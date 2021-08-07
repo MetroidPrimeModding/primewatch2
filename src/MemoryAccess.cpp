@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <cstring>
+
 #endif
 
 using namespace std;
@@ -87,12 +89,23 @@ namespace MemoryAccess {
     return true;
   }
 
-  void dolphin_memcpy(void *dest, std::size_t offset, std::size_t size) {
-
-  }
-
   int getAttachedPid() {
     return attachedPid;
+  }
+
+  uint32_t getRealPtr(uint32_t address) {
+    uint32_t masked = address & 0x7FFFFFFFu;
+    if (masked > 0x1800000) {
+      return 0;
+    }
+    return masked;
+  }
+
+  void dolphin_memcpy(void *dest, size_t offset, size_t size) {
+    if (size > 0x1800000) {
+      size = 0x1800000;
+    }
+    memcpy(dest, emuRAMAddressStart + getRealPtr(offset), size);
   }
 
 #else
