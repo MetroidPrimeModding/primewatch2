@@ -11,6 +11,7 @@ add_subdirectory(extern/glfw)
 find_package(OpenGL REQUIRED)
 
 include_directories(include)
+include_directories(src)
 include_directories(extern/imgui)
 include_directories(extern/imgui/backends)
 include_directories(extern/implot)
@@ -41,8 +42,9 @@ set(SOURCE_FILES
         src/MemoryAccess.hpp
         src/MemoryAccess.cpp
 
-        src/common/game_value.h
-        src/common/GameMemory.h
+        src/game_value.h
+        src/GameMemory.h
+        src/GameMemory.cpp
         src/prime1/CAABB.hpp
         src/prime1/CCameraManager.hpp
         src/prime1/CGameGlobalObjects.hpp
@@ -79,8 +81,7 @@ set(SOURCE_FILES
         src/prime1/rstl/rstl.hpp
         #        src/prime1/Prime1JsonDumper.cpp
         #        src/prime1/Prime1ConsoleDumper.cpp
-        src/prime1/CGameArea.hpp
-        src/common/GameMemory.cpp)
+        src/prime1/CGameArea.hpp)
 
 add_executable(primewatch2 ${SOURCE_FILES})
 target_link_libraries(primewatch2 OpenGL::GL glfw)

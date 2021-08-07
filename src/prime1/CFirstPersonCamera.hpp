@@ -6,9 +6,9 @@
 
 class CFirstPersonCamera : public CGameCamera {
 public:
-    CFirstPersonCamera(uint32_t base_ptr, uint32_t ptr_offset = 0) : CGameCamera(base_ptr, ptr_offset) {}
+  CFirstPersonCamera(uint32_t base_ptr, uint32_t ptr_offset = 0) : CGameCamera(base_ptr, ptr_offset) {}
 
-    CTransform gunFollowXf = CTransform(ptr(), 0x190);
+  CTransform gunFollowXf = CTransform(ptr(), 0x190);
 };
 
 

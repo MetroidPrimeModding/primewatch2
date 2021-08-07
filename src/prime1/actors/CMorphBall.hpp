@@ -5,7 +5,7 @@
 
 class CMorphBall : public game_value<> {
 public:
-    CMorphBall(uint32_t base_ptr, uint32_t ptr_offset = 0) : game_value(base_ptr, ptr_offset) {}
+  CMorphBall(uint32_t base_ptr, uint32_t ptr_offset = 0) : game_value(base_ptr, ptr_offset) {}
 
-    CSpherePrimitive collisionPrimitive = CSpherePrimitive(ptr(), 0x38);
+  CSpherePrimitive collisionPrimitive = CSpherePrimitive(ptr(), 0x38);
 };

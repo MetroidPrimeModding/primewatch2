@@ -1,22 +1,20 @@
 #include <array>
 #include <memory>
 #include <chrono>
+#include <cstring>
 #include "GameMemory.h"
 
-#include "../MemoryAccess.hpp"
+#include "MemoryAccess.hpp"
 
 using namespace std;
 
 
 namespace GameMemory {
-  unique_ptr<array<char, MemoryAccess::DOLPHIN_MEMORY_SIZE>> memory;
+  array<char, MemoryAccess::DOLPHIN_MEMORY_SIZE> memory{0};
 
   void updateFromDolphin() {
     if (MemoryAccess::getAttachedPid() > 0) {
-      if (memory == nullptr) {
-        memory = make_unique<array<char, MemoryAccess::DOLPHIN_MEMORY_SIZE>>();
-      }
-      MemoryAccess::dolphin_memcpy(memory->data(), 0, memory->size());
+      MemoryAccess::dolphin_memcpy(memory.data(), 0, memory.size());
     }
   }
 
@@ -24,22 +22,22 @@ namespace GameMemory {
   std::uint32_t read_u32(std::uint32_t address) {
     uint32_t res;
     MemoryAccess::dolphin_memcpy(&res, address, sizeof(res));
-    return res;
+    return MemoryAccess::beToHost32(res);
   }
 
   std::uint64_t read_u64(std::uint32_t address) {
     uint64_t res;
     MemoryAccess::dolphin_memcpy(&res, address, sizeof(res));
-    return res;
+    return MemoryAccess::beToHost64(res);
   }
 
   float read_float(std::uint32_t address) {
     uint32_t value = read_u32(address);
-    return *reinterpret_cast<float*>(&value);
+    return *reinterpret_cast<float *>(&value);
   }
 
   double read_double(std::uint32_t address) {
     uint64_t value = read_u64(address);
-    return *reinterpret_cast<double*>(&value);
+    return *reinterpret_cast<double *>(&value);
   }
 }

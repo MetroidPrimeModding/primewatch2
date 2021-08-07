@@ -4,6 +4,7 @@
 #include <iostream>
 
 #ifdef __linux__
+
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -17,7 +18,8 @@ namespace fs = filesystem;
 namespace MemoryAccess {
 #ifdef __linux__
   int attachedPid = -1;
-  uint8_t* emuRAMAddressStart = nullptr;
+  uint8_t *emuRAMAddressStart = nullptr;
+
   vector<int> getDolphinPids() {
     vector<int> res{};
     string path = "/proc";
@@ -109,6 +111,22 @@ namespace MemoryAccess {
       size = DOLPHIN_MEMORY_SIZE;
     }
     memcpy(dest, emuRAMAddressStart + getRealPtr(offset), size);
+  }
+
+  uint32_t beToHost32(uint32_t bigEndian) {
+    return be32toh(bigEndian);
+  }
+
+  uint32_t hostToBe32(uint32_t value) {
+    return htobe32(value);
+  }
+
+  uint64_t beToHost64(uint64_t bigEndian) {
+    return be64toh(bigEndian);
+  }
+
+  uint64_t hostToBe64(uint64_t value) {
+    return htobe64(value);
   }
 
 #else

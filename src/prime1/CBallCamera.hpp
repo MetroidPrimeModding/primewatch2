@@ -6,7 +6,7 @@
 
 class CBallCamera : public CGameCamera {
 public:
-    CBallCamera(uint32_t base_ptr, uint32_t ptr_offset = 0) : CGameCamera(base_ptr, ptr_offset) {}
+  CBallCamera(uint32_t base_ptr, uint32_t ptr_offset = 0) : CGameCamera(base_ptr, ptr_offset) {}
 
 
 };

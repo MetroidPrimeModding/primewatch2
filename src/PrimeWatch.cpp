@@ -7,7 +7,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "MemoryAccess.hpp"
-#include "common/GameMemory.h"
+#include "GameMemory.h"
+#include "prime1/CStateManager.hpp"
 
 PrimeWatch::PrimeWatch() {
 }
@@ -41,6 +42,9 @@ int PrimeWatch::initAndCreateWindow() {
   initGlAndImgui(width, height);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_cb);
 
+  // This won't copy anything, but will init the memory buffer
+  GameMemory::updateFromDolphin();
+
   return 0;
 }
 
@@ -48,7 +52,7 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImPlot::CreateContext();
-  ImGuiIO& io = ImGui::GetIO();
+  ImGuiIO &io = ImGui::GetIO();
 //  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard
   ImGui::StyleColorsDark();
   ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -122,7 +126,7 @@ void PrimeWatch::doImGui() {
         ImPlotFlags_None,
         ImPlotAxisFlags_AutoFit,
         ImPlotAxisFlags_AutoFit
-        )) {
+    )) {
       ImPlot::PlotLine("Lines", frameTimes.data(), frameTimes.size());
       ImPlot::EndPlot();
     }
@@ -158,6 +162,16 @@ void PrimeWatch::doImGui() {
       ImGui::EndListBox();
     }
     ImGui::PopID();
+
+    ImGui::End();
+  }
+
+  if (ImGui::Begin("Player")) {
+    CStateManager stateManager(CStateManager::LOCATION);
+    CPlayer player = stateManager.player.deref();
+    if (player.ptr() != 0) {
+      player.doGui();
+    }
 
     ImGui::End();
   }
