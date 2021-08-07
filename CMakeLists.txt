@@ -31,7 +31,7 @@ set(SOURCE_FILES
 
         src/main.cpp
         src/PrimeWatch.cpp
-        src/PrimeWatch.hpp)
+        src/PrimeWatch.hpp src/MemoryAccess.hpp src/MemoryAccess.cpp)
 
 add_executable(primewatch2 ${SOURCE_FILES})
 target_link_libraries(primewatch2 OpenGL::GL glfw)

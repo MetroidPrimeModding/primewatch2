@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "MemoryAccess.hpp"
 
 
 PrimeWatch::PrimeWatch() {
@@ -94,4 +95,39 @@ void PrimeWatch::doFrame() {
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void PrimeWatch::doImGui() const { ImGui::ShowDemoWindow(nullptr); }
+void PrimeWatch::doImGui() {
+  ImGui::ShowDemoWindow(nullptr);
+
+  if (ImGui::Begin("Processes")) {
+    if (MemoryAccess::getAttachedPid() > 0) {
+      ImGui::Text("Attached to process %d", MemoryAccess::getAttachedPid());
+    } else {
+      ImGui::Text("Not currently attached to process");
+    }
+
+    if (ImGui::Button("Refresh")) {
+      pids = MemoryAccess::getDolphinPids();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Attach")) {
+      if (selectedPidIndex < pids.size()) {
+        int pid = pids[selectedPidIndex];
+        MemoryAccess::attachToProcess(pid);
+      }
+    }
+
+    ImGui::PushID("PID box");
+    if (ImGui::BeginListBox("")) {
+      for (int i = 0; i < pids.size(); i++) {
+        int pid = pids[i];
+        char buff[32];
+        snprintf(buff, sizeof(buff), "PID: %d", pid);
+        ImGui::Selectable(buff, i == selectedPidIndex);
+      }
+      ImGui::EndListBox();
+    }
+    ImGui::PopID();
+
+    ImGui::End();
+  }
+}
