@@ -1,14 +1,15 @@
 #include <iostream>
+#include <chrono>
+#include <implot.h>
 
 #include "PrimeWatch.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "MemoryAccess.hpp"
-
+#include "common/GameMemory.h"
 
 PrimeWatch::PrimeWatch() {
-
 }
 
 int PrimeWatch::initAndCreateWindow() {
@@ -46,6 +47,7 @@ int PrimeWatch::initAndCreateWindow() {
 void PrimeWatch::initGlAndImgui(const int width, const int height) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
+  ImPlot::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
 //  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard
   ImGui::StyleColorsDark();
@@ -62,8 +64,16 @@ void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) 
 
 void PrimeWatch::mainLoop() {
   while (!glfwWindowShouldClose(window)) {
+    auto start = std::chrono::high_resolution_clock::now();
     processInput();
     doFrame();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start).count();
+
+    for (int i = 1; i < frameTimes.size(); i++) {
+      frameTimes[i - 1] = frameTimes[i];
+    }
+    frameTimes[frameTimes.size() - 1] = ms;
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -80,6 +90,9 @@ void PrimeWatch::processInput() {
 }
 
 void PrimeWatch::doFrame() {
+  // watch
+  doMemoryParse();
+
   // imgui
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -97,6 +110,24 @@ void PrimeWatch::doFrame() {
 
 void PrimeWatch::doImGui() {
   ImGui::ShowDemoWindow(nullptr);
+  ImPlot::ShowDemoWindow(nullptr);
+//  ImPlot::ShowMetricsWindow(nullptr);
+//  ImGui::ShowMetricsWindow(nullptr);
+
+  if (ImGui::Begin("Frame time")) {
+    if (ImPlot::BeginPlot(
+        "frametime",
+        "ms", nullptr,
+        ImVec2(-1, 0),
+        ImPlotFlags_None,
+        ImPlotAxisFlags_AutoFit,
+        ImPlotAxisFlags_AutoFit
+        )) {
+      ImPlot::PlotLine("Lines", frameTimes.data(), frameTimes.size());
+      ImPlot::EndPlot();
+    }
+    ImGui::End();
+  }
 
   if (ImGui::Begin("Processes")) {
     if (MemoryAccess::getAttachedPid() > 0) {
@@ -130,4 +161,8 @@ void PrimeWatch::doImGui() {
 
     ImGui::End();
   }
+}
+
+void PrimeWatch::doMemoryParse() {
+  GameMemory::updateFromDolphin();
 }

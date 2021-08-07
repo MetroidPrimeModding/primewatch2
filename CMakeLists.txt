@@ -13,6 +13,7 @@ find_package(OpenGL REQUIRED)
 include_directories(include)
 include_directories(extern/imgui)
 include_directories(extern/imgui/backends)
+include_directories(extern/implot)
 
 set(SOURCE_FILES
         extern/imgui/imgui.cpp
@@ -27,11 +28,59 @@ set(SOURCE_FILES
         extern/imgui/backends/imgui_impl_glfw.cpp
         extern/imgui/backends/imgui_impl_glfw.h
 
+        extern/implot/implot.h
+        extern/implot/implot.cpp
+        extern/implot/implot_demo.cpp
+        extern/implot/implot_items.cpp
+
         src/glad.c
 
         src/main.cpp
         src/PrimeWatch.cpp
-        src/PrimeWatch.hpp src/MemoryAccess.hpp src/MemoryAccess.cpp)
+        src/PrimeWatch.hpp
+        src/MemoryAccess.hpp
+        src/MemoryAccess.cpp
+
+        src/common/game_value.h
+        src/common/GameMemory.h
+        src/prime1/CAABB.hpp
+        src/prime1/CCameraManager.hpp
+        src/prime1/CGameGlobalObjects.hpp
+        src/prime1/CMatrix4f.hpp
+        src/prime1/CPair.hpp
+        src/prime1/CQuaternion.hpp
+        src/prime1/CReservedVector.hpp
+        src/prime1/CStateManager.hpp
+        src/prime1/CVector3f.hpp
+        src/prime1/SObjectTag.hpp
+        src/prime1/CAABBPrimitive.hpp
+        src/prime1/CFirstPersonCamera.hpp
+        src/prime1/CGameState.hpp
+        src/prime1/CObjectList.hpp
+        src/prime1/CPlayerCameraBob.hpp
+        src/prime1/CRBTree.hpp
+        src/prime1/CSimplePool.hpp
+        src/prime1/CTransform.hpp
+        src/prime1/CWorld.hpp
+        src/prime1/CBallCamera.hpp
+        src/prime1/CGameAllocator.hpp
+        src/prime1/CHealthInfo.hpp
+        src/prime1/CObjectReference.hpp
+        src/prime1/CPlayerState.hpp
+        src/prime1/CRandom16.hpp
+        src/prime1/CSpherePrimitive.hpp
+        src/prime1/actors/CActor.hpp
+        src/prime1/actors/CEntity.hpp
+        src/prime1/actors/CGameCamera.hpp
+        src/prime1/actors/CMorphBall.hpp
+        src/prime1/actors/CPhysicsActor.hpp
+        src/prime1/actors/CPlayer.hpp
+        src/prime1/actors/CPlayerGun.hpp
+        src/prime1/rstl/rstl.hpp
+        #        src/prime1/Prime1JsonDumper.cpp
+        #        src/prime1/Prime1ConsoleDumper.cpp
+        src/prime1/CGameArea.hpp
+        src/common/GameMemory.cpp)
 
 add_executable(primewatch2 ${SOURCE_FILES})
 target_link_libraries(primewatch2 OpenGL::GL glfw)

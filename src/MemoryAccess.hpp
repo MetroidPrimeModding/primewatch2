@@ -4,6 +4,8 @@
 #include <vector>
 
 namespace MemoryAccess {
+  constexpr int DOLPHIN_MEMORY_SIZE = 0x1800000;
+
   std::vector<int> getDolphinPids();
   bool attachToProcess(int pid);
   void dolphin_memcpy(void *dest, std::size_t offset, std::size_t size);

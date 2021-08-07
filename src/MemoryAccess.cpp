@@ -95,15 +95,18 @@ namespace MemoryAccess {
 
   uint32_t getRealPtr(uint32_t address) {
     uint32_t masked = address & 0x7FFFFFFFu;
-    if (masked > 0x1800000) {
+    if (masked > DOLPHIN_MEMORY_SIZE) {
       return 0;
     }
     return masked;
   }
 
   void dolphin_memcpy(void *dest, size_t offset, size_t size) {
-    if (size > 0x1800000) {
-      size = 0x1800000;
+    if (emuRAMAddressStart == nullptr) {
+      return;
+    }
+    if (size > DOLPHIN_MEMORY_SIZE) {
+      size = DOLPHIN_MEMORY_SIZE;
     }
     memcpy(dest, emuRAMAddressStart + getRealPtr(offset), size);
   }
