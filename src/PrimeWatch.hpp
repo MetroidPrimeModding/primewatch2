@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <array>
@@ -17,12 +16,13 @@ public:
 private:
   bool initialized{false};
   GLFWwindow *window;
+
   std::vector<int> pids{};
   int selectedPidIndex{0};
 
   std::array<float, 120> frameTimes;
 
-  void initGlAndImgui(int width, int height);
+  void initBgfxAndImgui(int width, int height);
   static void framebuffer_size_cb(GLFWwindow *window, int width, int height);
   void doFrame();
   void processInput();

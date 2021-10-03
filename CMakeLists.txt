@@ -7,8 +7,8 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(extern/glfw)
-
-find_package(OpenGL REQUIRED)
+dddddd
+add_subdirectory(extern/bgfx.cmake)
 
 include_directories(include)
 include_directories(src)
@@ -24,8 +24,6 @@ set(SOURCE_FILES
         extern/imgui/imgui_widgets.cpp
         extern/imgui/imgui.h
 
-        extern/imgui/backends/imgui_impl_opengl3.cpp
-        extern/imgui/backends/imgui_impl_opengl3.h
         extern/imgui/backends/imgui_impl_glfw.cpp
         extern/imgui/backends/imgui_impl_glfw.h
 
@@ -34,7 +32,8 @@ set(SOURCE_FILES
         extern/implot/implot_demo.cpp
         extern/implot/implot_items.cpp
 
-        src/glad.c
+        src/imgui/imgui_impl_bgfx.cpp
+        src/imgui/imgui_impl_bgfx.h
 
         src/main.cpp
         src/PrimeWatch.cpp
@@ -84,4 +83,4 @@ set(SOURCE_FILES
         src/prime1/CGameArea.hpp)
 
 add_executable(primewatch2 ${SOURCE_FILES})
-target_link_libraries(primewatch2 OpenGL::GL glfw)
+target_link_libraries(primewatch2 glfw bgfx bx)
