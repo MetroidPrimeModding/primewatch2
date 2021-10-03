@@ -1,0 +1,3 @@
+struct CScriptCameraFilterKeyframe: CEntity {
+    vtable 0x803dfc80
+}

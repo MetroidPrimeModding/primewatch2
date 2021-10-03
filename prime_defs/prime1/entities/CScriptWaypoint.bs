@@ -1,0 +1,3 @@
+struct CScriptWaypoint: CActor {
+    vtable 0x803da558
+}

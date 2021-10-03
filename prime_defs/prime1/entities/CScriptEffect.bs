@@ -1,0 +1,3 @@
+struct CScriptEffect: CActor {
+    vtable 0x803dac38
+}

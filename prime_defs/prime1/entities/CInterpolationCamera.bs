@@ -1,0 +1,3 @@
+struct CInterpolationCamera: CGameCamera {
+    vtable 0x803e9d80
+}

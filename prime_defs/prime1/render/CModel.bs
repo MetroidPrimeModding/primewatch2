@@ -1,0 +1,3 @@
+struct CModel {
+    u8[32] name
+}

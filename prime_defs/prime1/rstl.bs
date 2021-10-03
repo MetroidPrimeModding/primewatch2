@@ -1,0 +1,49 @@
+struct rstl::vector<T> {
+    u32 end
+    u32 size
+    *T first
+}
+
+// TODO: maybe set the size of this properly later
+struct rstl::reserved_vector<T> {
+    u32 size
+    *T first
+}
+
+struct rstl::autoptr<T> {
+    size 0x8
+    u32 unknown 0x0
+    u8 referenced 0x0
+    // u32 data 0x4
+    *T value 0x4
+}
+
+struct rstl::rc_ptr<T> {
+    *rstl::CRefData<T> ref
+}
+
+struct rstl::CRefData<T> {
+  *T value
+  u32 refCount
+}
+
+struct rstl::rbtree<T> {
+    u32 size 0x0
+    *rstl::rbtree_node<T> first 0x4
+    *rstl::rbtree_node<T> last 0x8
+    *rstl::rbtree_node<T> root 0xC
+}
+
+struct rstl::rbtree_node<T> {
+    u32 size 0x0
+    *rstl::rbtree_node<T> left 0x0
+    *rstl::rbtree_node<T> right 0x4
+    *rstl::rbtree_node<T> parent 0x8
+    u32 redOrBlack 0xC
+    *T data 0x10
+}
+
+struct rstl::pair<A, B> {
+    A a
+    B b
+}

@@ -1,0 +1,7 @@
+struct CPlayerState {
+    u32 currentBeam 0x8
+    CHealthInfo healthInfo 0xC
+    u32 currentVisor 0x14
+    u32 currentSuit 0x20
+    u32 items 0x14 // TODO: this is wrong
+}

@@ -1,0 +1,41 @@
+enum EPhase {
+  LoadHeader,
+  LoadSecSizes,
+  ReserveSections,
+  LoadDataSections,
+  WaitForFinish
+}
+
+enum EChain {
+  Invalid = -1,
+  ToDeallocate,
+  Deallocated,
+  Loading,
+  Alive,
+  AliveJudgement
+}
+
+enum EOcclusionState {
+  Occluded,
+  Visible
+}
+
+struct CGameArea {
+  size 0x13c
+  u32 vtable 0x0
+  u32 selfIDX 0x4
+  u32 nameStrg 0x8
+  u32 mrea 0x84
+  u32 areaID 0x88
+  // TODO: bit struct
+  u32 flags 0xF0
+  bool isPostConstructed 0xF0:7:1
+  bool active 0xF0:6:1
+  bool tokensReady 0xF0:5:1
+  bool loadPaused 0xF0:4:1
+  bool validated 0xF0:3:1
+  EPhase phase 0xF4
+  u32 loadTransactions 0xF8
+  EChain curChain 0x138
+  *CPostConstructed postConstructed 0x12C
+}

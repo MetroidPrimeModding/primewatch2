@@ -1,0 +1,3 @@
+struct CScriptDoor: CPhysicsActor {
+    vtable 0x803daa78
+}

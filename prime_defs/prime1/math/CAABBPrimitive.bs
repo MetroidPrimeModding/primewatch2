@@ -1,0 +1,3 @@
+struct CAABBPrimitive {
+    CAABB aabb 0x10
+}

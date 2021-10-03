@@ -1,0 +1,3 @@
+struct CCollisionActor: CPhysicsActor {
+    vtable 0x803e4b18
+}

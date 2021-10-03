@@ -1,0 +1,4 @@
+struct CActor: CEntity {
+    CTransform transform 0x34
+    *CModelData modelData 0x64
+}

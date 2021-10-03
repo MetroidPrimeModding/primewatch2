@@ -1,0 +1,38 @@
+struct CPlayer: CPhysicsActor {
+    vtable 0x803d96e8
+    EPlayerMovementState jumpstate 0x258
+    f32 sjTimer 0x28C
+    u32 cameraState 0x2F4
+    u32 morphState 0x2F8
+    *CPlayerGun gun 0x490
+    *CMorphBall morphBall 0x768
+    *CPlayerCameraBob cameraBob 0x76C
+
+    bool visorChangeRequested 0x9C4:7:1
+    bool showCrosshairs 0x9C4:6:1
+    bool canEnterMorphBall 0x9C4:4:1
+    bool canLeaveMorphBall 0x9C4:3:1
+    bool spiderBallControlXY 0x9C4:2:1
+    bool controlDirOverride 0x9C4:1:1
+    bool inWaterMovement 0x9C4:0:1
+    bool splashUpdated 0x9C5:6:1
+    bool camSubmerged 0x9C5:4:1
+    bool slidingOnWall 0x9C5:3:1
+    bool hitWall 0x9C5:2:1
+    bool selectFluidBallSound 0x9C5:1:1
+    bool stepCameraZBiasDirty 0x9C5:0:1
+    bool extendTargetDistance 0x9C6:7:1
+    bool interpolatingControlDir 0x9C6:6:1
+    bool outOfBallLookAtHint 0x9C6:5:1
+    bool aimingAtProjectile 0x9C6:4:1
+    bool aligningGrappleSwingTurn 0x9C6:3:1
+    bool disableInput 0x9C6:2:1
+    bool newScanScanning 0x9C6:1:1
+    bool overrideRadarRadius 0x9C6:0:1
+    bool noDamageLoopSfx 0x9C7:7:1
+    bool outOfBallLookAtHintActor 0x9C7:6:1
+}
+
+enum EPlayerMovementState: u32 {
+    OnGround=0, Jump, ApplyJump, Falling, FallingMorphed
+}

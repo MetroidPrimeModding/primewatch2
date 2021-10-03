@@ -1,0 +1,15 @@
+struct CPhysicsActor: CActor {
+    bool standardCollider 0xF9
+    CVector3f constantForce 0xFC
+    CVector3f angularMomentum 0x108
+    CVector3f velocity 0x138
+    CVector3f momentum 0x150
+    CVector3f force 0x15C
+    CVector3f impulse 0x168
+    CVector3f torque 0x174
+    CVector3f angularImpulse 0x180
+    CAABBPrimitive collisionPrimitive 0x1C0
+    CVector3f primitiveOffset 0x1E8
+    CVector3f translation 0x1F4
+    CQuaternion orientation 0x200
+}

@@ -1,0 +1,3 @@
+struct CHUDBillboardEffect: CEffect {
+    vtable 0x803e0d70
+}

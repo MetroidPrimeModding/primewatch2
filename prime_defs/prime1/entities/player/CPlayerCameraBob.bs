@@ -1,0 +1,5 @@
+struct CPlayerCameraBob {
+    CTransform cameraBobTransform 0x2C
+    f32 bobMagnitude 0x10
+    f32 bobTimeScale 0x18
+}

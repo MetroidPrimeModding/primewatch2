@@ -1,0 +1,3 @@
+struct CScriptDamageableTrigger: CActor {
+    vtable 0x803dfd08
+}

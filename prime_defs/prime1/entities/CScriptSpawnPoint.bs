@@ -1,0 +1,3 @@
+struct CScriptSpawnPoint: CEntity {
+    vtable 0x803df850
+}

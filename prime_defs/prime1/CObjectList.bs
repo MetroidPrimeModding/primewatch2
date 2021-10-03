@@ -1,0 +1,25 @@
+struct CObjectList {
+    SObjectListEntry[1024] list 0x4
+    EGameObjectList typeEnum 0x2004
+    u16 firstID 0x2008
+    u16 size 0x200A
+}
+
+struct SObjectListEntry {
+    size 0x8
+    *CEntity entity 0x0
+    u16 next 0x4
+    u16 prev 0x6
+}
+
+enum EGameObjectList {
+  Invalid = -1,
+  All,
+  Actor,
+  PhysicsActor,
+  GameCamera,
+  GameLight,
+  ListeningAi,
+  AiWaypoint,
+  PlatformAndDoor,
+}

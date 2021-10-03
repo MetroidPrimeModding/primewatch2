@@ -1,0 +1,3 @@
+struct CScriptSwitch: CEntity {
+    vtable 0x803e5c40
+}

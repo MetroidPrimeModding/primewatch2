@@ -1,0 +1,3 @@
+struct CScriptControllerAction: CEntity {
+    vtable 0x803e5c20
+}

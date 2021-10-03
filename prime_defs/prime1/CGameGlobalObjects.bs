@@ -1,0 +1,4 @@
+struct CGameGlobalObjects {
+    CSimplePool mainPool 0xCC
+    *CGameState gameState 0x134
+}

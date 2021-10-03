@@ -1,0 +1,3 @@
+struct IObj {
+    u32 vtable 0x0
+}

@@ -1,0 +1,3 @@
+struct CScriptRelay: CEntity {
+    vtable 0x803df830
+}

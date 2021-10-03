@@ -1,0 +1,3 @@
+struct CScriptTimer: CEntity {
+    vtable 0x803dadd8
+}

@@ -1,0 +1,4 @@
+struct CGameState {
+    u32 mlvlID 0x84
+    f64 playtime 0xA0
+}

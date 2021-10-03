@@ -1,6 +1,8 @@
 #include <iostream>
 #include <chrono>
 #include <implot.h>
+#include <defs/GameDefinitions.hpp>
+#include <defs/GameObject.hpp>
 
 #include "PrimeWatch.hpp"
 #include "imgui.h"
@@ -41,6 +43,8 @@ int PrimeWatch::initAndCreateWindow() {
 
   initGlAndImgui(width, height);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_cb);
+
+  GameDefinitions::loadDefinitionsFromPath("prime1.json");
 
   // This won't copy anything, but will init the memory buffer
   GameMemory::updateFromDolphin();
@@ -144,44 +148,47 @@ void PrimeWatch::doImGui() {
 //  }
 //    ImGui::End();
 
-  char buff[32];
-  int pid = MemoryAccess::getAttachedPid();
-  if (pid > 0) {
-    snprintf(buff, sizeof(buff), "Attached (%d)###Processes", pid);
-  } else {
-    snprintf(buff, sizeof(buff), "Detatched###Processes", pid);
-  }
-  if (ImGui::Begin(buff)) {
-    if (MemoryAccess::getAttachedPid() > 0) {
-      ImGui::Text("Attached to process %d", MemoryAccess::getAttachedPid());
+  // Process window
+  {
+    char buff[32];
+    int pid = MemoryAccess::getAttachedPid();
+    if (pid > 0) {
+      snprintf(buff, sizeof(buff), "Attached (%d)###Processes", pid);
     } else {
-      ImGui::Text("Not currently attached to process");
+      snprintf(buff, sizeof(buff), "Detatched###Processes");
     }
-
-    if (ImGui::Button("Refresh")) {
-      pids = MemoryAccess::getDolphinPids();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Attach")) {
-      if (selectedPidIndex < pids.size()) {
-        int pid = pids[selectedPidIndex];
-        MemoryAccess::attachToProcess(pid);
+    if (ImGui::Begin(buff)) {
+      if (MemoryAccess::getAttachedPid() > 0) {
+        ImGui::Text("Attached to process %d", MemoryAccess::getAttachedPid());
+      } else {
+        ImGui::Text("Not currently attached to process");
       }
-    }
 
-    ImGui::PushID("PID box");
-    if (ImGui::BeginListBox("")) {
-      for (int i = 0; i < pids.size(); i++) {
-        int pid = pids[i];
-        char buff[32];
-        snprintf(buff, sizeof(buff), "PID: %d", pid);
-        ImGui::Selectable(buff, i == selectedPidIndex);
+      if (ImGui::Button("Refresh")) {
+        pids = MemoryAccess::getDolphinPids();
       }
-      ImGui::EndListBox();
+      ImGui::SameLine();
+      if (ImGui::Button("Attach")) {
+        if (selectedPidIndex < pids.size()) {
+          int pid = pids[selectedPidIndex];
+          MemoryAccess::attachToProcess(pid);
+        }
+      }
+
+      ImGui::PushID("PID box");
+      if (ImGui::BeginListBox("")) {
+        for (int i = 0; i < pids.size(); i++) {
+          int pid = pids[i];
+          char buff[32];
+          snprintf(buff, sizeof(buff), "PID: %d", pid);
+          ImGui::Selectable(buff, i == selectedPidIndex);
+        }
+        ImGui::EndListBox();
+      }
+      ImGui::PopID();
     }
-    ImGui::PopID();
+    ImGui::End();
   }
-  ImGui::End();
 
 
   if (ImGui::Begin("Player")) {
@@ -190,6 +197,12 @@ void PrimeWatch::doImGui() {
     if (player.ptr() != 0) {
       player.doGui();
     }
+  }
+  ImGui::End();
+
+  if (ImGui::Begin("CStateManager")) {
+    GameObject stateManager("g_stateManager", GameDefinitions::structs_by_name["CStateManager"], CStateManager::LOCATION);
+    stateManager.renderGui(false);
   }
   ImGui::End();
 

@@ -1,0 +1,3 @@
+struct CRandom16 {
+    i32 seed
+}

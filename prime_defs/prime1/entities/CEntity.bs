@@ -1,0 +1,109 @@
+struct CEntity {
+    u32 vtable 0x0
+    u32 areaID 0x4
+    u32 uniqueID 0x8
+    u32 editorID 0xC
+    *u8 name 0x10
+    rstl::vector<SConnection> connections 0x24
+    u32 status 0x30
+    bool active 0x30:7:1
+    bool inGraveyard 0x30:6:1
+    bool scriptingBlocked 0x30:5:1
+    bool inUse 0x30:4:1
+}
+
+struct SConnection {
+    EScriptObjectState state 0x0
+    EScriptObjectMessage message 0x4
+    u32 objID 0x4
+}
+
+enum EScriptObjectState {
+  Any = -1,
+  Active = 0,
+  Arrived = 1,
+  Closed = 2,
+  Entered = 3,
+  Exited = 4,
+  Inactive = 5,
+  Inside = 6,
+  MaxReached = 7,
+  Open = 8,
+  Zero = 9,
+  Attack = 10,
+  CloseIn = 11,
+  Retreat = 12,
+  Patrol = 13,
+  Dead = 14,
+  CameraPath = 15,
+  CameraTarget = 16,
+  DeactivateState = 17,
+  Play = 18,
+  MassiveDeath = 19,
+  DeathRattle = 20,
+  AboutToMassivelyDie = 21,
+  Damage = 22,
+  InvulnDamage = 23,
+  MassiveFrozenDeath = 24,
+  Modify = 25,
+  ScanStart = 26,
+  ScanProcessing = 27,
+  ScanDone = 28,
+  UnFrozen = 29,
+  Default = 30,
+  ReflectedDamage = 31,
+  InheritBounds = 32
+}
+
+enum EScriptObjectMessage {
+  None = -1,
+  UNKM0 = 0,
+  Activate = 1,
+  Arrived = 2,
+  Close = 3,
+  Deactivate = 4,
+  Decrement = 5,
+  Follow = 6,
+  Increment = 7,
+  Next = 8,
+  Open = 9,
+  Reset = 10,
+  ResetAndStart = 11,
+  SetToMax = 12,
+  SetToZero = 13,
+  Start = 14,
+  Stop = 15,
+  StopAndReset = 16,
+  ToggleActive = 17,
+  UNKM18 = 18,
+  Action = 19,
+  Play = 20,
+  Alert = 21,
+  InternalMessage00 = 22,
+  OnFloor = 23,
+  InternalMessage02 = 24,
+  InternalMessage03 = 25,
+  Falling = 26,
+  OnIceSurface = 27,
+  OnMudSlowSurface = 28,
+  OnNormalSurface = 29,
+  Touched = 30,
+  AddPlatformRider = 31,
+  LandOnNotFloor = 32,
+  Registered = 33,
+  Deleted = 34,
+  InitializedInArea = 35,
+  WorldInitialized = 36,
+  AddSplashInhabitant = 37,
+  UpdateSplashInhabitant = 38,
+  RemoveSplashInhabitant = 39,
+  Jumped = 40,
+  Damage = 41,
+  InvulnDamage = 42,
+  ProjectileCollide = 43,
+  InSnakeWeed = 44,
+  AddPhazonPoolInhabitant = 45,
+  UpdatePhazonPoolInhabitant = 46,
+  RemovePhazonPoolInhabitant = 47,
+  SuspendedMove = 48
+}

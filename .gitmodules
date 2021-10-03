@@ -7,3 +7,9 @@
 [submodule "extern/implot"]
 	path = extern/implot
 	url = https://github.com/epezent/implot.git
+[submodule "extern/bstruct"]
+	path = extern/bstruct
+	url = git@github.com:Pwootage/bstruct.git
+[submodule "extern/json"]
+	path = extern/json
+	url = git@github.com:nlohmann/json.git

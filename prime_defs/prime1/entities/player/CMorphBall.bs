@@ -1,0 +1,3 @@
+struct CMorphBall {
+    CSpherePrimitive collisionPrimitive 0x38
+}

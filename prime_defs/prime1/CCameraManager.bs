@@ -1,0 +1,4 @@
+struct CCameraManager {
+    *CFirstPersonCamera firstPerson 0x7C
+    *CBallCamera bball 0x7C
+}

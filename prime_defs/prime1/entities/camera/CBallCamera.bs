@@ -1,0 +1,3 @@
+struct CBallCamera: CGameCamera {
+    vtable 0x803dab90
+}

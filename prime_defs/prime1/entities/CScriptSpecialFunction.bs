@@ -1,0 +1,51 @@
+struct CScriptSpecialFunction: CActor {
+    vtable 0x803e2b68
+    ESpecialFunction specialFunction 0xE8
+    f32 float1 0xFC
+    f32 float2 0x100
+    f32 float3 0x104
+    f32 float4 0x108
+    CVector3f vector3f 0x10C
+    CColor color 0x118
+    // TODO: rest of these
+}
+
+enum ESpecialFunction {
+    What = 0,
+    PlayerFollowLocator = 1,
+    SpinnerController = 2,
+    ObjectFollowLocator = 3,
+    ChaffTarget = 4,
+    InventoryActivator = 5,
+    MapStation = 6,
+    SaveStation = 7,
+    IntroBossRingController = 8,
+    ViewFrustumTester = 9,
+    ShotSpinnerController = 10,
+    EscapeSequence = 11,
+    BossEnergyBar = 12,
+    EndGame = 13,
+    HUDFadeIn = 14,
+    CinematicSkip = 15,
+    ScriptLayerController = 16,
+    RainSimulator = 17,
+    AreaDamage = 18,
+    ObjectFollowObject = 19,
+    RedundantHintSystem = 20,
+    DropBomb = 21,
+    ScaleActor = 22,
+    MissileStation = 23,
+    Billboard = 24,
+    PlayerInAreaRelay = 25,
+    HUDTarget = 26,
+    FogFader = 27,
+    EnterLogbook = 28,
+    PowerBombStation = 29,
+    Ending = 30,
+    FusionRelay = 31,
+    WeaponSwitch = 32,
+    FogVolume = 47,
+    RadialDamage = 48,
+    EnvFxDensityController = 49,
+    RumbleEffect = 50
+  }

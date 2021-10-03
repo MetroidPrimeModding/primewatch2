@@ -1,0 +1,10 @@
+struct CStateManager {
+    *CObjectList allObjects 0x810
+    *CPlayer player 0x84C
+    *CWorld world 0x850
+    *CCameraManager cameraManager 0x870
+    rstl::rc_ptr<CPlayerState> playerState 0x8b8
+    u32 nextAreaID 0x8CC
+    u32 prevAreaID 0x8D0
+    CRandom16 random 0x8FC
+}

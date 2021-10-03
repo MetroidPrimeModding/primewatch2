@@ -1,0 +1,22 @@
+struct CWorld {
+    u32 vtable 0x0
+    CWorld::Phase phase 0x4
+    u32 mlvl 0x8
+    u32 strgID 0xC
+    u32 savewID 0x10
+    rstl::vector<rstl::autoptr<CGameArea>> areas 0x18
+    u32 mapwId 0x24
+    u32 relays 0x2C
+    u32 currentArea 0x68
+    u32 flags 0x70
+    
+}
+
+enum CWorld::Phase {
+    Loading,
+    LoadingMap,
+    LoadingMapAreas,
+    LoadingSkyBox,
+    LoadingSoundGroups,
+    Done,
+}

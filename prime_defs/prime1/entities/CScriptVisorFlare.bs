@@ -1,0 +1,3 @@
+struct CScriptVisorFlare: CActor {
+    vtable 0x803e5830
+}

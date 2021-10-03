@@ -1,0 +1,4 @@
+struct CAABB {
+    CVector3f min
+    CVector3f max
+}

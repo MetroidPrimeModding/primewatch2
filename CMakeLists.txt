@@ -8,6 +8,10 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(extern/glfw)
 
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install OFF CACHE INTERNAL "")
+add_subdirectory(extern/json)
+
 find_package(OpenGL REQUIRED)
 
 include_directories(include)
@@ -41,6 +45,11 @@ set(SOURCE_FILES
         src/PrimeWatch.hpp
         src/MemoryAccess.hpp
         src/MemoryAccess.cpp
+
+        include/json_optional.hpp
+
+        src/defs/GameDefinitions.cpp
+        src/defs/GameDefinitions.hpp
 
         src/game_value.h
         src/GameMemory.h
@@ -79,9 +88,22 @@ set(SOURCE_FILES
         src/prime1/actors/CPlayer.hpp
         src/prime1/actors/CPlayerGun.hpp
         src/prime1/rstl/rstl.hpp
-        #        src/prime1/Prime1JsonDumper.cpp
-        #        src/prime1/Prime1ConsoleDumper.cpp
-        src/prime1/CGameArea.hpp)
+        src/prime1/CGameArea.hpp
+        src/defs/GameObject.cpp src/defs/GameObject.hpp)
+
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
+        COMMAND npm i && node lib/index.js
+        -i '${CMAKE_SOURCE_DIR}/prime_defs/**/*.bs'
+        -o ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/extern/bstruct"
+)
+add_custom_target(
+        def_gen ALL
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
+)
+
 
 add_executable(primewatch2 ${SOURCE_FILES})
-target_link_libraries(primewatch2 OpenGL::GL glfw)
+target_link_libraries(primewatch2 OpenGL::GL glfw nlohmann_json::nlohmann_json)
+add_dependencies(primewatch2 def_gen)

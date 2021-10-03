@@ -1,0 +1,3 @@
+struct CScriptSteam: CScriptTrigger {
+    vtable 0x803e3da8
+}

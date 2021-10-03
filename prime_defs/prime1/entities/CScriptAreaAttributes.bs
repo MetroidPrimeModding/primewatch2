@@ -1,0 +1,3 @@
+struct CScriptAreaAttributes: CEntity {
+    vtable 0x803e52f8
+}

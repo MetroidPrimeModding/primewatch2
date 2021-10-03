@@ -1,0 +1,6 @@
+FSeek(0x457798);
+CGameGlobalObjects globalObjects;
+FSeek(0x45A1A8);
+CStateManager stateManager;
+FSeek(0x4BFD64);
+CGameAllocator globalAllocator;

@@ -1,0 +1,35 @@
+struct CAreaOctTree {
+    CAABB aabb 0x0
+    CAreaOctTree::Node::ETreeType treeType 0x18
+    *u8 buf 0x1C
+    *u8 treebuff 0x20
+    u32 matCount 0x24
+    *u32 materials 0x28
+    *u8 vertMats 0x2C
+    *u8 edgeMatx 0x30
+    *u8 polyMats 0x34
+    u32 edgeCount 0x38
+    *CCollisionEdge edges 0x3C
+    u32 polyCount 0x40
+    *u16 polyEdges 0x44
+    u32 vertCount 0x48
+    *f32 verts 0x4C
+}
+
+struct CAreaOctTree::Node {
+    CAABB aabb 0x0
+    *u8 ptr 0x18 // not sure what this is
+    *CAreaOctTree owner 0x1C
+    CAreaOctTree::Node::ETreeType nodeType 0x20
+}
+
+enum CAreaOctTree::Node::ETreeType { 
+    Invalid, 
+    Branch, 
+    Leaf
+}
+
+struct CCollisionEdge {
+    u16 edge1 0x0
+    u16 edge2 0x2
+}

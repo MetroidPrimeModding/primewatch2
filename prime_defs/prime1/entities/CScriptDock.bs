@@ -1,0 +1,3 @@
+struct CScriptDock: CPhysicsActor {
+    vtable 0x803df580
+}

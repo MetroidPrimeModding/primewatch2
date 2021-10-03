@@ -1,0 +1,3 @@
+struct CCinematicCamera: CGameCamera {
+    vtable 0x803dadf8
+}

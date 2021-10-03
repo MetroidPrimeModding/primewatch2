@@ -1,0 +1,3 @@
+struct CScriptCounter: CEntity {
+    vtable 0x803daef0
+}

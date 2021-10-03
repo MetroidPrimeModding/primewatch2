@@ -1,0 +1,3 @@
+struct CScriptPlatform: CPhysicsActor {
+    vtable 0x803df220
+}

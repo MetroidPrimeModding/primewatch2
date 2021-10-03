@@ -1,0 +1,4 @@
+struct SObjectTag {
+    u32 fourCC
+    u32 id
+}

@@ -1,0 +1,3 @@
+struct CScriptActorKeyframe: CEntity {
+    vtable 0x803dfe20
+}

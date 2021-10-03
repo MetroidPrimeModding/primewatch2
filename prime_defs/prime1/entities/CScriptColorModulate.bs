@@ -1,0 +1,3 @@
+struct CScriptColorModulate: CEntity {
+    vtable 0x803e6bb0
+}
