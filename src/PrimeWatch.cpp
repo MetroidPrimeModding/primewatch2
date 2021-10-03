@@ -45,6 +45,13 @@ int PrimeWatch::initAndCreateWindow() {
   // This won't copy anything, but will init the memory buffer
   GameMemory::updateFromDolphin();
 
+  // Load the current list of PIDs
+  pids = MemoryAccess::getDolphinPids();
+
+  if (pids.size() == 1) {
+    MemoryAccess::attachToProcess(pids[0]);
+  }
+
   return 0;
 }
 
@@ -86,7 +93,11 @@ void PrimeWatch::mainLoop() {
 
 void PrimeWatch::shutdown() {
   std::cout << "goodbye" << std::endl;
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
   glfwTerminate();
+
 }
 
 void PrimeWatch::processInput() {
@@ -118,22 +129,29 @@ void PrimeWatch::doImGui() {
 //  ImPlot::ShowMetricsWindow(nullptr);
 //  ImGui::ShowMetricsWindow(nullptr);
 
-  if (ImGui::Begin("Frame time")) {
-    if (ImPlot::BeginPlot(
-        "frametime",
-        "ms", nullptr,
-        ImVec2(-1, 0),
-        ImPlotFlags_None,
-        ImPlotAxisFlags_AutoFit,
-        ImPlotAxisFlags_AutoFit
-    )) {
-      ImPlot::PlotLine("Lines", frameTimes.data(), frameTimes.size());
-      ImPlot::EndPlot();
-    }
-    ImGui::End();
-  }
+//  if (ImGui::Begin("Frame time")) {
+//    if (ImPlot::BeginPlot(
+//        "frametime",
+//        "ms", nullptr,
+//        ImVec2(-1, 0),
+//        ImPlotFlags_None,
+//        ImPlotAxisFlags_AutoFit,
+//        ImPlotAxisFlags_AutoFit
+//    )) {
+//      ImPlot::PlotLine("Lines", frameTimes.data(), frameTimes.size());
+//      ImPlot::EndPlot();
+//    }
+//  }
+//    ImGui::End();
 
-  if (ImGui::Begin("Processes")) {
+  char buff[32];
+  int pid = MemoryAccess::getAttachedPid();
+  if (pid > 0) {
+    snprintf(buff, sizeof(buff), "Attached (%d)###Processes", pid);
+  } else {
+    snprintf(buff, sizeof(buff), "Detatched###Processes", pid);
+  }
+  if (ImGui::Begin(buff)) {
     if (MemoryAccess::getAttachedPid() > 0) {
       ImGui::Text("Attached to process %d", MemoryAccess::getAttachedPid());
     } else {
@@ -162,9 +180,9 @@ void PrimeWatch::doImGui() {
       ImGui::EndListBox();
     }
     ImGui::PopID();
-
-    ImGui::End();
   }
+  ImGui::End();
+
 
   if (ImGui::Begin("Player")) {
     CStateManager stateManager(CStateManager::LOCATION);
@@ -172,9 +190,9 @@ void PrimeWatch::doImGui() {
     if (player.ptr() != 0) {
       player.doGui();
     }
-
-    ImGui::End();
   }
+  ImGui::End();
+
 }
 
 void PrimeWatch::doMemoryParse() {
