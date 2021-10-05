@@ -13,3 +13,6 @@
 [submodule "extern/json"]
 	path = extern/json
 	url = git@github.com:nlohmann/json.git
+[submodule "extern/fmt"]
+	path = extern/fmt
+	url = git@github.com:fmtlib/fmt.git

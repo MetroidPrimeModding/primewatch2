@@ -2,7 +2,7 @@
 #include <chrono>
 #include <implot.h>
 #include <defs/GameDefinitions.hpp>
-#include <defs/GameObject.hpp>
+#include <defs/GameObjectRenderers.hpp>
 
 #include "PrimeWatch.hpp"
 #include "imgui.h"
@@ -11,6 +11,8 @@
 #include "MemoryAccess.hpp"
 #include "GameMemory.h"
 #include "prime1/CStateManager.hpp"
+
+using namespace GameDefinitions;
 
 PrimeWatch::PrimeWatch() {
 }
@@ -201,8 +203,8 @@ void PrimeWatch::doImGui() {
   ImGui::End();
 
   if (ImGui::Begin("CStateManager")) {
-    GameObject stateManager("g_stateManager", GameDefinitions::structs_by_name["CStateManager"], CStateManager::LOCATION);
-    stateManager.renderGui(false);
+    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager::LOCATION};
+    GameObjectRenderers::render(stateManager, false);
   }
   ImGui::End();
 

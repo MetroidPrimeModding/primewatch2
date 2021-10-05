@@ -12,6 +12,8 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 set(JSON_Install OFF CACHE INTERNAL "")
 add_subdirectory(extern/json)
 
+add_subdirectory(extern/fmt)
+
 find_package(OpenGL REQUIRED)
 
 include_directories(include)
@@ -89,7 +91,7 @@ set(SOURCE_FILES
         src/prime1/actors/CPlayerGun.hpp
         src/prime1/rstl/rstl.hpp
         src/prime1/CGameArea.hpp
-        src/defs/GameObject.cpp src/defs/GameObject.hpp)
+        src/defs/GameObjectRenderers.hpp src/defs/GameObjectRenderers.cpp)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
@@ -105,5 +107,9 @@ add_custom_target(
 
 
 add_executable(primewatch2 ${SOURCE_FILES})
-target_link_libraries(primewatch2 OpenGL::GL glfw nlohmann_json::nlohmann_json)
+target_link_libraries(primewatch2
+        OpenGL::GL
+        glfw
+        nlohmann_json::nlohmann_json
+        fmt::fmt)
 add_dependencies(primewatch2 def_gen)

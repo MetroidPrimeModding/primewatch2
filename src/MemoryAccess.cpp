@@ -113,6 +113,14 @@ namespace MemoryAccess {
     memcpy(dest, emuRAMAddressStart + getRealPtr(offset), size);
   }
 
+  uint32_t beToHost16(uint32_t bigEndian) {
+    return be16toh(bigEndian);
+  }
+
+  uint32_t hostToBe16(uint32_t value) {
+    return htobe16(value);
+  }
+
   uint32_t beToHost32(uint32_t bigEndian) {
     return be32toh(bigEndian);
   }

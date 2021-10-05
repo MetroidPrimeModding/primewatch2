@@ -59,6 +59,7 @@ namespace GameDefinitions {
 
   void loadStructsFromJsonList(const json &structs) {
     for (auto jsonStruct: structs) {
+      vector<GameMember> members_by_order;
       map<string, GameMember> members_by_name;
       map<uint32_t, GameMember> members_by_offset;
 
@@ -72,6 +73,7 @@ namespace GameDefinitions {
           .arrayLength=jsonMember["arrayLength"].get<optional<uint32_t>>(),
           .pointer=jsonMember["pointer"].get<optional<bool>>().value_or(false),
         };
+        members_by_order.push_back(m);
         members_by_offset[m.offset] = m;
         members_by_name[m.name] = m;
       }
@@ -81,6 +83,7 @@ namespace GameDefinitions {
           .size = jsonStruct["size"].get<uint32_t>(),
           .vtable = jsonStruct["vtable"].get<optional<uint32_t>>(),
           .extends = jsonStruct["extends"].get<optional<vector<string>>>().value_or(vector<string>()),
+          .members_by_order = members_by_order,
           .members_by_name = members_by_name,
           .members_by_offset = members_by_offset,
       };

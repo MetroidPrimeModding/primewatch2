@@ -18,6 +18,17 @@ namespace GameMemory {
     }
   }
 
+  std::uint8_t read_u8(std::uint32_t address) {
+    uint8_t res;
+    MemoryAccess::dolphin_memcpy(&res, address, sizeof(res));
+    return res;
+  }
+
+  std::uint16_t read_u16(std::uint32_t address) {
+    uint16_t res;
+    MemoryAccess::dolphin_memcpy(&res, address, sizeof(res));
+    return MemoryAccess::beToHost16(res);
+  }
 
   std::uint32_t read_u32(std::uint32_t address) {
     uint32_t res;

@@ -12,6 +12,8 @@ namespace MemoryAccess {
 
   int getAttachedPid();
 
+  uint32_t beToHost16(uint32_t bigEndian);
+  uint32_t hostToBe16(uint32_t value);
   uint32_t beToHost32(uint32_t bigEndian);
   uint32_t hostToBe32(uint32_t value);
   uint64_t beToHost64(uint64_t bigEndian);

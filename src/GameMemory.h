@@ -5,6 +5,8 @@
 namespace GameMemory {
   void updateFromDolphin();
 
+  std::uint8_t read_u8(std::uint32_t address);
+  std::uint16_t read_u16(std::uint32_t address);
   std::uint32_t read_u32(std::uint32_t address);
   std::uint64_t read_u64(std::uint32_t address);
   float read_float(std::uint32_t address);

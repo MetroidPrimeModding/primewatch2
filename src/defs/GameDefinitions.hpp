@@ -24,10 +24,10 @@ namespace GameDefinitions {
     std::string name;
     std::string type;
     uint32_t offset;
-    std::optional<uint32_t> bit;
-    std::optional<uint32_t> bitLength;
-    std::optional<uint32_t> arrayLength;
-    bool pointer;
+    std::optional<uint32_t> bit{};
+    std::optional<uint32_t> bitLength{};
+    std::optional<uint32_t> arrayLength{};
+    bool pointer{false};
   };
 
   struct GameStruct {
@@ -35,6 +35,7 @@ namespace GameDefinitions {
     uint32_t size;
     std::optional<uint32_t> vtable;
     std::vector<std::string> extends;
+    std::vector<GameMember> members_by_order;
     std::map<std::string, GameMember> members_by_name;
     std::map<uint32_t, GameMember> members_by_offset;
   };
