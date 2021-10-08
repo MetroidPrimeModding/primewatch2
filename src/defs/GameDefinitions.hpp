@@ -28,6 +28,8 @@ namespace GameDefinitions {
     std::optional<uint32_t> bitLength{};
     std::optional<uint32_t> arrayLength{};
     bool pointer{false};
+
+    std::optional<GameMember> memberByName(const std::string& subName) const;
   };
 
   struct GameStruct {
@@ -38,12 +40,14 @@ namespace GameDefinitions {
     std::vector<GameMember> members_by_order;
     std::map<std::string, GameMember> members_by_name;
     std::map<uint32_t, GameMember> members_by_offset;
+
+    std::optional<GameMember> memberByName(const std::string& subName) const;
   };
 
   void loadDefinitionsFromPath(const char *path);
 
-  std::optional<GameEnum> enumByName(std::string name);
-  std::optional<GameStruct> structByName(std::string name);
+  std::optional<GameEnum> enumByName(const std::string& name);
+  std::optional<GameStruct> structByName(const std::string& name);
 
 //  extern std::unordered_map<std::string, GameEnum> enums_by_name;
 //  extern  std::unordered_map<std::string, GameStruct> structs_by_name;

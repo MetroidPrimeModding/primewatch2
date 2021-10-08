@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <GameMemory.h>
 #include "json_optional.hpp"
 
 using namespace nlohmann;
@@ -30,7 +31,7 @@ namespace GameDefinitions {
     loadStructsFromJsonList(rawJson["structs"]);
   }
 
-  std::optional<GameEnum> enumByName(std::string name) {
+  std::optional<GameEnum> enumByName(const std::string& name) {
     if (enums_by_name.count(name)) {
       return enums_by_name[name];
     } else {
@@ -38,7 +39,7 @@ namespace GameDefinitions {
     }
   }
 
-  std::optional<GameStruct> structByName(std::string name) {
+  std::optional<GameStruct> structByName(const std::string& name) {
     if (structs_by_name.count(name)) {
       return structs_by_name[name];
     } else {
@@ -107,5 +108,27 @@ namespace GameDefinitions {
     }
 
     cout << "Loaded " << structs_by_name.size() << " structs" << endl;
+  }
+
+  optional<GameMember> GameStruct::memberByName(const string& subName) const {
+    if (members_by_name.count(subName)) {
+      return members_by_name.at(subName);
+    } else {
+      return {};
+    }
+  }
+
+  std::optional<GameMember> GameMember::memberByName(const std::string& subName) const {
+    auto myType = structByName(this->type);
+    if (!myType.has_value()) return {};
+    auto subMember = myType->memberByName(subName);
+    if (!subMember.has_value()) return {};
+
+    GameMember res = *subMember;
+    res.offset = this->offset + subMember->offset;
+    if (subMember->pointer) {
+      res.offset = GameMemory::read_u32(res.offset);
+    }
+    return res;
   }
 }

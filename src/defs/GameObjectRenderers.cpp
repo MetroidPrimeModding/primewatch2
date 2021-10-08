@@ -9,18 +9,18 @@ using namespace GameDefinitions;
 
 namespace GameObjectRenderers {
   unordered_map<string, RenderFunc> specialRenderers{ // NOLINT(cert-err58-cpp) // it won't throw (or at least I don't care if it does right now)
-      {"u8",   &primitiveRenderer},
-      {"u16",  &primitiveRenderer},
-      {"u32",  &primitiveRenderer},
-      {"u64",  &primitiveRenderer},
-      {"i8",   &primitiveRenderer},
-      {"i16",  &primitiveRenderer},
-      {"i32",  &primitiveRenderer},
-      {"i64",  &primitiveRenderer},
-      {"f32",  &primitiveRenderer},
-      {"f64",  &primitiveRenderer},
-      {"bool", &primitiveRenderer},
-      {"CVector3f", &CVector3fRenderer},
+      {"u8",          &primitiveRenderer},
+      {"u16",         &primitiveRenderer},
+      {"u32",         &primitiveRenderer},
+      {"u64",         &primitiveRenderer},
+      {"i8",          &primitiveRenderer},
+      {"i16",         &primitiveRenderer},
+      {"i32",         &primitiveRenderer},
+      {"i64",         &primitiveRenderer},
+      {"f32",         &primitiveRenderer},
+      {"f64",         &primitiveRenderer},
+      {"bool",        &primitiveRenderer},
+      {"CVector3f",   &CVector3fRenderer},
       {"CQuaternion", &CQuaternionRenderer},
   };
 
@@ -29,7 +29,11 @@ namespace GameObjectRenderers {
     if (specialRenderers.count(typeName)) {
       specialRenderers[typeName](member);
     } else {
-      renderEnumOrStruct(member, addTree);
+      if (typeName.rfind("rstl::vector", 0) != string::npos) {
+        renderVector(member);
+      } else {
+        renderEnumOrStruct(member, addTree);
+      }
     }
   }
 
@@ -89,28 +93,31 @@ namespace GameObjectRenderers {
       ImGui::Indent();
     }
 
-    for (auto &extends: gameStruct->extends) {
-      render(GameMember{
-          .name = extends,
-          .type = extends,
-          .offset = member.offset,
-      });
-    }
-
-    for (auto &child: gameStruct->members_by_order) {
-      uint32_t addr = member.offset + child.offset;
-      string name = child.name;
-
-      if (child.pointer) {
-        name = "*" + name;
-        addr = GameMemory::read_u32(addr);
+    if (member.offset == 0) {
+      ImGui::Text("null");
+    } else {
+      for (auto &extends: gameStruct->extends) {
+        render(GameMember{
+            .name = extends,
+            .type = extends,
+            .offset = member.offset,
+        });
       }
 
-      GameMember childCopy = child;
-      childCopy.offset = addr;
-      render(childCopy);
-    }
+      for (auto &child: gameStruct->members_by_order) {
+        uint32_t addr = member.offset + child.offset;
+        string name = child.name;
 
+        if (child.pointer) {
+          name = "*" + name;
+          addr = GameMemory::read_u32(addr);
+        }
+
+        GameMember childCopy = child;
+        childCopy.offset = addr;
+        render(childCopy);
+      }
+    }
 
     if (addTree) {
       ImGui::Unindent();
@@ -137,7 +144,18 @@ namespace GameObjectRenderers {
     string itemText = name + " ";
     string clip;
     auto &typ = member.type;
-    if (typ == "bool") {
+    if (typ == "u8" && member.pointer) {
+      // c string
+      int maxLen = 255;
+      string val;
+      for (int i = 0; i < maxLen; i++) {
+        char c = GameMemory::read_u8(member.offset + i);
+        if (c == 0) break;
+        val += c;
+      }
+      itemText += fmt::format("\"{}\"", val);
+      clip = val;
+    } else if (typ == "bool") {
       bool v = getBits(GameMemory::read_u8(member.offset), bit, length);
       if (v) {
         itemText += "true";
@@ -232,6 +250,45 @@ namespace GameObjectRenderers {
       ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
     }
     hoverTooltip(member);
+  }
+
+  void renderVector(const GameMember &member) {
+    string label = fmt::format("{}###{:08x}", member.name, member.offset);
+    bool open = ImGui::CollapsingHeader(label.c_str());
+    hoverTooltip(member);
+    if (!open) return;
+    ImGui::Indent();
+
+    ImGui::PushID(label.c_str());
+
+    uint32_t end = GameMemory::read_u32(member.memberByName("end")->offset);
+    uint32_t size = GameMemory::read_u32(member.memberByName("size")->offset);
+    ImGui::Text("size: %d max size: %d", end, size);
+
+    ImGuiStorage *storage = ImGui::GetStateStorage();
+    int index = storage->GetInt(ImGui::GetID("index"), 0);
+
+    ImGui::InputInt("Index", &index);
+
+    if (index >= end) index = end - 1;
+    if (index < 0) index = 0;
+
+    storage->SetInt(ImGui::GetID("index"), index);
+
+    auto first = *member.memberByName("first");
+    auto baseOffset = first.offset;
+    auto sizePer = GameDefinitions::structByName(first.type)->size;
+
+    ImGui::Indent();
+    GameMember vecItem = first;
+    vecItem.offset += sizePer * index;
+    vecItem.name = fmt::format("{:d}", index);
+    ImGui::Text("%s", vecItem.name.c_str());
+    render(vecItem, false);
+    ImGui::Unindent();
+
+    ImGui::PopID();
+    ImGui::Unindent();
   }
 }
 

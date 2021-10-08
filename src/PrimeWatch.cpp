@@ -12,7 +12,6 @@
 #include "ImGuiFileDialog.h"
 #include "MemoryAccess.hpp"
 #include "GameMemory.h"
-#include "prime1/CStateManager.hpp"
 
 using namespace GameDefinitions;
 
@@ -219,21 +218,21 @@ void PrimeWatch::doImGui() {
     }
   }
 
-
-  if (ImGui::Begin("Player")) {
-    CStateManager stateManager(CStateManager::LOCATION);
-    CPlayer player = stateManager.player.deref();
-    if (player.ptr() != 0) {
-      player.doGui();
-    }
-  }
-  ImGui::End();
-
   if (ImGui::Begin("CStateManager")) {
-    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager::LOCATION};
+    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=0x8045A1A8};
     GameObjectRenderers::render(stateManager, false);
   }
   ImGui::End();
+
+  if (ImGui::Begin("Areas")) {
+    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=0x8045A1A8};
+    auto world = stateManager.memberByName("world");
+    if (!world) goto areaEnd;
+//    auto areas = world->memberByName("areas");
+//    if (!areas) goto areaEnd;
+    GameObjectRenderers::render(*world, false);
+  }
+  areaEnd: ImGui::End();
 
   mem_edit.DrawWindow("Raw view", GameMemory::memory.data(),   GameMemory::memory.size());
 }
