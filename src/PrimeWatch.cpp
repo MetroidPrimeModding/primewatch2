@@ -3,6 +3,7 @@
 #include <implot.h>
 #include <defs/GameDefinitions.hpp>
 #include <defs/GameObjectRenderers.hpp>
+#include <filesystem>
 
 #include "PrimeWatch.hpp"
 #include "imgui.h"
@@ -76,6 +77,11 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   glViewport(0, 0, width, height);
 
   mem_edit.ReadOnly = true;
+
+  // TODO: probably remove this
+  if (std::filesystem::exists("../mem1.raw")) {
+    GameMemory::loadFromPath("../mem1.raw");
+  }
 }
 
 void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) {

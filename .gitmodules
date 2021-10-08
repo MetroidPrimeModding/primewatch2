@@ -22,3 +22,6 @@
 [submodule "extern/imgui_club"]
 	path = extern/imgui_club
 	url = git@github.com:ocornut/imgui_club.git
+[submodule "extern/glm"]
+	path = extern/glm
+	url = git@github.com:g-truc/glm.git

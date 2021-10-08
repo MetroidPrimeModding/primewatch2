@@ -30,6 +30,22 @@ namespace GameDefinitions {
     loadStructsFromJsonList(rawJson["structs"]);
   }
 
+  std::optional<GameEnum> enumByName(std::string name) {
+    if (enums_by_name.count(name)) {
+      return enums_by_name[name];
+    } else {
+      return {};
+    }
+  }
+
+  std::optional<GameStruct> structByName(std::string name) {
+    if (structs_by_name.count(name)) {
+      return structs_by_name[name];
+    } else {
+      return {};
+    }
+  }
+
   void loadEnumsFromJsonList(const json &enums) {
     for (auto jsonEnum: enums) {
       map<uint32_t, GameEnumValue> values_by_value;

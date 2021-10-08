@@ -42,8 +42,11 @@ namespace GameDefinitions {
 
   void loadDefinitionsFromPath(const char *path);
 
-  extern std::unordered_map<std::string, GameEnum> enums_by_name;
-  extern  std::unordered_map<std::string, GameStruct> structs_by_name;
+  std::optional<GameEnum> enumByName(std::string name);
+  std::optional<GameStruct> structByName(std::string name);
+
+//  extern std::unordered_map<std::string, GameEnum> enums_by_name;
+//  extern  std::unordered_map<std::string, GameStruct> structs_by_name;
 };
 
 

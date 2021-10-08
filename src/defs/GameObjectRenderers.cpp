@@ -54,32 +54,33 @@ namespace GameObjectRenderers {
   }
 
   void renderEnum(const GameMember &member) {
-    if (!GameDefinitions::enums_by_name.count(member.type)) {
+    auto gameEnum = GameDefinitions::enumByName(member.type);
+    if (!gameEnum.has_value()) {
       ImGui::Text("Unknown enum %s", member.type.c_str());
       return;
     }
-    auto &gameEnum = GameDefinitions::enums_by_name[member.type];
     uint32_t value = GameMemory::read_u32(member.offset);
     string name = "unknown";
-    if (gameEnum.values_by_value.count(value)) {
-      name = gameEnum.values_by_value[value].name;
+    if (gameEnum->values_by_value.count(value)) {
+      name = gameEnum->values_by_value[value].name;
     }
     string msg = fmt::format("{0} {1} ({2:d}/{2:#x}/{2:#b})", member.name, name, value);
     ImGui::Text("%s", msg.c_str());
   }
 
   void renderEnumOrStruct(const GameMember &member, bool addTree) {
-    if (GameDefinitions::enums_by_name.count(member.type)) {
+    if (GameDefinitions::enumByName(member.type).has_value()) {
       renderEnum(member);
       return;
     }
-    if (GameDefinitions::structs_by_name.count(member.type) == 0) {
+
+    auto gameStruct = GameDefinitions::structByName(member.type);
+    if (!gameStruct.has_value()) {
       ImGui::Text("Unknown type %s", member.type.c_str());
       hoverTooltip(member);
       return;
     }
 
-    const GameStruct &gameStruct = GameDefinitions::structs_by_name[member.type];
     if (addTree) {
       string label = fmt::format("{}###{:08x}", member.name, member.offset);
       bool open = ImGui::CollapsingHeader(label.c_str());
@@ -88,7 +89,7 @@ namespace GameObjectRenderers {
       ImGui::Indent();
     }
 
-    for (auto &extends: gameStruct.extends) {
+    for (auto &extends: gameStruct->extends) {
       render(GameMember{
           .name = extends,
           .type = extends,
@@ -96,7 +97,7 @@ namespace GameObjectRenderers {
       });
     }
 
-    for (auto &child: gameStruct.members_by_order) {
+    for (auto &child: gameStruct->members_by_order) {
       uint32_t addr = member.offset + child.offset;
       string name = child.name;
 

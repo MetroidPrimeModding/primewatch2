@@ -14,6 +14,8 @@ add_subdirectory(extern/json)
 
 add_subdirectory(extern/fmt)
 
+add_subdirectory(extern/glm)
+
 find_package(OpenGL REQUIRED)
 
 include_directories(include)
@@ -119,5 +121,6 @@ target_link_libraries(primewatch2
         OpenGL::GL
         glfw
         nlohmann_json::nlohmann_json
-        fmt::fmt)
+        fmt::fmt
+        glm)
 add_dependencies(primewatch2 def_gen)
