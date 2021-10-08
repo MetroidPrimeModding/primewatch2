@@ -3,12 +3,16 @@
 #include <filesystem>
 #include <iostream>
 
-#ifdef __linux__
+#if defined(__linux__)
 
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <cstring>
+
+#elif defined(__APPLE__)
+
+#include <libkern/OSByteOrder.h>
 
 #endif
 
@@ -16,7 +20,7 @@ using namespace std;
 namespace fs = filesystem;
 
 namespace MemoryAccess {
-#ifdef __linux__
+#if defined(__linux__)
   int attachedPid = -1;
   uint8_t *emuRAMAddressStart = nullptr;
 
@@ -57,15 +61,7 @@ namespace MemoryAccess {
   bool attachToProcess(int pid) {
     constexpr size_t size = 0x2040000;
 
-    if (emuRAMAddressStart != nullptr) {
-      cout << "Closing old shared memory" << endl;
-      if (munmap(emuRAMAddressStart, size) < 0) {
-        cerr << "Failed to close old memory" << endl;
-        exit(4);
-      }
-      emuRAMAddressStart = nullptr;
-      attachedPid = -1;
-    }
+    detachFromProcess();
 
     cout << "Dolphin found, PID " << pid << endl;
     const string file_name = "/dolphin-emu." + to_string(pid);
@@ -89,6 +85,18 @@ namespace MemoryAccess {
     attachedPid = pid;
     close(fd);
     return true;
+  }
+
+  void detachFromProcess() {
+    if (emuRAMAddressStart != nullptr) {
+      cout << "Closing old shared memory" << endl;
+      if (munmap(emuRAMAddressStart, size) < 0) {
+        cerr << "Failed to close old memory" << endl;
+        exit(4);
+      }
+      emuRAMAddressStart = nullptr;
+      attachedPid = -1;
+    }
   }
 
   int getAttachedPid() {
@@ -139,7 +147,54 @@ namespace MemoryAccess {
 
 #else
 
-#error Not yet implemented for other platforms
+#warning Not yet implemented properly for other platforms
+  char *fakeMemory{nullptr};
+
+  std::vector<int> getDolphinPids() {
+    return {};
+  }
+  bool attachToProcess(int pid) {
+    return false;
+  }
+
+  void detachFromProcess() {
+  }
+
+  void dolphin_memcpy(void *dest, std::size_t offset, std::size_t size) {
+    if (!fakeMemory) {
+      fakeMemory = new char[DOLPHIN_MEMORY_SIZE];
+    }
+  }
+
+  int getAttachedPid() {
+    return 0;
+  }
+
+#if defined(__APPLE__)
+    uint32_t beToHost16(uint32_t bigEndian) {
+      return OSSwapBigToHostInt16(bigEndian);
+    }
+
+    uint32_t hostToBe16(uint32_t value) {
+      return OSSwapHostToBigInt16(value);
+    }
+
+    uint32_t beToHost32(uint32_t bigEndian) {
+      return OSSwapBigToHostInt32(bigEndian);
+    }
+
+    uint32_t hostToBe32(uint32_t value) {
+      return OSSwapHostToBigInt32(value);
+    }
+
+    uint64_t beToHost64(uint64_t bigEndian) {
+      return OSSwapBigToHostInt64(bigEndian);
+    }
+
+    uint64_t hostToBe64(uint64_t value) {
+      return OSSwapHostToBigInt64(value);
+    }
+#endif
 
 #endif
 }

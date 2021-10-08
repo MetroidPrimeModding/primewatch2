@@ -16,3 +16,9 @@
 [submodule "extern/fmt"]
 	path = extern/fmt
 	url = git@github.com:fmtlib/fmt.git
+[submodule "extern/ImGuiFileDialog"]
+	path = extern/ImGuiFileDialog
+	url = git@github.com:aiekick/ImGuiFileDialog.git
+[submodule "extern/imgui_club"]
+	path = extern/imgui_club
+	url = git@github.com:ocornut/imgui_club.git

@@ -21,6 +21,8 @@ include_directories(src)
 include_directories(extern/imgui)
 include_directories(extern/imgui/backends)
 include_directories(extern/implot)
+include_directories(extern/ImGuiFileDialog)
+include_directories(extern/imgui_club/imgui_memory_editor)
 
 set(SOURCE_FILES
         extern/imgui/imgui.cpp
@@ -39,6 +41,12 @@ set(SOURCE_FILES
         extern/implot/implot.cpp
         extern/implot/implot_demo.cpp
         extern/implot/implot_items.cpp
+
+        extern/ImGuiFileDialog/ImGuiFileDialog.cpp
+        extern/ImGuiFileDialog/ImGuiFileDialog.h
+        extern/ImGuiFileDialog/ImGuiFileDialogConfig.h
+
+        extern/imgui_club/imgui_memory_editor/imgui_memory_editor.h
 
         src/glad.c
 

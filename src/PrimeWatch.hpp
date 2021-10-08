@@ -5,6 +5,9 @@
 #include <vector>
 #include <array>
 
+#include "imgui.h"
+#include "imgui_memory_editor.h"
+
 class PrimeWatch {
 public:
   PrimeWatch();
@@ -19,6 +22,7 @@ private:
   GLFWwindow *window;
   std::vector<int> pids{};
   int selectedPidIndex{0};
+  MemoryEditor mem_edit;
 
   std::array<float, 120> frameTimes;
 

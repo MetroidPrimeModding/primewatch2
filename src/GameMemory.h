@@ -1,9 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
+#include <array>
+#include "MemoryAccess.hpp"
 
 namespace GameMemory {
+  extern std::array<char, MemoryAccess::DOLPHIN_MEMORY_SIZE> memory;
+
   void updateFromDolphin();
+  void loadFromPath(const std::string& path);
 
   std::uint8_t read_u8(std::uint32_t address);
   std::uint16_t read_u16(std::uint32_t address);

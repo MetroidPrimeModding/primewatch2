@@ -8,6 +8,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "ImGuiFileDialog.h"
 #include "MemoryAccess.hpp"
 #include "GameMemory.h"
 #include "prime1/CStateManager.hpp"
@@ -73,6 +74,8 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   io.Fonts->AddFontDefault();
 
   glViewport(0, 0, width, height);
+
+  mem_edit.ReadOnly = true;
 }
 
 void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) {
@@ -176,6 +179,15 @@ void PrimeWatch::doImGui() {
           MemoryAccess::attachToProcess(pid);
         }
       }
+      ImGui::SameLine();
+      if (ImGui::Button("Load from file")) {
+        ImGuiFileDialog::Instance()->OpenDialog(
+            "ChooseMemoryDump",
+            "Choose Memory Dump",
+            ".raw",
+            "."
+        );
+      }
 
       ImGui::PushID("PID box");
       if (ImGui::BeginListBox("")) {
@@ -190,6 +202,15 @@ void PrimeWatch::doImGui() {
       ImGui::PopID();
     }
     ImGui::End();
+
+    if (ImGuiFileDialog::Instance()->Display("ChooseMemoryDump")) {
+      if (ImGuiFileDialog::Instance()->IsOk()) {
+        std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+        MemoryAccess::detachFromProcess();
+        GameMemory::loadFromPath(filePathName);
+      }
+      ImGuiFileDialog::Instance()->Close();
+    }
   }
 
 
@@ -208,6 +229,7 @@ void PrimeWatch::doImGui() {
   }
   ImGui::End();
 
+  mem_edit.DrawWindow("Raw view", GameMemory::memory.data(),   GameMemory::memory.size());
 }
 
 void PrimeWatch::doMemoryParse() {

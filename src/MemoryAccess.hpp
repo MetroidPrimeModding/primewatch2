@@ -8,6 +8,7 @@ namespace MemoryAccess {
 
   std::vector<int> getDolphinPids();
   bool attachToProcess(int pid);
+  void detachFromProcess();
   void dolphin_memcpy(void *dest, std::size_t offset, std::size_t size);
 
   int getAttachedPid();
