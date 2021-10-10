@@ -6,7 +6,7 @@ struct CAreaOctTree {
     u32 matCount 0x24
     *u32 materials 0x28
     *u8 vertMats 0x2C
-    *u8 edgeMatx 0x30
+    *u8 edgeMats 0x30
     *u8 polyMats 0x34
     u32 edgeCount 0x38
     *CCollisionEdge edges 0x3C
@@ -32,4 +32,40 @@ enum CAreaOctTree::Node::ETreeType {
 struct CCollisionEdge {
     u16 edge1 0x0
     u16 edge2 0x2
+}
+
+enum CollisionMaterial: u32 {
+  UNKNOWN_1 = 0x1,
+  STONE = 0x2,
+  METAL = 0x4,
+  GRASS = 0x8,
+  ICE = 0x10,
+  PILLAR = 0x20,
+  METAL_GRATING = 0x40,
+  PHAZON = 0x80,
+  DIRT = 0x100,
+  LAVA = 0x200,
+  UNKNOWN_2 = 0x400,
+  SNOW = 0x800,
+  SLOW_MUD = 0x1000,
+  HALFPIPE = 0x2000,
+  MUD = 0x4000,
+  GLASS = 0x8000,
+  SHIELD = 0x10000,
+  SAND = 0x20000,
+  SHOOT_THRU = 0x40000,
+  SOLID = 0x80000,
+  UNKNOWN_3 = 0x100000,
+  CAMERA_THRU = 0x200000,
+  WOOD = 0x400000,
+  ORGANIC = 0x800000,
+  UNKNOWN_4 = 0x1000000,
+  REDUNDANT_EDGE = 0x2000000,
+  FLIPPED_TRI = 0x2000000,
+  SEE_THRU = 0x4000000,
+  SCAN_THRU = 0x8000000,
+  AI_WALK_THRU = 0x10000000,
+  CEILING = 0x20000000,
+  WALL = 0x40000000,
+  FLOOR = 0x80000000
 }
