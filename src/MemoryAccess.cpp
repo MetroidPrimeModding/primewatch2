@@ -88,6 +88,7 @@ namespace MemoryAccess {
   }
 
   void detachFromProcess() {
+    constexpr size_t size = 0x2040000;
     if (emuRAMAddressStart != nullptr) {
       cout << "Closing old shared memory" << endl;
       if (munmap(emuRAMAddressStart, size) < 0) {

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <GameMemory.h>
+#include <fmt/format.h>
 #include "json_optional.hpp"
 
 using namespace nlohmann;
@@ -31,7 +32,7 @@ namespace GameDefinitions {
     loadStructsFromJsonList(rawJson["structs"]);
   }
 
-  std::optional<GameEnum> enumByName(const std::string& name) {
+  std::optional<GameEnum> enumByName(const std::string &name) {
     if (enums_by_name.count(name)) {
       return enums_by_name[name];
     } else {
@@ -39,7 +40,7 @@ namespace GameDefinitions {
     }
   }
 
-  std::optional<GameStruct> structByName(const std::string& name) {
+  std::optional<GameStruct> structByName(const std::string &name) {
     if (structs_by_name.count(name)) {
       return structs_by_name[name];
     } else {
@@ -80,15 +81,15 @@ namespace GameDefinitions {
       map<string, GameMember> members_by_name;
       map<uint32_t, GameMember> members_by_offset;
 
-      for (auto jsonMember : jsonStruct["members"]) {
+      for (auto jsonMember: jsonStruct["members"]) {
         GameMember m{
-          .name=jsonMember["name"].get<string>(),
-          .type=jsonMember["type"].get<string>(),
-          .offset=jsonMember["offset"].get<uint32_t>(),
-          .bit=jsonMember["bit"].get<optional<uint32_t>>(),
-          .bitLength=jsonMember["bitLength"].get<optional<uint32_t>>(),
-          .arrayLength=jsonMember["arrayLength"].get<optional<uint32_t>>(),
-          .pointer=jsonMember["pointer"].get<optional<bool>>().value_or(false),
+            .name=jsonMember["name"].get<string>(),
+            .type=jsonMember["type"].get<string>(),
+            .offset=jsonMember["offset"].get<uint32_t>(),
+            .bit=jsonMember["bit"].get<optional<uint32_t>>(),
+            .bitLength=jsonMember["bitLength"].get<optional<uint32_t>>(),
+            .arrayLength=jsonMember["arrayLength"].get<optional<uint32_t>>(),
+            .pointer=jsonMember["pointer"].get<optional<bool>>().value_or(false),
         };
         members_by_order.push_back(m);
         members_by_offset[m.offset] = m;
@@ -110,7 +111,27 @@ namespace GameDefinitions {
     cout << "Loaded " << structs_by_name.size() << " structs" << endl;
   }
 
-  optional<GameMember> GameStruct::memberByName(const string& subName) const {
+
+  optional<GameEnumValue> GameEnum::valueByName(const string &subName) const {
+    if (values_by_name.count(subName)) {
+      return values_by_name.at(subName);
+    } else {
+      return {};
+    }
+  }
+
+  GameEnumValue GameEnum::valueByValue(uint32_t value) const {
+    if (values_by_value.count(value)) {
+      return values_by_value.at(value);
+    } else {
+      return {
+          .name = fmt::format("Unknown ({})", value),
+          .value = value
+      };
+    }
+  }
+
+  optional<GameMember> GameStruct::memberByName(const string &subName) const {
     if (members_by_name.count(subName)) {
       return members_by_name.at(subName);
     } else {
@@ -118,7 +139,7 @@ namespace GameDefinitions {
     }
   }
 
-  std::optional<GameMember> GameMember::memberByName(const std::string& subName) const {
+  std::optional<GameMember> GameMember::memberByName(const std::string &subName) const {
     auto myType = structByName(this->type);
     if (!myType.has_value()) return {};
     auto subMember = myType->memberByName(subName);
@@ -130,5 +151,63 @@ namespace GameDefinitions {
       res.offset = GameMemory::read_u32(res.offset);
     }
     return res;
+  }
+
+  template<typename T>
+  T getBits(T v, optional<uint32_t> bitOptional, optional<uint32_t> lengthOptional) {
+    uint32_t bit = bitOptional.value_or(0);
+    uint32_t length = lengthOptional.value_or(0);
+    T mask = (1ULL << length) - 1;
+    if (length == 0) {
+      mask = ~0;
+    }
+    return (v >> bit) & mask;
+  }
+
+
+  bool GameMember::read_bool() const {
+    return read_u8() != 0;
+  }
+
+  uint8_t GameMember::read_u8() const {
+    return getBits<>(GameMemory::read_u8(offset), bit, bitLength);
+  }
+
+  uint16_t GameMember::read_u16() const {
+    return getBits<>(GameMemory::read_u16(offset), bit, bitLength);
+  }
+
+  uint32_t GameMember::read_u32() const {
+    return getBits<>(GameMemory::read_u32(offset), bit, bitLength);
+  }
+
+  uint64_t GameMember::read_u64() const {
+    return getBits<>(GameMemory::read_u64(offset), bit, bitLength);
+  }
+
+  float GameMember::read_f32() const {
+    return GameMemory::read_float(offset);
+  }
+
+  double GameMember::read_f64() const {
+    return GameMemory::read_double(offset);
+  }
+
+  std::string GameMember::read_string() const {
+    constexpr int maxLen = 255;
+    string val;
+    for (int i = 0; i < maxLen; i++) {
+      char c = static_cast<char>(GameMemory::read_u8(offset + i));
+      if (c == 0) break;
+      val += c;
+    }
+    return val;
+  }
+
+  // WARNING: this will crash if it doesn't exit. I'm so safe :)
+  GameMember GameMember::operator[](string subName) const {
+    optional<GameMember> mbr = memberByName(subName);
+    if (!mbr.has_value()) throw std::invalid_argument(fmt::format("Unknown member {} {}.{}", type, name, subName));
+    return *mbr;
   }
 }

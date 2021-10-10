@@ -18,6 +18,9 @@ namespace GameDefinitions {
     uint32_t size;
     std::map<uint32_t, GameEnumValue> values_by_value;
     std::map<std::string, GameEnumValue> values_by_name;
+
+    std::optional<GameEnumValue> valueByName(const std::string& subName) const;
+    GameEnumValue valueByValue(uint32_t value) const;
   };
 
   struct GameMember {
@@ -29,7 +32,18 @@ namespace GameDefinitions {
     std::optional<uint32_t> arrayLength{};
     bool pointer{false};
 
+    GameMember operator [](std::string subName) const;
     std::optional<GameMember> memberByName(const std::string& subName) const;
+
+    bool read_bool() const;
+    uint8_t read_u8() const;
+    uint16_t read_u16() const;
+    uint32_t read_u32() const;
+    uint64_t read_u64() const;
+    float read_f32() const;
+    double read_f64() const;
+
+    std::string read_string() const;
   };
 
   struct GameStruct {

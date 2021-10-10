@@ -63,14 +63,14 @@ set(SOURCE_FILES
         src/defs/GameDefinitions.cpp
         src/defs/GameDefinitions.hpp
 
-        src/game_value.h
         src/GameMemory.h
         src/GameMemory.cpp
         src/defs/GameObjectRenderers.hpp
         src/defs/GameObjectRenderers.cpp
-        src/collision/CollisionMesh.hpp
-        src/collision/CollisionMesh.cpp
-        )
+        src/world/CollisionMesh.hpp
+        src/world/CollisionMesh.cpp
+        src/world/WorldRenderer.cpp
+        src/world/WorldRenderer.hpp src/defs/GameOffsets.hpp src/utils/AreaUtils.cpp src/utils/AreaUtils.hpp)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/prime1.json

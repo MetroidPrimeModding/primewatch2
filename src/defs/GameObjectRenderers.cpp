@@ -39,7 +39,7 @@ namespace GameObjectRenderers {
 
   void hoverTooltip(const GameMember &member) {
     if (ImGui::IsItemHovered()) {
-      string msg = "";
+      string msg;
       if (member.pointer) {
         msg += "*";
       }
@@ -109,7 +109,6 @@ namespace GameObjectRenderers {
         string name = child.name;
 
         if (child.pointer) {
-          name = "*" + name;
           addr = GameMemory::read_u32(addr);
         }
 
@@ -138,25 +137,16 @@ namespace GameObjectRenderers {
       name = "*" + name;
     }
 
-    uint32_t bit = member.bit.value_or(0);
-    uint32_t length = member.bitLength.value_or(64);
-
     string itemText = name + " ";
     string clip;
     auto &typ = member.type;
     if (typ == "u8" && member.pointer) {
       // c string
-      int maxLen = 255;
-      string val;
-      for (int i = 0; i < maxLen; i++) {
-        char c = GameMemory::read_u8(member.offset + i);
-        if (c == 0) break;
-        val += c;
-      }
+      string val = member.read_string();
       itemText += fmt::format("\"{}\"", val);
       clip = val;
     } else if (typ == "bool") {
-      bool v = getBits(GameMemory::read_u8(member.offset), bit, length);
+      bool v = member.read_bool();
       if (v) {
         itemText += "true";
         clip = "true";
@@ -167,37 +157,36 @@ namespace GameObjectRenderers {
     } else if (typ[0] == 'i') {
       uint64_t v;
       if (typ == "i8") {
-        v = getBits(GameMemory::read_u8(member.offset), bit, length);
+        v = member.read_u8();
       } else if (typ == "i16") {
-        v = getBits(GameMemory::read_u16(member.offset), bit, length);
+        v = member.read_u16();
       } else if (typ == "i32") {
-        v = getBits(GameMemory::read_u32(member.offset), bit, length);
+        v = member.read_u32();
       } else {
-        v = getBits(GameMemory::read_u64(member.offset), bit, length);
+        v = member.read_u64();
       }
-      v = getBits(v, bit, length);
       itemText += fmt::format("{0:d}/{0:#x}", static_cast<int64_t>(v));
       clip = fmt::format("{:d}", v);
     } else if (typ[0] == 'u') {
       uint64_t v;
       if (typ == "u8") {
-        v = getBits(GameMemory::read_u8(member.offset), bit, length);
+        v = member.read_u8();
       } else if (typ == "u16") {
-        v = getBits(GameMemory::read_u16(member.offset), bit, length);
+        v = member.read_u16();
       } else if (typ == "u32") {
-        v = getBits(GameMemory::read_u32(member.offset), bit, length);
+        v = member.read_u32();
       } else {
-        v = getBits(GameMemory::read_u64(member.offset), bit, length);
+        v = member.read_u64();
       }
       itemText += fmt::format("{0:d}/{0:#x}", v);
       clip = fmt::format("{:d}", v);
     } else if (typ[0] == 'f') {
       if (typ == "f32") {
-        float f = GameMemory::read_float(member.offset);
+        float f = member.read_f32();
         itemText += fmt::format("{:0.3f}", f);
         clip = fmt::format("{:f}", f);
       } else {
-        double d = GameMemory::read_double(member.offset);
+        double d = member.read_f64();
         itemText += fmt::format("{:0.3f}", d);
         clip = fmt::format("{:f}", d);
       }
@@ -261,8 +250,8 @@ namespace GameObjectRenderers {
 
     ImGui::PushID(label.c_str());
 
-    uint32_t end = GameMemory::read_u32(member.memberByName("end")->offset);
-    uint32_t size = GameMemory::read_u32(member.memberByName("size")->offset);
+    uint32_t end = member.memberByName("end")->read_u32();
+    uint32_t size = member.memberByName("size")->read_u32();
     ImGui::Text("size: %d max size: %d", end, size);
 
     ImGuiStorage *storage = ImGui::GetStateStorage();

@@ -7,6 +7,7 @@
 
 #include "imgui.h"
 #include "imgui_memory_editor.h"
+#include "world/WorldRenderer.hpp"
 
 class PrimeWatch {
 public:
@@ -23,6 +24,7 @@ private:
   std::vector<int> pids{};
   int selectedPidIndex{0};
   MemoryEditor mem_edit;
+  WorldRenderer worldRenderer;
 
   std::array<float, 120> frameTimes;
 
@@ -32,6 +34,7 @@ private:
   void processInput();
   void doImGui();
   void doMemoryParse();
+  void doMainMenu();
 };
 
 

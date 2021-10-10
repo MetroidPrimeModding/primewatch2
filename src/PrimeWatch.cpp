@@ -4,6 +4,8 @@
 #include <defs/GameDefinitions.hpp>
 #include <defs/GameObjectRenderers.hpp>
 #include <filesystem>
+#include <fmt/format.h>
+#include <defs/GameOffsets.hpp>
 
 #include "PrimeWatch.hpp"
 #include "imgui.h"
@@ -14,6 +16,7 @@
 #include "GameMemory.h"
 
 using namespace GameDefinitions;
+using namespace std;
 
 PrimeWatch::PrimeWatch() {
 }
@@ -111,7 +114,6 @@ void PrimeWatch::shutdown() {
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
   glfwTerminate();
-
 }
 
 void PrimeWatch::processInput() {
@@ -121,6 +123,10 @@ void PrimeWatch::processInput() {
 void PrimeWatch::doFrame() {
   // watch
   doMemoryParse();
+
+  // world render
+  worldRenderer.update();
+  worldRenderer.render();
 
   // imgui
   ImGui_ImplOpenGL3_NewFrame();
@@ -143,6 +149,8 @@ void PrimeWatch::doImGui() {
 //  ImPlot::ShowMetricsWindow(nullptr);
 //  ImGui::ShowMetricsWindow(nullptr);
 
+  doMainMenu();
+
 //  if (ImGui::Begin("Frame time")) {
 //    if (ImPlot::BeginPlot(
 //        "frametime",
@@ -158,74 +166,23 @@ void PrimeWatch::doImGui() {
 //  }
 //    ImGui::End();
 
-  // Process window
-  {
-    char buff[32];
-    int pid = MemoryAccess::getAttachedPid();
-    if (pid > 0) {
-      snprintf(buff, sizeof(buff), "Attached (%d)###Processes", pid);
-    } else {
-      snprintf(buff, sizeof(buff), "Detatched###Processes");
+  if (ImGuiFileDialog::Instance()->Display("ChooseMemoryDump")) {
+    if (ImGuiFileDialog::Instance()->IsOk()) {
+      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+      MemoryAccess::detachFromProcess();
+      GameMemory::loadFromPath(filePathName);
     }
-    if (ImGui::Begin(buff)) {
-      if (MemoryAccess::getAttachedPid() > 0) {
-        ImGui::Text("Attached to process %d", MemoryAccess::getAttachedPid());
-      } else {
-        ImGui::Text("Not currently attached to process");
-      }
-
-      if (ImGui::Button("Refresh")) {
-        pids = MemoryAccess::getDolphinPids();
-      }
-      ImGui::SameLine();
-      if (ImGui::Button("Attach")) {
-        if (selectedPidIndex < pids.size()) {
-          int pid = pids[selectedPidIndex];
-          MemoryAccess::attachToProcess(pid);
-        }
-      }
-      ImGui::SameLine();
-      if (ImGui::Button("Load from file")) {
-        ImGuiFileDialog::Instance()->OpenDialog(
-            "ChooseMemoryDump",
-            "Choose Memory Dump",
-            ".raw",
-            "."
-        );
-      }
-
-      ImGui::PushID("PID box");
-      if (ImGui::BeginListBox("")) {
-        for (int i = 0; i < pids.size(); i++) {
-          int pid = pids[i];
-          char buff[32];
-          snprintf(buff, sizeof(buff), "PID: %d", pid);
-          ImGui::Selectable(buff, i == selectedPidIndex);
-        }
-        ImGui::EndListBox();
-      }
-      ImGui::PopID();
-    }
-    ImGui::End();
-
-    if (ImGuiFileDialog::Instance()->Display("ChooseMemoryDump")) {
-      if (ImGuiFileDialog::Instance()->IsOk()) {
-        std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-        MemoryAccess::detachFromProcess();
-        GameMemory::loadFromPath(filePathName);
-      }
-      ImGuiFileDialog::Instance()->Close();
-    }
+    ImGuiFileDialog::Instance()->Close();
   }
 
   if (ImGui::Begin("CStateManager")) {
-    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=0x8045A1A8};
+    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager_ADDRESS};
     GameObjectRenderers::render(stateManager, false);
   }
   ImGui::End();
 
   if (ImGui::Begin("Areas")) {
-    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=0x8045A1A8};
+    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager_ADDRESS};
     auto world = stateManager.memberByName("world");
     if (!world) goto areaEnd;
 //    auto areas = world->memberByName("areas");
@@ -234,7 +191,44 @@ void PrimeWatch::doImGui() {
   }
   areaEnd: ImGui::End();
 
-  mem_edit.DrawWindow("Raw view", GameMemory::memory.data(),   GameMemory::memory.size());
+  mem_edit.DrawWindow("Raw view", GameMemory::memory.data(), GameMemory::memory.size());
+
+  worldRenderer.renderImGui();
+}
+
+void PrimeWatch::doMainMenu() {
+  if (ImGui::BeginMainMenuBar()) {
+    string attachMenuTitle;
+    int attachedPid = MemoryAccess::getAttachedPid();
+    if (attachedPid > 0) {
+      attachMenuTitle = fmt::format("Attached ({})###Processes", attachedPid);
+    } else {
+      attachMenuTitle = fmt::format("Detatched###Processes");
+    }
+    if (ImGui::BeginMenu(attachMenuTitle.c_str())) {
+      if (ImGui::BeginMenu("Attach")) {
+        if (ImGui::MenuItem("Refresh")) {
+          pids = MemoryAccess::getDolphinPids();
+        }
+        ImGui::Separator();
+        for (auto pid: pids) {
+          if (ImGui::MenuItem(fmt::format("{}", pid).c_str())) {
+            MemoryAccess::attachToProcess(pid);
+          }
+        }
+        ImGui::EndMenu();
+      }
+      if (ImGui::MenuItem("Detatch", nullptr, false, attachedPid != 0)) {
+        MemoryAccess::detachFromProcess();
+      }
+      if (ImGui::MenuItem("Load from file")) {
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseMemoryDump", "Choose Memory Dump", ".raw", ".");
+      }
+
+      ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+  }
 }
 
 void PrimeWatch::doMemoryParse() {
