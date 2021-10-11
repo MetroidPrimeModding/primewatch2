@@ -7,33 +7,80 @@
 #include "defs/GameDefinitions.hpp"
 #include "utils/AreaUtils.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+
+#include <glad/glad.h>
+
 using namespace GameDefinitions;
 using namespace std;
 
-const char *meshVertShader = R"src(
-#version 330 core
+const char *meshVertShader = R"src(#version 330 core
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 color;
-layout (location = 2) in vec4 normal;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec3 aNormal;
 
-void main()
-{
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+out vec4 vertexColor;
+out vec3 normal;
+out vec3 fragPos;
+
+uniform mat4 view;
+uniform mat4 projection;
+
+void main() {
+  gl_Position = projection * view * vec4(aPos, 1.0f);
+  vertexColor = aColor;
+  normal = aNormal;
+  fragPos = aPos;
 }
 )src";
 
-const char *meshFragShader = R"src(
-#version 330 core
+const char *meshFragShader = R"src(#version 330 core
 out vec4 FragColor;
 
-void main()
-{
-    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+in vec4 vertexColor;
+in vec3 normal;
+in vec3 fragPos;
+
+uniform vec3 lightDir;
+
+void main() {
+  vec3 lightColor = vec3(1,1,1);
+  // ambient
+  float ambientStrength = 0.1;
+  vec3 ambient = ambientStrength * lightColor;
+
+  // diffuse
+  float diff = max(dot(normal, lightDir), 0.0);
+  vec3 diffuse = diff * lightColor;
+
+  // specular
+//  float specularStrength = 0.5;
+//  vec3 viewDir = normalize(viewPos - fragPos);
+//  vec3 reflectDir = reflect(-lightDir, norm);
+//  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+//  vec3 specular = specularStrength * spec * lightColor;
+  vec3 specular = vec3(0,0,0);
+
+  FragColor = vec4(ambient + diffuse + specular, 1.0) * vertexColor;
 }
 )src";
+
+WorldRenderer::WorldRenderer() {
+}
 
 void WorldRenderer::update() {
   updateAreas();
+
+  yaw += 0.01f;
+
+  GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager_ADDRESS};
+  GameMember transform = stateManager["player"]["transform"];
+  lookAt = glm::vec3{
+      transform["posX"].read_f32(),
+      transform["posY"].read_f32(),
+      transform["posZ"].read_f32(),
+  };
 }
 
 void WorldRenderer::updateAreas() {
@@ -75,7 +122,7 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
 
   for (int i = 0; i < matCount; i++) {
     res.materials.push_back(
-        GameMemory::read_u32(materialStart + i * 4)
+        static_cast<ECollisionMaterial>(GameMemory::read_u32(materialStart + i * 4))
     );
   }
 
@@ -89,7 +136,7 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
   // separate loop for locality reasons
   for (int i = 0; i < vertCount; i++) {
     res.raw_vert_materials.emplace_back(
-        GameMemory::read_u8(vertMaterialStart + i * 2)
+        GameMemory::read_u8(vertMaterialStart + i)
     );
   }
 
@@ -101,7 +148,7 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
   }
   for (int i = 0; i < edgeCount; i++) {
     res.raw_edge_materials.emplace_back(
-        GameMemory::read_u8(edgeMaterialStart + i * 2)
+        GameMemory::read_u8(edgeMaterialStart + i)
     );
   }
 
@@ -114,7 +161,7 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
   }
   for (int i = 0; i < polyCount; i++) {
     res.raw_poly_materials.emplace_back(
-        GameMemory::read_u8(polyMaterialStart + i * 2)
+        GameMemory::read_u8(polyMaterialStart + i)
     );
   }
 
@@ -123,13 +170,27 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
   return res;
 }
 
-
 void WorldRenderer::render() {
   if (!shader) {
     shader = make_unique<OpenGLShader>(meshVertShader, meshFragShader);
   }
 
+  glm::mat4 projection = glm::perspective(fov, aspect, zNear, zFar);
+
+  glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
+  glm::vec3 eye = glm::vec4(lookAt, 1.0f) - (angle * glm::vec4{distance,0,0,1});
+  glm::mat4 view = glm::lookAt(eye, lookAt, up);
+
+  shader->setMat4("view", view);
+  shader->setMat4("projection", projection);
+  shader->setVec3("lightDir", glm::normalize(lightDir));
+
   shader->use();
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+  glFrontFace(GL_CW);
   for (auto &[k, v]:mesh_by_mrea) {
     v.draw();
   }

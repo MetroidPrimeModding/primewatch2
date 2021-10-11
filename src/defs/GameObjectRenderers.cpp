@@ -86,7 +86,7 @@ namespace GameObjectRenderers {
     }
 
     if (addTree) {
-      string label = fmt::format("{}###{:08x}", member.name, member.offset);
+      string label = fmt::format("{0}###{0}{1:08x}", member.name, member.offset);
       bool open = ImGui::CollapsingHeader(label.c_str());
       hoverTooltip(member);
       if (!open) return;

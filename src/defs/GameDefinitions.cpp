@@ -135,6 +135,15 @@ namespace GameDefinitions {
     if (members_by_name.count(subName)) {
       return members_by_name.at(subName);
     } else {
+      for (auto &extend : extends) {
+        auto parent = GameDefinitions::structByName(extend);
+        if (parent.has_value()) {
+          auto res = parent->memberByName(subName);
+          if (res.has_value()) {
+            return res;
+          }
+        }
+      }
       return {};
     }
   }

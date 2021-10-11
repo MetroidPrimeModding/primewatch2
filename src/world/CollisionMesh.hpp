@@ -5,7 +5,7 @@
 #include <gl/OpenGLMesh.hpp>
 #include <memory>
 
-enum class CollisionMaterial: uint32_t {
+enum class ECollisionMaterial: uint32_t {
   UNKNOWN_1 = 0x1,
   STONE = 0x2,
   METAL = 0x4,
@@ -41,6 +41,15 @@ enum class CollisionMaterial: uint32_t {
   FLOOR = 0x80000000,
 };
 
+// TODO: generic?
+inline ECollisionMaterial operator |(ECollisionMaterial lhs, ECollisionMaterial rhs) {
+  return static_cast<ECollisionMaterial> (static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+}
+
+inline ECollisionMaterial operator &(ECollisionMaterial lhs, ECollisionMaterial rhs) {
+  return static_cast<ECollisionMaterial> (static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+}
+
 class CollisionMesh {
 public:
   std::vector<glm::vec3> raw_verts;
@@ -53,7 +62,7 @@ public:
   std::vector<uint16_t> raw_poly_materials;
 
 
-  std::vector<uint32_t> materials;
+  std::vector<ECollisionMaterial> materials;
 
   void initGlMesh();
   void draw();

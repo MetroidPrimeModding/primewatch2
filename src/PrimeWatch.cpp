@@ -48,6 +48,7 @@ int PrimeWatch::initAndCreateWindow() {
   }
 
   initGlAndImgui(width, height);
+  glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_cb);
 
   GameDefinitions::loadDefinitionsFromPath("prime1.json");
@@ -77,6 +78,7 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   io.Fonts->AddFontDefault();
 
   glViewport(0, 0, width, height);
+  worldRenderer.aspect = (float)width / (float) height;
 
   mem_edit.ReadOnly = true;
 
@@ -88,6 +90,8 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
 
 void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
+  PrimeWatch *ptr = (PrimeWatch*)glfwGetWindowUserPointer(window);
+  ptr->worldRenderer.aspect = (float)width / (float) height;
 }
 
 void PrimeWatch::mainLoop() {
