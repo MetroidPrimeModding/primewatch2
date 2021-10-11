@@ -9,6 +9,12 @@
 #include <PrimeWatchInput.hpp>
 #include "./CollisionMesh.hpp"
 
+enum class CullType {
+  BACK,
+  FRONT,
+  NONE
+};
+
 class WorldRenderer {
 public:
   float aspect{0};
@@ -22,10 +28,11 @@ public:
   float distance{10.f};
   glm::vec3 up{0, 0, 1};
 
-  glm::vec3 lightDir{0,0.1f,0.9f};
+  CullType culling{CullType::BACK};
 
-  WorldRenderer();
+  glm::vec3 lightDir{0.1,0.2f,0.9f};
 
+  void init();
   void update(const PrimeWatchInput &input);
   void render();
   void renderImGui();
@@ -34,6 +41,7 @@ private:
 
 
   std::unique_ptr<OpenGLShader> shader{};
+  std::unique_ptr<OpenGLMesh> playerUnmorphedMesh{};
   std::map<uint32_t, CollisionMesh> mesh_by_mrea{};
 
   void updateAreas();

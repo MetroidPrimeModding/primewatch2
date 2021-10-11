@@ -9,15 +9,19 @@ struct __attribute__ ((packed)) Vert {
   glm::vec3 normal;
 };
 
-struct __attribute__ ((packed)) Tri {
-  Vert a;
-  Vert b;
-  Vert c;
+enum class RenderType {
+  POINTS,
+  LINES,
+  LINE_LOOP,
+  LINE_STRIP,
+  TRIANGLES,
+  TRIANGLE_STRIP,
+  TRIANGLE_FAN
 };
 
 class OpenGLMesh {
 public:
-  explicit OpenGLMesh(std::vector<Tri> tris);
+  explicit OpenGLMesh(std::vector<Vert> vertData, RenderType mode);
   ~OpenGLMesh();
 
   OpenGLMesh(const OpenGLMesh &) = delete;
@@ -25,7 +29,8 @@ public:
 
   void draw();
 private:
-  int triCount{0};
+  int vertCount{0};
+  RenderType mode{};
   unsigned int vbo{0};
   unsigned int vao{0};
 };

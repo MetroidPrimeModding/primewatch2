@@ -6,8 +6,10 @@
 #include "defs/GameOffsets.hpp"
 #include "defs/GameDefinitions.hpp"
 #include "utils/AreaUtils.hpp"
+#include "gl/ShapeGenerator.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 #include <glad/glad.h>
@@ -24,11 +26,12 @@ out vec4 vertexColor;
 out vec3 normal;
 out vec3 fragPos;
 
+uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
 void main() {
-  gl_Position = projection * view * vec4(aPos, 1.0f);
+  gl_Position = projection * view * model * vec4(aPos, 1.0f);
   vertexColor = aColor;
   normal = aNormal;
   fragPos = aPos;
@@ -47,7 +50,7 @@ uniform vec3 lightDir;
 void main() {
   vec3 lightColor = vec3(1,1,1);
   // ambient
-  float ambientStrength = 0.1;
+  float ambientStrength = 0.2;
   vec3 ambient = ambientStrength * lightColor;
 
   // diffuse
@@ -66,29 +69,20 @@ void main() {
 }
 )src";
 
-WorldRenderer::WorldRenderer() {
+void WorldRenderer::init() {
+  playerUnmorphedMesh = ShapeGenerator::generateCube(
+      glm::vec3{-0.5, -0.5, 0},
+      glm::vec3{0.5, 0.5, 2.7},
+      glm::vec4{1, 1, 1, 1}
+  );
 }
 
 void WorldRenderer::update(const PrimeWatchInput &input) {
   updateAreas();
 
-  float pitchSpeed = 0.03;
-  float yawSpeed = 0.03;
-  float distSpeed = 0.5;
-
-  if (input.camUp) {
-    pitch += pitchSpeed;
-  } else if (input.camDown) {
-    pitch -= pitchSpeed;
-  } else if (input.camLeft) {
-    yaw -= yawSpeed;
-  } else if (input.camRight) {
-    yaw += yawSpeed;
-  } else if (input.camIn) {
-    distance -= distSpeed;
-  } else if (input.camOut) {
-    distance += distSpeed;
-  }
+  pitch += input.camPitch;
+  yaw += input.camYaw;
+  distance += input.camZoom;
 
   pitch = glm::clamp(pitch, -(glm::pi<float>() / 2 - 0.1f), glm::pi<float>() / 2 - 0.1f);
   distance = glm::clamp(distance, 1.0f, 100.0f);
@@ -197,9 +191,10 @@ void WorldRenderer::render() {
   glm::mat4 projection = glm::perspective(fov, aspect, zNear, zFar);
 
   glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
-  glm::vec3 eye = glm::vec4(lookAt, 1.0f) - (angle * glm::vec4{distance,0,0,1});
+  glm::vec3 eye = glm::vec4(lookAt, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
   glm::mat4 view = glm::lookAt(eye, lookAt, up);
 
+  shader->setMat4("model", glm::identity<glm::mat4>());
   shader->setMat4("view", view);
   shader->setMat4("projection", projection);
   shader->setVec3("lightDir", glm::normalize(lightDir));
@@ -207,12 +202,31 @@ void WorldRenderer::render() {
   shader->use();
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
   glFrontFace(GL_CW);
-  for (auto &[k, v]:mesh_by_mrea) {
+
+  switch (culling) {
+    case CullType::BACK:
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
+      break;
+    case CullType::FRONT:
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_FRONT);
+      break;
+    case CullType::NONE:
+      glDisable(GL_CULL_FACE);
+      break;
+  }
+
+  for (auto &[k, v]: mesh_by_mrea) {
     v.draw();
   }
+
+  // then player
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+  shader->setMat4("model", glm::translate(lookAt));
+  playerUnmorphedMesh->draw();
 }
 
 void WorldRenderer::renderImGui() {

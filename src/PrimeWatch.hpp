@@ -32,7 +32,6 @@ private:
 
   void initGlAndImgui(int width, int height);
   static void framebuffer_size_cb(GLFWwindow *window, int width, int height);
-  static void key_cb(GLFWwindow* window, int key, int scancode, int action, int mods);
 
   void doFrame();
   void processInput();

@@ -3,7 +3,7 @@
 using namespace std;
 
 void CollisionMesh::initGlMesh() {
-  vector<Tri> tris{};
+  vector<Vert> verts{};
 
   for (int i = 0; i < raw_polys.size(); i++) {
     auto polyFlags = materials[raw_poly_materials[i]];
@@ -52,38 +52,35 @@ void CollisionMesh::initGlMesh() {
 
     auto n = glm::normalize(glm::cross(v1 - v3, v1 - v2));
 
-    glm::vec4 color{1,1,1,1};
+    glm::vec4 color{1, 1, 1, 1};
 
     // this is how the game calculates standability
     if (!!(polyFlags & ECollisionMaterial::FLOOR) || n.z > 0.85) {
-      color = glm::vec4{0.5f,1.0f,0.5f,1.0f};
+      color = glm::vec4{0.5f, 1.0f, 0.5f, 1.0f};
     } else if (!!(polyFlags & ECollisionMaterial::WALL) || n.z > 0.85) {
-      color = glm::vec4{0.5f,0.5f,1.0f,1.0f};
+      color = glm::vec4{0.5f, 0.5f, 1.0f, 1.0f};
     } else if (!!(polyFlags & ECollisionMaterial::CEILING) || n.z > 0.85) {
-      color = glm::vec4{1.0f,0.5f,0.5f,1.0f};
+      color = glm::vec4{1.0f, 0.5f, 0.5f, 1.0f};
     }
 
-
-    tris.emplace_back(Tri{
-        .a = {
-            .pos = v1,
-            .color = color,
-            .normal = n
-        },
-        .b = {
-            .pos = v2,
-            .color = color,
-            .normal = n
-        },
-        .c = {
-            .pos = v3,
-            .color = color,
-            .normal = n
-        }
+    verts.emplace_back(Vert{
+        .pos = v1,
+        .color = color,
+        .normal = n
+    });
+    verts.emplace_back(Vert{
+        .pos = v2,
+        .color = color,
+        .normal = n
+    });
+    verts.emplace_back(Vert{
+        .pos = v3,
+        .color = color,
+        .normal = n
     });
   }
 
-  this->mesh = make_unique<OpenGLMesh>(tris);
+  this->mesh = make_unique<OpenGLMesh>(verts, RenderType::TRIANGLES);
 }
 
 void CollisionMesh::draw() {

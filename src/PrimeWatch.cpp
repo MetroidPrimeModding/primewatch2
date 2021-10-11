@@ -50,7 +50,6 @@ int PrimeWatch::initAndCreateWindow() {
   initGlAndImgui(width, height);
   glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_cb);
-  glfwSetKeyCallback(window, key_cb);
 
   GameDefinitions::loadDefinitionsFromPath("prime1.json");
 
@@ -63,6 +62,8 @@ int PrimeWatch::initAndCreateWindow() {
   if (pids.size() == 1) {
     MemoryAccess::attachToProcess(pids[0]);
   }
+
+  worldRenderer.init();
 
   return 0;
 }
@@ -79,7 +80,7 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   io.Fonts->AddFontDefault();
 
   glViewport(0, 0, width, height);
-  worldRenderer.aspect = (float)width / (float) height;
+  worldRenderer.aspect = (float) width / (float) height;
 
   mem_edit.ReadOnly = true;
 
@@ -116,7 +117,59 @@ void PrimeWatch::shutdown() {
 }
 
 void PrimeWatch::processInput() {
+  // Reset
+  input.camPitch = input.camYaw = input.camZoom = 0.0f;
 
+  // get new stuff
+  ImGuiIO &io = ImGui::GetIO();
+
+  if (!io.WantCaptureMouse) {
+    if (io.MouseDown[GLFW_MOUSE_BUTTON_LEFT]) {
+      input.capturedMouse = true;
+    }
+  }
+  if (!io.MouseDown[GLFW_MOUSE_BUTTON_LEFT]) {
+    input.capturedMouse = false;
+  }
+
+  if (input.capturedMouse) {
+    float pitchSpeed = 0.005;
+    float yawSpeed = -0.005;
+
+    ImVec2 delta = io.MouseDelta;
+    input.camPitch = delta.y * pitchSpeed;
+    input.camYaw = delta.x * yawSpeed;
+  }
+
+  if (!io.WantCaptureMouse) {
+    float distSpeed = -2;
+    input.camZoom = io.MouseWheel * distSpeed;
+  }
+
+  if (!io.WantCaptureKeyboard) {
+    float pitchSpeed = 0.03;
+    float yawSpeed = 0.03;
+    float zoomSpeed = 0.5;
+
+    if (io.KeysDown[GLFW_KEY_UP]) {
+      input.camPitch += pitchSpeed;
+    }
+    if (io.KeysDown[GLFW_KEY_DOWN]) {
+      input.camPitch -= pitchSpeed;
+    }
+    if (io.KeysDown[GLFW_KEY_LEFT]) {
+      input.camYaw += yawSpeed;
+    }
+    if (io.KeysDown[GLFW_KEY_RIGHT]) {
+      input.camYaw -= yawSpeed;
+    }
+    if (io.KeysDown[GLFW_KEY_PAGE_UP]) {
+      input.camZoom -= zoomSpeed;
+    }
+    if (io.KeysDown[GLFW_KEY_PAGE_DOWN]) {
+      input.camZoom += zoomSpeed;
+    }
+  }
 }
 
 void PrimeWatch::doFrame() {
@@ -189,7 +242,8 @@ void PrimeWatch::doImGui() {
 //    if (!areas) goto areaEnd;
     GameObjectRenderers::render(*world, false);
   }
-  areaEnd: ImGui::End();
+  areaEnd:
+  ImGui::End();
 
   mem_edit.DrawWindow("Raw view", GameMemory::memory.data(), GameMemory::memory.size());
 
@@ -198,6 +252,7 @@ void PrimeWatch::doImGui() {
 
 void PrimeWatch::doMainMenu() {
   if (ImGui::BeginMainMenuBar()) {
+
     string attachMenuTitle;
     int attachedPid = MemoryAccess::getAttachedPid();
     if (attachedPid > 0) {
@@ -227,6 +282,19 @@ void PrimeWatch::doMainMenu() {
 
       ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("Culling")) {
+      if (ImGui::MenuItem("Show Front", nullptr, worldRenderer.culling == CullType::BACK)) {
+        worldRenderer.culling = CullType::BACK;
+      }
+      if (ImGui::MenuItem("Show Back", nullptr, worldRenderer.culling == CullType::FRONT)) {
+        worldRenderer.culling = CullType::FRONT;
+      }
+      if (ImGui::MenuItem("Show All", nullptr, worldRenderer.culling == CullType::NONE)) {
+        worldRenderer.culling = CullType::NONE;
+      }
+      ImGui::EndMenu();
+    }
     ImGui::EndMainMenuBar();
   }
 }
@@ -237,35 +305,6 @@ void PrimeWatch::doMemoryParse() {
 
 void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
-  PrimeWatch *ptr = (PrimeWatch*)glfwGetWindowUserPointer(window);
-  ptr->worldRenderer.aspect = (float)width / (float) height;
-}
-
-void PrimeWatch::key_cb(GLFWwindow *window, int key, int scancode, int action, int mods) {
-  PrimeWatch *ptr = (PrimeWatch*)glfwGetWindowUserPointer(window);
-  PrimeWatchInput &input = ptr->input;
-
-  switch (key) {
-    case GLFW_KEY_UP:
-      input.camUp = action != GLFW_RELEASE;
-      break;
-    case GLFW_KEY_DOWN:
-      input.camDown = action != GLFW_RELEASE;
-      break;
-    case GLFW_KEY_LEFT:
-      input.camLeft = action != GLFW_RELEASE;
-      break;
-    case GLFW_KEY_RIGHT:
-      input.camRight = action != GLFW_RELEASE;
-      break;
-    case GLFW_KEY_PAGE_UP:
-      input.camIn = action != GLFW_RELEASE;
-      break;
-    case GLFW_KEY_PAGE_DOWN:
-      input.camOut = action != GLFW_RELEASE;
-      break;
-    default:
-      // don't care
-      break;
-  }
+  PrimeWatch *ptr = (PrimeWatch *) glfwGetWindowUserPointer(window);
+  ptr->worldRenderer.aspect = (float) width / (float) height;
 }
