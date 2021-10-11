@@ -234,17 +234,6 @@ void PrimeWatch::doImGui() {
   }
   ImGui::End();
 
-  if (ImGui::Begin("Areas")) {
-    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager_ADDRESS};
-    auto world = stateManager.memberByName("world");
-    if (!world) goto areaEnd;
-//    auto areas = world->memberByName("areas");
-//    if (!areas) goto areaEnd;
-    GameObjectRenderers::render(*world, false);
-  }
-  areaEnd:
-  ImGui::End();
-
   mem_edit.DrawWindow("Raw view", GameMemory::memory.data(), GameMemory::memory.size());
 
   worldRenderer.renderImGui();

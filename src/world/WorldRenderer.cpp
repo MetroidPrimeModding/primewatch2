@@ -33,8 +33,8 @@ uniform mat4 projection;
 void main() {
   gl_Position = projection * view * model * vec4(aPos, 1.0f);
   vertexColor = aColor;
-  normal = aNormal;
-  fragPos = aPos;
+  normal = mat3(transpose(inverse(model))) * aNormal;
+  fragPos = vec3(model * vec4(aPos, 1.0f));
 }
 )src";
 
@@ -45,6 +45,7 @@ in vec4 vertexColor;
 in vec3 normal;
 in vec3 fragPos;
 
+uniform vec3 viewPos;
 uniform vec3 lightDir;
 
 void main() {
@@ -58,12 +59,11 @@ void main() {
   vec3 diffuse = diff * lightColor;
 
   // specular
-//  float specularStrength = 0.5;
-//  vec3 viewDir = normalize(viewPos - fragPos);
-//  vec3 reflectDir = reflect(-lightDir, norm);
-//  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-//  vec3 specular = specularStrength * spec * lightColor;
-  vec3 specular = vec3(0,0,0);
+  float specularStrength = 0.3;
+  vec3 viewDir = normalize(viewPos - fragPos);
+  vec3 reflectDir = reflect(-lightDir, normal);
+  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
+  vec3 specular = specularStrength * spec * lightColor;
 
   FragColor = vec4(ambient + diffuse + specular, 1.0) * vertexColor;
 }
@@ -73,6 +73,12 @@ void WorldRenderer::init() {
   playerUnmorphedMesh = ShapeGenerator::generateCube(
       glm::vec3{-0.5, -0.5, 0},
       glm::vec3{0.5, 0.5, 2.7},
+      glm::vec4{1, 1, 1, 1}
+  );
+
+  playerMorphedMesh = ShapeGenerator::generateSphere(
+      glm::vec3{0, 0, 0},
+      0.7f,
       glm::vec4{1, 1, 1, 1}
   );
 }
@@ -89,11 +95,19 @@ void WorldRenderer::update(const PrimeWatchInput &input) {
 
   GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager_ADDRESS};
   GameMember transform = stateManager["player"]["transform"];
-  lookAt = glm::vec3{
+  playerPos = glm::vec3{
       transform["posX"].read_f32(),
       transform["posY"].read_f32(),
       transform["posZ"].read_f32(),
   };
+  GameMember orientation = stateManager["player"]["orientation"];
+  playerOrientation = glm::quat{
+      orientation["x"].read_f32(),
+      orientation["y"].read_f32(),
+      orientation["z"].read_f32(),
+      orientation["w"].read_f32()
+  };
+  playerIsMorphed = stateManager["player"]["morphState"].read_u32() == 1; // Morphed
 }
 
 void WorldRenderer::updateAreas() {
@@ -191,13 +205,14 @@ void WorldRenderer::render() {
   glm::mat4 projection = glm::perspective(fov, aspect, zNear, zFar);
 
   glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
-  glm::vec3 eye = glm::vec4(lookAt, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
-  glm::mat4 view = glm::lookAt(eye, lookAt, up);
+  glm::vec3 eye = glm::vec4(playerPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
+  glm::mat4 view = glm::lookAt(eye, playerPos, up);
 
   shader->setMat4("model", glm::identity<glm::mat4>());
   shader->setMat4("view", view);
   shader->setMat4("projection", projection);
   shader->setVec3("lightDir", glm::normalize(lightDir));
+  shader->setVec3("viewPos", eye);
 
   shader->use();
   glEnable(GL_DEPTH_TEST);
@@ -225,8 +240,16 @@ void WorldRenderer::render() {
   // then player
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
-  shader->setMat4("model", glm::translate(lookAt));
-  playerUnmorphedMesh->draw();
+  if (playerIsMorphed) {
+    glm::mat4 model =
+        glm::translate(playerPos + glm::vec3(0, 0, 0.7)) *
+        glm::toMat4(playerOrientation);
+    shader->setMat4("model", model);
+    playerMorphedMesh->draw();
+  } else {
+    shader->setMat4("model", glm::translate(playerPos));
+    playerUnmorphedMesh->draw();
+  }
 }
 
 void WorldRenderer::renderImGui() {

@@ -3,7 +3,9 @@
 #include <map>
 #include <vector>
 #include <memory>
-#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <defs/GameDefinitions.hpp>
 #include <gl/OpenGLShader.hpp>
 #include <PrimeWatchInput.hpp>
@@ -22,7 +24,6 @@ public:
   float zNear{0.1f};
   float zFar{10000.0f};
 
-  glm::vec3 lookAt{0.0, 0.0, 0.0};
   float yaw{0};
   float pitch{0.3f};
   float distance{10.f};
@@ -31,6 +32,10 @@ public:
   CullType culling{CullType::BACK};
 
   glm::vec3 lightDir{0.1,0.2f,0.9f};
+
+  bool playerIsMorphed{false};
+  glm::vec3 playerPos;
+  glm::quat playerOrientation;
 
   void init();
   void update(const PrimeWatchInput &input);
@@ -42,6 +47,7 @@ private:
 
   std::unique_ptr<OpenGLShader> shader{};
   std::unique_ptr<OpenGLMesh> playerUnmorphedMesh{};
+  std::unique_ptr<OpenGLMesh> playerMorphedMesh{};
   std::map<uint32_t, CollisionMesh> mesh_by_mrea{};
 
   void updateAreas();

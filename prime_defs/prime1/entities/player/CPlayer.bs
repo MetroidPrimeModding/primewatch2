@@ -2,8 +2,10 @@ struct CPlayer: CPhysicsActor {
     vtable 0x803d96e8
     EPlayerMovementState jumpstate 0x258
     f32 sjTimer 0x28C
-    u32 cameraState 0x2F4
-    u32 morphState 0x2F8
+    EPlayerCameraState cameraState 0x2F4
+    EPlayerMorphBallState morphState 0x2F8
+    EPlayerMorphBallState spawnedMorphBallState 0x2FC
+    f32 fallingTime 0x300
     *CPlayerGun gun 0x490
     *CMorphBall morphBall 0x768
     *CPlayerCameraBob cameraBob 0x76C
@@ -36,3 +38,7 @@ struct CPlayer: CPhysicsActor {
 enum EPlayerMovementState: u32 {
     OnGround=0, Jump, ApplyJump, Falling, FallingMorphed
 }
+
+enum EPlayerMorphBallState: u32 { Unmorphed, Morphed, Morphing, Unmorphing }
+
+enum EPlayerCameraState: u32 { FirstPerson, Ball, Two, Transitioning, Spawned }

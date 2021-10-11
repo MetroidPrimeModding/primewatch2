@@ -70,6 +70,13 @@ namespace GameObjectRenderers {
     }
     string msg = fmt::format("{0} {1} ({2:d}/{2:#x}/{2:#b})", member.name, name, value);
     ImGui::Text("%s", msg.c_str());
+    if (ImGui::IsItemClicked()) {
+      ImGui::SetClipboardText(msg.c_str());
+    }
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+    }
+    hoverTooltip(member);
   }
 
   void renderEnumOrStruct(const GameMember &member, bool addTree) {

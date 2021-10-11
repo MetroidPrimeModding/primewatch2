@@ -74,7 +74,7 @@ set(SOURCE_FILES
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
-        COMMAND npm i && node lib/index.js
+        COMMAND node lib/index.js
         -i '${CMAKE_SOURCE_DIR}/prime_defs/**/*.bs'
         -o ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/extern/bstruct"
