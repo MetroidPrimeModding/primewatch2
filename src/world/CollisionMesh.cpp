@@ -40,7 +40,7 @@ void CollisionMesh::initGlMesh() {
     }
 
     // swap if needed
-    if ((polyFlags & ECollisionMaterial::FLIPPED_TRI) == ECollisionMaterial::FLIPPED_TRI) {
+    if (!!(polyFlags & ECollisionMaterial::FLIPPED_TRI)) {
       uint16_t tmp = i1;
       i1 = i3;
       i3 = tmp;
@@ -52,20 +52,32 @@ void CollisionMesh::initGlMesh() {
 
     auto n = glm::normalize(glm::cross(v1 - v3, v1 - v2));
 
+    glm::vec4 color{1,1,1,1};
+
+    // this is how the game calculates standability
+    if (!!(polyFlags & ECollisionMaterial::FLOOR) || n.z > 0.85) {
+      color = glm::vec4{0.5f,1.0f,0.5f,1.0f};
+    } else if (!!(polyFlags & ECollisionMaterial::WALL) || n.z > 0.85) {
+      color = glm::vec4{0.5f,0.5f,1.0f,1.0f};
+    } else if (!!(polyFlags & ECollisionMaterial::CEILING) || n.z > 0.85) {
+      color = glm::vec4{1.0f,0.5f,0.5f,1.0f};
+    }
+
+
     tris.emplace_back(Tri{
         .a = {
             .pos = v1,
-            .color = {1,1,1,1},
+            .color = color,
             .normal = n
         },
         .b = {
             .pos = v2,
-            .color = {1,1,1,1},
+            .color = color,
             .normal = n
         },
         .c = {
             .pos = v3,
-            .color = {1,1,1,1},
+            .color = color,
             .normal = n
         }
     });

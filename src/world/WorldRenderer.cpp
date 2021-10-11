@@ -69,10 +69,29 @@ void main() {
 WorldRenderer::WorldRenderer() {
 }
 
-void WorldRenderer::update() {
+void WorldRenderer::update(const PrimeWatchInput &input) {
   updateAreas();
 
-  yaw += 0.01f;
+  float pitchSpeed = 0.03;
+  float yawSpeed = 0.03;
+  float distSpeed = 0.5;
+
+  if (input.camUp) {
+    pitch += pitchSpeed;
+  } else if (input.camDown) {
+    pitch -= pitchSpeed;
+  } else if (input.camLeft) {
+    yaw -= yawSpeed;
+  } else if (input.camRight) {
+    yaw += yawSpeed;
+  } else if (input.camIn) {
+    distance -= distSpeed;
+  } else if (input.camOut) {
+    distance += distSpeed;
+  }
+
+  pitch = glm::clamp(pitch, -(glm::pi<float>() / 2 - 0.1f), glm::pi<float>() / 2 - 0.1f);
+  distance = glm::clamp(distance, 1.0f, 100.0f);
 
   GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager_ADDRESS};
   GameMember transform = stateManager["player"]["transform"];

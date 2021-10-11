@@ -6,6 +6,7 @@
 #include <glm/fwd.hpp>
 #include <defs/GameDefinitions.hpp>
 #include <gl/OpenGLShader.hpp>
+#include <PrimeWatchInput.hpp>
 #include "./CollisionMesh.hpp"
 
 class WorldRenderer {
@@ -25,7 +26,7 @@ public:
 
   WorldRenderer();
 
-  void update();
+  void update(const PrimeWatchInput &input);
   void render();
   void renderImGui();
 

@@ -50,6 +50,10 @@ inline ECollisionMaterial operator &(ECollisionMaterial lhs, ECollisionMaterial 
   return static_cast<ECollisionMaterial> (static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
 }
 
+inline bool operator!(ECollisionMaterial lhs) {
+  return !static_cast<uint32_t>(lhs);
+}
+
 class CollisionMesh {
 public:
   std::vector<glm::vec3> raw_verts;

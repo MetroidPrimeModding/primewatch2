@@ -50,6 +50,7 @@ int PrimeWatch::initAndCreateWindow() {
   initGlAndImgui(width, height);
   glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_cb);
+  glfwSetKeyCallback(window, key_cb);
 
   GameDefinitions::loadDefinitionsFromPath("prime1.json");
 
@@ -86,12 +87,6 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   if (std::filesystem::exists("../mem1.raw")) {
     GameMemory::loadFromPath("../mem1.raw");
   }
-}
-
-void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) {
-  glViewport(0, 0, width, height);
-  PrimeWatch *ptr = (PrimeWatch*)glfwGetWindowUserPointer(window);
-  ptr->worldRenderer.aspect = (float)width / (float) height;
 }
 
 void PrimeWatch::mainLoop() {
@@ -142,7 +137,7 @@ void PrimeWatch::doFrame() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // world render
-  worldRenderer.update();
+  worldRenderer.update(input);
   worldRenderer.render();
 
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -238,4 +233,39 @@ void PrimeWatch::doMainMenu() {
 
 void PrimeWatch::doMemoryParse() {
   GameMemory::updateFromDolphin();
+}
+
+void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) {
+  glViewport(0, 0, width, height);
+  PrimeWatch *ptr = (PrimeWatch*)glfwGetWindowUserPointer(window);
+  ptr->worldRenderer.aspect = (float)width / (float) height;
+}
+
+void PrimeWatch::key_cb(GLFWwindow *window, int key, int scancode, int action, int mods) {
+  PrimeWatch *ptr = (PrimeWatch*)glfwGetWindowUserPointer(window);
+  PrimeWatchInput &input = ptr->input;
+
+  switch (key) {
+    case GLFW_KEY_UP:
+      input.camUp = action != GLFW_RELEASE;
+      break;
+    case GLFW_KEY_DOWN:
+      input.camDown = action != GLFW_RELEASE;
+      break;
+    case GLFW_KEY_LEFT:
+      input.camLeft = action != GLFW_RELEASE;
+      break;
+    case GLFW_KEY_RIGHT:
+      input.camRight = action != GLFW_RELEASE;
+      break;
+    case GLFW_KEY_PAGE_UP:
+      input.camIn = action != GLFW_RELEASE;
+      break;
+    case GLFW_KEY_PAGE_DOWN:
+      input.camOut = action != GLFW_RELEASE;
+      break;
+    default:
+      // don't care
+      break;
+  }
 }
