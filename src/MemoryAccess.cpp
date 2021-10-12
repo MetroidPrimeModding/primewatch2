@@ -14,6 +14,12 @@
 
 #include <libkern/OSByteOrder.h>
 
+#elif defined(WIN32)
+
+#include <windows.h>
+#include <tlhelp32.h>
+#include <psapi.h>
+
 #endif
 
 using namespace std;
@@ -147,26 +153,152 @@ namespace MemoryAccess {
   }
 
 #elif defined(WIN32)
-char* fakeMemory{ nullptr };
+int attachedPid = -1;
+HANDLE dolphinProcHandle = 0;
+uint64_t emuRAMAddressStart = 0;
+bool MEM2Present = false;
 
-std::vector<int> getDolphinPids() {
-    return {};
+// Shamelessly ripped from Dolphin-memory-engine
+// https://github.com/aldelaro5/Dolphin-memory-engine/blob/master/Source/DolphinProcess/Windows/WindowsDolphinProcess.cpp
+// Returns true if we found and set emuRAMAddressStart
+bool getEmuRAMAddressStart() {
+    if (!dolphinProcHandle)
+        return false;
+
+    MEMORY_BASIC_INFORMATION info;
+    bool MEM1Found = false;
+    for (unsigned char* p = nullptr; VirtualQueryEx(dolphinProcHandle, p, &info, sizeof(info)) == sizeof(info); p += info.RegionSize) {
+        if (MEM1Found) {
+            uint64_t regionBaseAddress = 0;
+            memcpy(&regionBaseAddress, &(info.BaseAddress), sizeof(info.BaseAddress));
+            if (regionBaseAddress == emuRAMAddressStart + 0x10000000) {
+                // View the comment for MEM1
+                PSAPI_WORKING_SET_EX_INFORMATION wsInfo;
+                wsInfo.VirtualAddress = info.BaseAddress;
+                if (QueryWorkingSetEx(dolphinProcHandle, &wsInfo, sizeof(PSAPI_WORKING_SET_EX_INFORMATION))) {
+                    if (wsInfo.VirtualAttributes.Valid)
+                        MEM2Present = true;
+                }
+
+                break;
+            }
+            else if (regionBaseAddress > emuRAMAddressStart + 0x10000000) {
+                MEM2Present = false;
+                break;
+            }
+
+            continue;
+        }
+
+        if (info.RegionSize == 0x2000000 && info.Type == MEM_MAPPED) {
+            // Here, it's likely the right page, but it can happen that multiple pages with these criteria
+            // exists and have nothing to do with the emulated memory. Only the right page has valid
+            // working set information so an additional check is required that it is backed by physical memory.
+            PSAPI_WORKING_SET_EX_INFORMATION wsInfo;
+            wsInfo.VirtualAddress = info.BaseAddress;
+            if (QueryWorkingSetEx(dolphinProcHandle, &wsInfo, sizeof(PSAPI_WORKING_SET_EX_INFORMATION))) {
+                if (wsInfo.VirtualAttributes.Valid) {
+                    memcpy(&emuRAMAddressStart, &(info.BaseAddress), sizeof(info.BaseAddress));
+                    MEM1Found = true;
+                    cout << "Found ram start: " << emuRAMAddressStart << endl;
+                }
+            }
+        }
+    }
+
+    if (!emuRAMAddressStart)
+        return false; // Dolphin is running, but the emulation hasn't started
+
+    return true;
 }
+
+vector<int> getDolphinPids() {
+    vector<int> res{};
+    PROCESSENTRY32 entry;
+    entry.dwSize = sizeof(PROCESSENTRY32);
+
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+    bool found = false;
+    if (Process32First(snapshot, &entry) == TRUE) {
+        while (Process32Next(snapshot, &entry) == TRUE) {
+            if (strncmp(entry.szExeFile, "Dolphin.exe", 10) == 0) {
+                res.push_back(entry.th32ProcessID);
+            }
+        }
+    }
+
+    CloseHandle(snapshot);
+
+    return res;
+}
+
 bool attachToProcess(int pid) {
-    return false;
+    constexpr size_t size = 0x2040000;
+
+    detachFromProcess();
+
+    cout << "Connectiong to Dolphin pid " << pid << endl;
+    dolphinProcHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_READ, FALSE, pid);
+
+    if (!getEmuRAMAddressStart()) {
+        // Wait for dolphin to start running a game
+        cout << "Detected dolphin isn't running a game. We'll check for it in copy." << endl;
+    }
+
+    attachedPid = pid;
+
+    return true;
 }
 
 void detachFromProcess() {
-}
-
-void dolphin_memcpy(void* dest, std::size_t offset, std::size_t size) {
-    if (!fakeMemory) {
-        fakeMemory = new char[DOLPHIN_MEMORY_SIZE];
+    constexpr size_t size = 0x2040000;
+    if (dolphinProcHandle != nullptr) {
+        cout << "Closing process" << endl;
+        CloseHandle(dolphinProcHandle);
+        dolphinProcHandle = nullptr;
+        emuRAMAddressStart = 0;
+        attachedPid = -1;
     }
 }
 
 int getAttachedPid() {
-    return 0;
+    return attachedPid;
+}
+
+
+uint32_t getRealPtr(uint32_t address) {
+    uint32_t masked = address & 0x7FFFFFFFu;
+    if (masked > DOLPHIN_MEMORY_SIZE) {
+        return 0;
+    }
+    return masked;
+}
+
+void dolphin_memcpy(void* dest, size_t offset, size_t size) {
+    if (emuRAMAddressStart == 0) {
+        if (dolphinProcHandle) {
+            if (!getEmuRAMAddressStart()) {
+                return;
+            }
+        }
+        return;
+    }
+    if (size > DOLPHIN_MEMORY_SIZE) {
+        size = DOLPHIN_MEMORY_SIZE;
+    }
+    SIZE_T read = 0;
+    if (ReadProcessMemory(dolphinProcHandle, reinterpret_cast<void*>(emuRAMAddressStart + getRealPtr(offset)), dest, size, &read) == 0) {
+        int err = GetLastError();
+        cerr << "Failed to read memory from" << offset << ". Error: " << err << endl;
+        if (err == 299) {
+            cerr << "Game probablly closed. Will continue looking." << endl;
+            emuRAMAddressStart = 0;
+        }
+    }
+    if (read != size) {
+        cerr << "Failed to read enough from " << hex << offset << ". Read: " << read << " of " << size << dec << endl;
+    }
 }
 
 // assume windows is little endian
@@ -187,7 +319,7 @@ uint32_t beToHost32(uint32_t value) {
         ((value & 0xFF000000) >> 24) |
         ((value & 0x00FF0000) >> 8) |
         ((value & 0x0000FF00) << 8) | 
-        ((value & 0x000000FF) >> 24);
+        ((value & 0x000000FF) << 24);
 }
 
 uint32_t hostToBe32(uint32_t value) {
@@ -195,7 +327,7 @@ uint32_t hostToBe32(uint32_t value) {
         ((value & 0xFF000000) >> 24) |
         ((value & 0x00FF0000) >> 8) |
         ((value & 0x0000FF00) << 8) |
-        ((value & 0x000000FF) >> 24);
+        ((value & 0x000000FF) << 24);
 }
 
 uint64_t beToHost64(uint64_t value) {

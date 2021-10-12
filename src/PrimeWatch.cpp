@@ -197,8 +197,8 @@ void PrimeWatch::doFrame() {
 }
 
 void PrimeWatch::doImGui() {
-  ImGui::ShowDemoWindow(nullptr);
-  ImPlot::ShowDemoWindow(nullptr);
+//  ImGui::ShowDemoWindow(nullptr);
+//  ImPlot::ShowDemoWindow(nullptr);
 //  ImPlot::ShowMetricsWindow(nullptr);
 //  ImGui::ShowMetricsWindow(nullptr);
 
