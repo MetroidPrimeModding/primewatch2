@@ -146,8 +146,83 @@ namespace MemoryAccess {
     return htobe64(value);
   }
 
-#else
+#elif defined(WIN32)
+char* fakeMemory{ nullptr };
 
+std::vector<int> getDolphinPids() {
+    return {};
+}
+bool attachToProcess(int pid) {
+    return false;
+}
+
+void detachFromProcess() {
+}
+
+void dolphin_memcpy(void* dest, std::size_t offset, std::size_t size) {
+    if (!fakeMemory) {
+        fakeMemory = new char[DOLPHIN_MEMORY_SIZE];
+    }
+}
+
+int getAttachedPid() {
+    return 0;
+}
+
+// assume windows is little endian
+uint32_t beToHost16(uint32_t value) {
+    return 
+        ((value & 0xFF00) >> 8) |
+        ((value & 0x00FF) << 8);
+}
+
+uint32_t hostToBe16(uint32_t value) {
+    return 
+        ((value & 0xFF00) >> 8) |
+        ((value & 0x00FF) << 8);
+}
+
+uint32_t beToHost32(uint32_t value) {
+    return
+        ((value & 0xFF000000) >> 24) |
+        ((value & 0x00FF0000) >> 8) |
+        ((value & 0x0000FF00) << 8) | 
+        ((value & 0x000000FF) >> 24);
+}
+
+uint32_t hostToBe32(uint32_t value) {
+    return
+        ((value & 0xFF000000) >> 24) |
+        ((value & 0x00FF0000) >> 8) |
+        ((value & 0x0000FF00) << 8) |
+        ((value & 0x000000FF) >> 24);
+}
+
+uint64_t beToHost64(uint64_t value) {
+    return
+        ((value & 0xFF00000000000000L) >> 56) |
+        ((value & 0x00FF000000000000L) >> 40) | 
+        ((value & 0x0000FF0000000000L) >> 24) |
+        ((value & 0x000000FF00000000L) >> 8) |
+        ((value & 0x00000000FF000000L) << 8) |
+        ((value & 0x0000000000FF0000L) << 24) |
+        ((value & 0x000000000000FF00L) << 40) |
+        ((value & 0x00000000000000FFL) << 56);
+}
+
+uint64_t hostToBe64(uint64_t value) {
+    return
+        ((value & 0xFF00000000000000L) >> 56) |
+        ((value & 0x00FF000000000000L) >> 40) |
+        ((value & 0x0000FF0000000000L) >> 24) |
+        ((value & 0x000000FF00000000L) >> 8) |
+        ((value & 0x00000000FF000000L) << 8) |
+        ((value & 0x0000000000FF0000L) << 24) |
+        ((value & 0x000000000000FF00L) << 40) |
+        ((value & 0x00000000000000FFL) << 56);
+}
+
+#else
 #warning Not yet implemented properly for other platforms
   char *fakeMemory{nullptr};
 

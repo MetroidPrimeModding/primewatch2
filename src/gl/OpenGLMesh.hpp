@@ -3,11 +3,20 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-struct __attribute__ ((packed)) Vert {
+#ifdef WIN32
+#pragma pack(push,1)
+struct
+#else
+struct __attribute__ ((packed)) 
+#endif
+	Vert {
   glm::vec3 pos;
   glm::vec4 color;
   glm::vec3 normal;
 };
+#ifdef WIN32
+#pragma pack(pop)
+#endif
 
 enum class RenderType {
   POINTS,
