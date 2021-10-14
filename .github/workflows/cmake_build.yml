@@ -3,8 +3,6 @@ name: CMake
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -38,6 +36,6 @@ jobs:
       with:
         name: primewatch2
         path: |
-          build/prime1.json
-          build/primewatch2(.exe)?
+          build/Release/prime1.json
+          build/Release/primewatch2(.exe)?
         if-no-files-found: error
