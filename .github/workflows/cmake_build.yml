@@ -34,7 +34,7 @@ jobs:
       run: |
         mkdir primewatch2
         cp build/prime1.json primewatch2/
-        cp build/Debug/primewatch2.exe primewatch2/
+        cp build/${{env.BUILD_TYPE}}/primewatch2.exe primewatch2/
         tar -a -c -f primewatch2.zip primewatch2
 
     - name: Upload Arifacts
