@@ -1,3 +1,45 @@
 struct CMorphBall {
     CSpherePrimitive collisionSphere 0x38
+    // TODO: this may be handy later   CCollisionInfoList x74_collisionInfos;\
+
+    ESpiderBallState spiderBallState 0x187C
+
+    f32 ballTiltAngle 0x30
+    bool tireMode 0x28
+    f32 tireLeanAngle 0x2C
+    f32 tireFactor 0x1C20
+    f32 maxTireFactor 0x1C24
+    f32 tireInterpSpeed 0x1C28
+    bool tireInterpolating 0x1C2C
+    f32 boostOverLightFactor 0x1C30
+    f32 boostLightFactor 0x1C34
+    f32 spiderLightFactor 0x1C38
+
+    EBallBoostState boostState 0x1E3C
+    CVector3f boostControlForce 0x10
+    CVector3f controlForce 0x1C
+    bool inBoost 0x1DE4:7:1
+    bool boostEnabled 0x1DE4:6:1
+    f32 boostChargeTime 0x1DE8
+    f32 timeNotInBoost 0x1DEC
+    f32 boostDrainTime 0x1DF4
+
+    bool inHalfPipeMode 0x1DF8:7:1
+    bool inHalfPipeModeInAir 0x1DF8:6:1
+    bool touchedHalfPipeRecently 0x1DF8:5:1
+    bool ballCloseToCollision 0x1DF8:4:1
+    f32 touchHalfPipeCooldown 0x1DFc
+    f32 disableControlCooldown 0x1E00
+    f32 touchHalfPipeRecentCooldown 0x1E04
+    CVector3f prevHalfPipeNormal 0x1E08
+    CVector3f halfPipeNormal 0x1E14
+
+    EBombJumpState bombJumpState 0x1E40
+
 }
+
+enum EBallBoostState: u32 { BoostAvailable, BoostDisabled }
+
+enum ESpiderBallState: u32 { Inactive, Active }
+
+enum EBombJumpState: u32 { BombJumpAvailable, BombJumpDisabled }

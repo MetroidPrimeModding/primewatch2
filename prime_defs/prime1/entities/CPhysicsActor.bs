@@ -1,8 +1,8 @@
 struct CPhysicsActor: CActor {
     f32 mass 0xE8
     f32 inertiaTensor 0xF0
-    bool movable 0xF8:8:1
-    bool angularEnabled 0xF8:7:1
+    bool movable 0xF8:7:1
+    bool angularEnabled 0xF8:6:1
     bool standardCollider 0xF9
     CVector3f constantForce 0xFC
     CVector3f angularMomentum 0x108
