@@ -10,6 +10,8 @@ env:
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v2
       with:
@@ -29,7 +31,9 @@ jobs:
     - name: Create Release Zip
       run: |
         mkdir primewatch2
-        cp build/* primewatch2/
+        cp build/prime1.json primewatch2/
+        cp build/Debug/primewatch2.exe primewatch2/
+        tar -a -c -f primewatch2.zip primewatch2
 
     - name: upload
       uses: actions/upload-artifact@v2.2.4
@@ -37,3 +41,9 @@ jobs:
         name: primewatch2
         path: primewatch2/**
         if-no-files-found: error
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/v')
+      with:
+        files: primewatch2.zip
+        body: Automated release build
