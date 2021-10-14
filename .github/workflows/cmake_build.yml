@@ -31,11 +31,15 @@ jobs:
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: Create Release Zip
+      run: |
+        mkdir primewatch2
+        cp build/* primewatch2/
+        tar -a -c -f primewatch2.zip primewatch2/
+
     - name: upload
       uses: actions/upload-artifact@v2.2.4
       with:
         name: primewatch2
-        path: |
-          build/Release/prime1.json
-          build/Release/primewatch2(.exe)?
+        path: primewatch2.zip
         if-no-files-found: error
