@@ -76,10 +76,22 @@ void WorldRenderer::init() {
       glm::vec4{1, 1, 1, 1}
   );
 
+  playerUnmorphedGhostMesh = ShapeGenerator::generateCube(
+      glm::vec3{-0.5, -0.5, 0},
+      glm::vec3{0.5, 0.5, 2.7},
+      glm::vec4{1, 0.5, 0.5, 0.5}
+  );
+
   playerMorphedMesh = ShapeGenerator::generateSphere(
       glm::vec3{0, 0, 0},
       0.7f,
       glm::vec4{1, 1, 1, 1}
+  );
+
+  playerMorphedGhostMesh = ShapeGenerator::generateSphere(
+      glm::vec3{0, 0, 0},
+      0.7f,
+      glm::vec4{1, 0.5, 0.5, 0.5}
   );
 }
 
@@ -99,6 +111,12 @@ void WorldRenderer::update(const PrimeWatchInput &input) {
       transform["posX"].read_f32(),
       transform["posY"].read_f32(),
       transform["posZ"].read_f32(),
+  };
+  GameMember lastKnownNonCollidingTranslation = stateManager["player"]["lastNonCollidingState"]["translation"];
+  lastKnownNonCollidingPos = glm::vec3{
+      lastKnownNonCollidingTranslation["x"].read_f32(),
+      lastKnownNonCollidingTranslation["y"].read_f32(),
+      lastKnownNonCollidingTranslation["z"].read_f32(),
   };
   GameMember orientation = stateManager["player"]["orientation"];
   playerOrientation = glm::quat{
@@ -250,6 +268,16 @@ void WorldRenderer::render() {
     shader->setMat4("model", glm::translate(playerPos));
     playerUnmorphedMesh->draw();
   }
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  shader->setMat4("model", glm::translate(lastKnownNonCollidingPos));
+  playerUnmorphedGhostMesh->draw();
+//  glm::mat4 model =
+//      glm::translate(lastKnownNonCollidingPos + glm::vec3(0, 0, 0.7)) *
+//      glm::toMat4(playerOrientation);
+//  shader->setMat4("model", model);
+//  playerMorphedGhostMesh->draw();
 }
 
 void WorldRenderer::renderImGui() {

@@ -34,6 +34,7 @@ public:
   glm::vec3 lightDir{0.1,0.2f,0.9f};
 
   bool playerIsMorphed{false};
+  glm::vec3 lastKnownNonCollidingPos;
   glm::vec3 playerPos;
   glm::quat playerOrientation;
 
@@ -47,7 +48,9 @@ private:
 
   std::unique_ptr<OpenGLShader> shader{};
   std::unique_ptr<OpenGLMesh> playerUnmorphedMesh{};
+  std::unique_ptr<OpenGLMesh> playerUnmorphedGhostMesh{};
   std::unique_ptr<OpenGLMesh> playerMorphedMesh{};
+  std::unique_ptr<OpenGLMesh> playerMorphedGhostMesh{};
   std::map<uint32_t, CollisionMesh> mesh_by_mrea{};
 
   void updateAreas();
