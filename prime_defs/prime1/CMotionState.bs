@@ -1,0 +1,6 @@
+struct CMotionState {
+    CVector3f translation 0x0
+    CQuaternion orientation 0xC
+    CVector3f velocity 0x1C
+    CVector3f angularMomentum 0x28
+}

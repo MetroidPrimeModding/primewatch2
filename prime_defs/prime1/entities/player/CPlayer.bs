@@ -2,10 +2,51 @@ struct CPlayer: CPhysicsActor {
     vtable 0x803d96e8
     EPlayerMovementState jumpstate 0x258
     f32 sjTimer 0x28C
+    f32 startingJumpTimeout 0x288
+    f32 minJumpTimeout 0x290
+    f32 jumpPresses 0x298
     EPlayerCameraState cameraState 0x2F4
     EPlayerMorphBallState morphState 0x2F8
     EPlayerMorphBallState spawnedMorphBallState 0x2FC
     f32 fallingTime 0x300
+    EPlayerOrbitState orbitState 0x304
+    EPlayerOrbitType orbitType 0x308
+    EPlayerOrbitRequest orbitRequest 0x30C
+    CVector3f orbitPoint 0x314
+    CVector3f orbitVector 0x320
+    EPlayerZoneInfo orbitZoneMode 0x330
+    EPlayerZoneType orbitType 0x334
+    bool orbitLockEstablished 0x374
+    bool sidewaysDashing 0x37c
+    f32 strafeInputAtDash 0x380
+    f32 dashTimer 0x384
+    f32 dashButtonHoldTime 0x388
+    bool doneSidewaysDashing 0x38C
+    f32 dashSpeedMultiplier 0x398
+    EPlayerScanState scanState 0x3A8
+    f32 scanningTime 0x3AC
+    f32 curScanTime 0x3B0
+    EGrappleState grappleState 0x3B8
+    f32 grappleSwingTimer 0x3BC
+    CVector3f grappleSwingAxis 0x3C0
+    // TODO: std::unique_ptr<CFailsafeTest> x4a0_failsafeTest;
+    // TODO: TReservedAverage<float, 20> x4a4_moveSpeedAvg
+    f32 moveSpeed 0x4f8
+    f32 flatMoveSpeed 0x4fc
+    CVector3f lookDir 0x500
+    CVector3f moveDir 0x50c
+    CVector3f leaveMorphDir 0x518
+    CVector3f lastPosForDirCalc 0x524
+    CVector3f gunDir 0x530
+    f32 frozenTimeout 0x750
+    i32 iceBreakJumps 0x754
+    i32 additionalIceBreakJumps 0x75c
+    bool controlsFrozen 0x760
+    f32 controlsFrozenTimeout 0x764
+    u32 bombJumpCount 0x9d0
+    i32 bombJumpCheckDelayFrames 0x9d4
+
+
     *CPlayerGun gun 0x490
     *CMorphBall morphBall 0x768
     *CPlayerCameraBob cameraBob 0x76C
@@ -42,3 +83,22 @@ enum EPlayerMovementState: u32 {
 enum EPlayerMorphBallState: u32 { Unmorphed, Morphed, Morphing, Unmorphing }
 
 enum EPlayerCameraState: u32 { FirstPerson, Ball, Two, Transitioning, Spawned }
+
+enum  EPlayerOrbitState: u32 {
+    NoOrbit, OrbitObject, OrbitPoint, OrbitCarcass, ForcedOrbitObject, Grapple
+}
+
+enum EPlayerOrbitType: u32 { Close, Far, Default }
+enum EPlayerOrbitRequest: u32 {
+    StopOrbit, Respawn, EnterMorphBall, Default, Four, Five, InvalidateTarget,
+    BadVerticalAngle, ActivateOrbitSource, ProjectileCollide, Freeze,
+    DamageOnGrapple, LostGrappleLineOfSight
+}
+
+enum EPlayerZoneInfo: u32 { Targeting, Scan }
+
+enum EPlayerZoneType: u32 { Always = -1, Box = 0, Ellipse }
+
+enum EPlayerScanState: u32 { NotScanning, Scanning, ScanComplete }
+
+enum EGrappleState: u32 { None, Firing, Pull, Swinging, JumpOff }

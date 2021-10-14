@@ -1,4 +1,8 @@
 struct CPhysicsActor: CActor {
+    f32 mass 0xE8
+    f32 inertiaTensor 0xF0
+    bool movable 0xF8:8:1
+    bool angularEnabled 0xF8:7:1
     bool standardCollider 0xF9
     CVector3f constantForce 0xFC
     CVector3f angularMomentum 0x108
@@ -10,6 +14,10 @@ struct CPhysicsActor: CActor {
     CVector3f angularImpulse 0x180
     CAABBPrimitive collisionPrimitive 0x1C0
     CVector3f primitiveOffset 0x1E8
-    CVector3f translation 0x1F4
+    CMotionState lastNonCollidingState 0x1F4
     CQuaternion orientation 0x200
+    CVector3f lastFloorPlaneNormal 0x228
+    f32 maxCollisionVelocity 0x238
+    f32 stepUpHeight 0x23C
+    f32 stepDownHeight 0x240
 }
