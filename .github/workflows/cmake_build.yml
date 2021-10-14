@@ -30,7 +30,7 @@ jobs:
       run: |
         mkdir primewatch2
         cp build/* primewatch2/
-        ls -lr primewatch2
+        dir /s primewatch2
         tar -a -c -f primewatch2.zip -R primewatch2
 
     - name: upload
