@@ -1,18 +1,23 @@
 #include "WorldRenderer.hpp"
 
+#include <iostream>
 #include <fmt/format.h>
 #include "imgui.h"
 #include "GameMemory.h"
 #include "defs/GameOffsets.hpp"
 #include "defs/GameDefinitions.hpp"
 #include "utils/AreaUtils.hpp"
+#include "utils/GameObjectUtils.hpp"
 #include "gl/ShapeGenerator.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_access.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 #include <glad/glad.h>
+#include <utils/MathUtils.hpp>
 
 using namespace GameDefinitions;
 using namespace std;
@@ -93,6 +98,12 @@ void WorldRenderer::init() {
       0.7f,
       glm::vec4{1, 0.5, 0.5, 0.5}
   );
+
+  cameraMesh = make_unique<OpenGLMesh>(
+      ShapeGenerator::generateCameraLineSegments(glm::mat4{1.0f}, glm::mat3x4{1.0f}),
+      RenderType::LINES,
+      BufferUpdateType::STREAM
+  );
 }
 
 void WorldRenderer::update(const PrimeWatchInput &input) {
@@ -105,27 +116,32 @@ void WorldRenderer::update(const PrimeWatchInput &input) {
   pitch = glm::clamp(pitch, -(glm::pi<float>() / 2 - 0.1f), glm::pi<float>() / 2 - 0.1f);
   distance = glm::clamp(distance, 1.0f, 100.0f);
 
-  GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager_ADDRESS};
-  GameMember transform = stateManager["player"]["transform"];
-  playerPos = glm::vec3{
-      transform["posX"].read_f32(),
-      transform["posY"].read_f32(),
-      transform["posZ"].read_f32(),
-  };
+  GameMember stateManager = g_stateManager;
+
+  glm::mat4 tf = MathUtils::readAsCTransform(stateManager["player"]["transform"]);
+  playerPos = glm::column(tf, 3);
   GameMember lastKnownNonCollidingTranslation = stateManager["player"]["lastNonCollidingState"]["translation"];
-  lastKnownNonCollidingPos = glm::vec3{
-      lastKnownNonCollidingTranslation["x"].read_f32(),
-      lastKnownNonCollidingTranslation["y"].read_f32(),
-      lastKnownNonCollidingTranslation["z"].read_f32(),
-  };
-  GameMember orientation = stateManager["player"]["orientation"];
-  playerOrientation = glm::quat{
-      orientation["x"].read_f32(),
-      orientation["y"].read_f32(),
-      orientation["z"].read_f32(),
-      orientation["w"].read_f32()
-  };
+  lastKnownNonCollidingPos = MathUtils::readAsCVector3f(lastKnownNonCollidingTranslation);
+
+  if (glm::length(lastKnownNonCollidingPos - playerPos) > 0.2) {
+    cout << "uhoh " << glm::length(lastKnownNonCollidingPos - playerPos) << endl;
+  }
+
+  playerOrientation = MathUtils::readAsCQuaternion(stateManager["player"]["orientation"]);
   playerIsMorphed = stateManager["player"]["morphState"].read_u32() == 1; // Morphed
+
+  GameMember cameraManager = stateManager["cameraManager"];
+  uint16_t cameraID = cameraManager["curCameraId"].read_u16();
+  GameMember camera = GameObjectUtils::getObjectByEntityID(cameraID);
+  camera.type = "CGameCamera"; // hacky hack. We assume this is a CGameCamera for now.
+  gameCam.perspective = MathUtils::readAsCMatrix4f(camera["perspectiveMatrix"]);
+  gameCam.transform = MathUtils::readAsCTransform(camera["transform"]);
+  gameCam.fov = camera["fov"].read_f32();
+  gameCam.znear = camera["znear"].read_f32();
+  gameCam.zfar = camera["zfar"].read_f32();
+  gameCam.aspect = camera["aspect"].read_f32();
+
+  cameraMesh->bufferNewData(ShapeGenerator::generateCameraLineSegments(gameCam.perspective, gameCam.transform));
 }
 
 void WorldRenderer::updateAreas() {
@@ -220,11 +236,37 @@ void WorldRenderer::render() {
     shader = make_unique<OpenGLShader>(meshVertShader, meshFragShader);
   }
 
-  glm::mat4 projection = glm::perspective(fov, aspect, zNear, zFar);
+  glm::mat4 projection{1.0f};
+  glm::mat4 view{1.0f};
+  glm::vec3 eye;
 
-  glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
-  glm::vec3 eye = glm::vec4(playerPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
-  glm::mat4 view = glm::lookAt(eye, playerPos, up);
+  if (cameraMode == CameraMode::FOLLOW_PLAYER) {
+    projection = glm::perspective(fov, aspect, zNear, zFar);
+    glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
+    // we look at the lastKnownNonCollidingPos because it's less jumpy
+    eye = glm::vec4(lastKnownNonCollidingPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
+    view = glm::lookAt(eye, lastKnownNonCollidingPos, up);
+  } else if (cameraMode == CameraMode::GAME_CAM) {
+    projection = gameCam.perspective;
+    view = gameCam.transform;
+
+    glm::vec3 scale;
+    glm::quat orient;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+
+    glm::decompose(
+        view, // mat
+        scale, //scale
+        orient, //orient
+        eye, // translation,
+        skew, //skew
+        perspective // perspective
+    );
+
+//    view = glm::translate(eye) * glm::toMat4(orient);
+  }
+
 
   shader->setMat4("model", glm::identity<glm::mat4>());
   shader->setMat4("view", view);
@@ -278,6 +320,10 @@ void WorldRenderer::render() {
 //      glm::toMat4(playerOrientation);
 //  shader->setMat4("model", model);
 //  playerMorphedGhostMesh->draw();
+
+  glLineWidth(2.0f);
+  shader->setMat4("model", glm::mat4{1.0f});
+  cameraMesh->draw();
 }
 
 void WorldRenderer::renderImGui() {

@@ -22,6 +22,8 @@ namespace GameObjectRenderers {
       {"bool",        &primitiveRenderer},
       {"CVector3f",   &CVector3fRenderer},
       {"CQuaternion", &CQuaternionRenderer},
+      {"CTransform",  &CTransformRenderer},
+      {"CMatrix4f",   &CMatrix4fRenderer},
   };
 
   void render(const GameMember &member, bool addTree) {
@@ -246,6 +248,64 @@ namespace GameObjectRenderers {
       ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
     }
     hoverTooltip(member);
+  }
+
+  void CTransformRenderer(const GameMember &member) {
+    string title = fmt::format("{0}###{0} {1}", member.name, member.offset);
+    bool open = ImGui::CollapsingHeader(title.c_str());
+    hoverTooltip(member);
+    if (open) {
+      ImGui::Indent();
+
+      uint32_t addr = member.offset;
+      for (int r = 0; r < 4; r++) {
+        string row;
+        string clip;
+        for (int c = 0; c < 3; c++) {
+          float v = GameMemory::read_float(addr + (c * 4 + r) * 4);
+          row += fmt::format("{:0.2f}, ", v);
+          clip += fmt::format("{}, ", v);
+        }
+        ImGui::Text("%s", row.c_str());
+        if (ImGui::IsItemHovered()) {
+          ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        }
+        if (ImGui::IsItemClicked()) {
+          ImGui::SetClipboardText(clip.c_str());
+        }
+      }
+
+      ImGui::Unindent();
+    }
+  }
+
+  void CMatrix4fRenderer(const GameMember &member) {
+    string title = fmt::format("{0}###{0} {1}", member.name, member.offset);
+    bool open = ImGui::CollapsingHeader(title.c_str());
+    hoverTooltip(member);
+    if (open) {
+      ImGui::Indent();
+
+      uint32_t addr = member.offset;
+      for (int r = 0; r < 4; r++) {
+        string row;
+        string clip;
+        for (int c = 0; c < 4; c++) {
+          float v = GameMemory::read_float(addr + (c * 4 + r) * 4);
+          row += fmt::format("{:0.2f}, ", v);
+          clip += fmt::format("{}, ", v);
+        }
+        ImGui::Text("%s", row.c_str());
+        if (ImGui::IsItemHovered()) {
+          ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        }
+        if (ImGui::IsItemClicked()) {
+          ImGui::SetClipboardText(clip.c_str());
+        }
+      }
+
+      ImGui::Unindent();
+    }
   }
 
   void renderVector(const GameMember &member) {

@@ -1,4 +1,6 @@
 struct CCameraManager {
-    *CFirstPersonCamera firstPerson 0x7C
-    *CBallCamera bball 0x7C
+    i16 curCameraId 0x0
+    rstl::vector<i16> cineCameras 0x4
+    *CFirstPersonCamera fpCamera 0x7C
+    *CBallCamera ballCamera 0x80
 }

@@ -14,6 +14,8 @@ namespace GameObjectRenderers {
   void primitiveRenderer(const GameDefinitions::GameMember &member);
   void CVector3fRenderer(const GameDefinitions::GameMember &member);
   void CQuaternionRenderer(const GameDefinitions::GameMember &member);
+  void CTransformRenderer(const GameDefinitions::GameMember &member);
+  void CMatrix4fRenderer(const GameDefinitions::GameMember &member);
   void renderVector(const GameDefinitions::GameMember &member);
 
   using RenderFunc = void (*)(const GameDefinitions::GameMember&);

@@ -82,7 +82,10 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   glViewport(0, 0, width, height);
   worldRenderer.aspect = (float) width / (float) height;
 
-  mem_edit.ReadOnly = true;
+  mem_edit.ReadOnly = false;
+  mem_edit.WriteFn = [](ImU8* data, size_t off, ImU8 d) {
+    // do nothing
+  };
 
   // TODO: probably remove this
   if (std::filesystem::exists("../mem1.raw")) {
@@ -228,9 +231,9 @@ void PrimeWatch::doImGui() {
     ImGuiFileDialog::Instance()->Close();
   }
 
-  if (ImGui::Begin("CStateManager")) {
-    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager_ADDRESS};
-    GameObjectRenderers::render(stateManager, false);
+  if (ImGui::Begin("globals")) {
+    GameObjectRenderers::render(g_stateManager, true);
+    GameObjectRenderers::render(g_main, true);
   }
   ImGui::End();
 
@@ -281,6 +284,16 @@ void PrimeWatch::doMainMenu() {
       }
       if (ImGui::MenuItem("Show All", nullptr, worldRenderer.culling == CullType::NONE)) {
         worldRenderer.culling = CullType::NONE;
+      }
+      ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Camera")) {
+      if (ImGui::MenuItem("Follow Player", nullptr, worldRenderer.cameraMode == CameraMode::FOLLOW_PLAYER)) {
+        worldRenderer.cameraMode = CameraMode::FOLLOW_PLAYER;
+      }
+      if (ImGui::MenuItem("Game Cam", nullptr, worldRenderer.cameraMode == CameraMode::GAME_CAM)) {
+        worldRenderer.cameraMode = CameraMode::GAME_CAM;
       }
       ImGui::EndMenu();
     }

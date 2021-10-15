@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include "defs/GameDefinitions.hpp"
 
-// TODO: move these into a definitions file or something so they can be per-version or per-game
-
-constexpr uint32_t CStateManager_ADDRESS = 0x8045A1A8;
+const GameDefinitions::GameMember g_stateManager{.name="g_stateManager", .type="CStateManager", .offset=0x8045A1A8};
+const GameDefinitions::GameMember g_main{.name="g_main", .type="CMain", .offset=0x80457560};

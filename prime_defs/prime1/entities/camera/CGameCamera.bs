@@ -1,7 +1,7 @@
 struct CGameCamera: CActor {
     u32 watchedObject 0xE8
     CMatrix4f perspectiveMatrix 0xEC
-    CTransform camTransform 0x12C
+    CTransform origXf 0x12C
     f32 currentFoV 0x15C
     f32 znear 0x160
     f32 zfar 0x164

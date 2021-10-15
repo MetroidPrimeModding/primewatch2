@@ -17,6 +17,20 @@ enum class CullType {
   NONE
 };
 
+enum class CameraMode {
+  FOLLOW_PLAYER,
+  GAME_CAM
+};
+
+struct GameCamera {
+  glm::mat4 perspective;
+  glm::mat4 transform;
+  float fov;
+  float znear;
+  float zfar;
+  float aspect;
+};
+
 class WorldRenderer {
 public:
   float aspect{0};
@@ -30,6 +44,7 @@ public:
   glm::vec3 up{0, 0, 1};
 
   CullType culling{CullType::BACK};
+  CameraMode cameraMode{CameraMode::FOLLOW_PLAYER};
 
   glm::vec3 lightDir{0.1,0.2f,0.9f};
 
@@ -44,14 +59,16 @@ public:
   void renderImGui();
 
 private:
-
-
   std::unique_ptr<OpenGLShader> shader{};
   std::unique_ptr<OpenGLMesh> playerUnmorphedMesh{};
   std::unique_ptr<OpenGLMesh> playerUnmorphedGhostMesh{};
   std::unique_ptr<OpenGLMesh> playerMorphedMesh{};
   std::unique_ptr<OpenGLMesh> playerMorphedGhostMesh{};
+
+  std::unique_ptr<OpenGLMesh> cameraMesh;
   std::map<uint32_t, CollisionMesh> mesh_by_mrea{};
+
+  GameCamera gameCam;
 
   void updateAreas();
   std::optional<CollisionMesh> loadMesh(const GameDefinitions::GameMember &area);

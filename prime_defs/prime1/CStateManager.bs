@@ -7,4 +7,12 @@ struct CStateManager {
     u32 nextAreaID 0x8CC
     u32 prevAreaID 0x8D0
     CRandom16 random 0x8FC
+
+    bool readyToRender 0xf94:7:1
+    bool quitGame 0xf94:6:1
+    bool generatingObject 0xf94:5:1
+    bool inMapScreen 0xf94:4:1
+    bool inSaveUI 0xf94:3:1
+    bool cinematicPause 0xf94:2:1
+    bool fullThreat 0xf94:1:1
 }

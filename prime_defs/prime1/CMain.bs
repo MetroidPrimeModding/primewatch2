@@ -1,0 +1,19 @@
+struct CMain {
+  EFlowState flowState 0x12C
+  bool finished 0x160:7:1
+  bool mfGameBuilt 0x160:6:1
+  bool screenFading 0x160:5:1
+  bool manageCard 0x160:3:1
+  bool cardBusy 0x160:0:1
+  bool gameFrameDrawn 0x161:7:1
+}
+
+enum EFlowState: u32 {
+  None,
+  WinBad,
+  WinGood,
+  WinBest,
+  LoseGame,
+  Default,
+  StateSetter,
+}

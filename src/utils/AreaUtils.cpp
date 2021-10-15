@@ -7,7 +7,7 @@ using namespace std;
 
 namespace AreaUtils {
   vector<GameMember> getAreas() {
-    GameMember stateManager{.name="g_stateManager", .type="CStateManager", .offset=CStateManager_ADDRESS};
+    GameMember stateManager = g_stateManager;
     auto world = stateManager.memberByName("world");
     if (!world) return {};
     auto areas = world->memberByName("areas");

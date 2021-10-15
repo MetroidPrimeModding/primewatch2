@@ -2,8 +2,7 @@
 
 #include <glad/glad.h>
 
-OpenGLMesh::OpenGLMesh(std::vector<Vert> vertData, RenderType mode) {
-  vertCount = static_cast<int>(vertData.size());
+OpenGLMesh::OpenGLMesh(const std::vector<Vert> &vertData, RenderType mode, BufferUpdateType type) {
   this->mode = mode;
 
   glGenVertexArrays(1, &vao);
@@ -11,7 +10,6 @@ OpenGLMesh::OpenGLMesh(std::vector<Vert> vertData, RenderType mode) {
 
   glBindVertexArray(vao);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, vertCount * sizeof(Vert), vertData.data(), GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vert), (void*) offsetof(Vert, pos));
   glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vert), (void*) offsetof(Vert, color));
@@ -19,6 +17,8 @@ OpenGLMesh::OpenGLMesh(std::vector<Vert> vertData, RenderType mode) {
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
   glEnableVertexAttribArray(2);
+
+  bufferNewData(vertData, type);
 }
 
 OpenGLMesh::~OpenGLMesh() {
@@ -28,6 +28,19 @@ OpenGLMesh::~OpenGLMesh() {
   if (this->vbo != 0) {
     glDeleteBuffers(1, &this->vbo);
   }
+}
+
+void OpenGLMesh::bufferNewData(const std::vector<Vert> &vertData, BufferUpdateType type) {
+  glBindVertexArray(vao);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  int bufferMode = GL_STATIC_DRAW;
+  if (type == BufferUpdateType::STREAM) {
+    bufferMode = GL_STREAM_DRAW;
+  } else if (type == BufferUpdateType::DYNAMIC) {
+    bufferMode = GL_DYNAMIC_DRAW;
+  }
+  vertCount = static_cast<int>(vertData.size());
+  glBufferData(GL_ARRAY_BUFFER, vertCount * sizeof(Vert), vertData.data(), bufferMode);
 }
 
 void OpenGLMesh::draw() {
@@ -59,3 +72,4 @@ void OpenGLMesh::draw() {
   }
   glDrawArrays(glMode, 0, vertCount);
 }
+

@@ -28,14 +28,21 @@ enum class RenderType {
   TRIANGLE_FAN
 };
 
+enum class BufferUpdateType {
+  STATIC,
+  DYNAMIC,
+  STREAM
+};
+
 class OpenGLMesh {
 public:
-  explicit OpenGLMesh(std::vector<Vert> vertData, RenderType mode);
+  explicit OpenGLMesh(const std::vector<Vert> &vertData, RenderType mode, BufferUpdateType type = BufferUpdateType::STATIC);
   ~OpenGLMesh();
 
   OpenGLMesh(const OpenGLMesh &) = delete;
   OpenGLMesh &operator=(const OpenGLMesh &) = delete;
 
+  void bufferNewData(const std::vector<Vert> &vertData, BufferUpdateType type = BufferUpdateType::DYNAMIC);
   void draw();
 private:
   int vertCount{0};
