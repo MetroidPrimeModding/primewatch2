@@ -248,7 +248,7 @@ void WorldRenderer::render() {
     view = glm::lookAt(eye, lastKnownNonCollidingPos, up);
   } else if (cameraMode == CameraMode::GAME_CAM) {
     projection = gameCam.perspective;
-    view = gameCam.transform;
+    view = glm::inverse(gameCam.transform);
 
     glm::vec3 scale;
     glm::quat orient;
