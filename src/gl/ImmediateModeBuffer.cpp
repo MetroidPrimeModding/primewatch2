@@ -1,6 +1,7 @@
 #include "ImmediateModeBuffer.hpp"
 
 #include <algorithm>
+#include <iterator>
 
 ImmediateModeBuffer::ImmediateModeBuffer() {
   linesMesh = make_unique<OpenGLMesh>(
@@ -116,7 +117,7 @@ void ImmediateModeBuffer::addLines(const std::vector<Vert> &newLineVerts) {
   glm::mat4 vt = this->vertTransform;
   glm::mat3 nt = this->normalTransform;
   std::transform(
-      newLineVerts.cbegin(), newLineVerts.cend(), std::back_insert_iterator(lineVerts),
+      newLineVerts.cbegin(), newLineVerts.cend(), std::back_inserter(lineVerts),
       [&vt, &nt](const Vert &in) {
         Vert v{
             .pos = glm::vec3{vt * glm::vec4{in.pos, 1.0f}},
@@ -132,7 +133,7 @@ void ImmediateModeBuffer::addTris(const std::vector<Vert> &newTriVerts) {
   glm::mat4 vt = this->vertTransform;
   glm::mat3 nt = this->normalTransform;
   std::transform(
-      newTriVerts.cbegin(), newTriVerts.cend(), std::back_insert_iterator(triVerts),
+      newTriVerts.cbegin(), newTriVerts.cend(), std::back_inserter(triVerts),
       [&vt, &nt](const Vert &in) {
         Vert v{
             .pos = glm::vec3{vt * glm::vec4{in.pos, 1.0f}},
