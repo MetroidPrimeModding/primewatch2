@@ -8,6 +8,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <defs/GameDefinitions.hpp>
 #include <gl/OpenGLShader.hpp>
+#include <gl/ImmediateModeBuffer.hpp>
 #include <PrimeWatchInput.hpp>
 #include "./CollisionMesh.hpp"
 
@@ -51,6 +52,7 @@ public:
   bool playerIsMorphed{false};
   glm::vec3 lastKnownNonCollidingPos;
   glm::vec3 playerPos;
+  glm::vec3 playerVelocity;
   glm::quat playerOrientation;
 
   void init();
@@ -60,12 +62,17 @@ public:
 
 private:
   std::unique_ptr<OpenGLShader> shader{};
-  std::unique_ptr<OpenGLMesh> playerUnmorphedMesh{};
-  std::unique_ptr<OpenGLMesh> playerUnmorphedGhostMesh{};
-  std::unique_ptr<OpenGLMesh> playerMorphedMesh{};
-  std::unique_ptr<OpenGLMesh> playerMorphedGhostMesh{};
+  std::unique_ptr<ImmediateModeBuffer> renderBuff;
+  std::unique_ptr<ImmediateModeBuffer> translucentRenderBuff;
 
-  std::unique_ptr<OpenGLMesh> cameraMesh;
+//  std::unique_ptr<OpenGLMesh> playerUnmorphedMesh{};
+//  std::unique_ptr<OpenGLMesh> playerUnmorphedGhostMesh{};
+//  std::unique_ptr<OpenGLMesh> playerMorphedMesh{};
+//  std::unique_ptr<OpenGLMesh> playerMorphedGhostMesh{};
+
+//  std::unique_ptr<OpenGLMesh> cameraMesh;
+//  std::unique_ptr<OpenGLMesh> speedMesh;
+
   std::map<uint32_t, CollisionMesh> mesh_by_mrea{};
 
   GameCamera gameCam;

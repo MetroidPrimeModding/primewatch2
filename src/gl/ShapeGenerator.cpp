@@ -16,7 +16,7 @@ struct LineSeg {
 };
 
 namespace ShapeGenerator {
-  unique_ptr<OpenGLMesh> generateCube(glm::vec3 min, glm::vec3 max, glm::vec4 color) {
+  std::vector<Vert> generateCube(glm::vec3 min, glm::vec3 max, glm::vec4 color) {
     vector<Vert> verts;
 
     // -Z
@@ -68,14 +68,14 @@ namespace ShapeGenerator {
     verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {0, 1, 0},});
     verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 1, 0},});
 
-    return make_unique<OpenGLMesh>(verts, RenderType::TRIANGLES);
+    return verts;
   }
 
-  std::unique_ptr<OpenGLMesh> generateCubeFromCenter(glm::vec3 center, glm::vec3 size, glm::vec4 color) {
-    return std::move(generateCube(center - size / 2.0f, center + size / 2.0f, color));
+  std::vector<Vert> generateCubeFromCenter(glm::vec3 center, glm::vec3 size, glm::vec4 color) {
+    return generateCube(center - size / 2.0f, center + size / 2.0f, color);
   }
 
-  std::unique_ptr<OpenGLMesh> generateSphere(glm::vec3 center, float radius, glm::vec4 color) {
+  std::vector<Vert> generateSphere(glm::vec3 center, float radius, glm::vec4 color) {
     vector<Vert> verts;
 
     // I wrote this, figuring it out by hand so... probably not optimal
@@ -126,7 +126,7 @@ namespace ShapeGenerator {
       }
     }
 
-    return make_unique<OpenGLMesh>(verts, RenderType::TRIANGLES);
+    return verts;
   }
 
   inline glm::vec4 invertHelper(glm::mat4 inv, glm::vec3 v) {

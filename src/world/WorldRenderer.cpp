@@ -75,35 +75,8 @@ void main() {
 )src";
 
 void WorldRenderer::init() {
-  playerUnmorphedMesh = ShapeGenerator::generateCube(
-      glm::vec3{-0.5, -0.5, 0},
-      glm::vec3{0.5, 0.5, 2.7},
-      glm::vec4{1, 1, 1, 1}
-  );
-
-  playerUnmorphedGhostMesh = ShapeGenerator::generateCube(
-      glm::vec3{-0.5, -0.5, 0},
-      glm::vec3{0.5, 0.5, 2.7},
-      glm::vec4{1, 0.5, 0.5, 0.5}
-  );
-
-  playerMorphedMesh = ShapeGenerator::generateSphere(
-      glm::vec3{0, 0, 0},
-      0.7f,
-      glm::vec4{1, 1, 1, 1}
-  );
-
-  playerMorphedGhostMesh = ShapeGenerator::generateSphere(
-      glm::vec3{0, 0, 0},
-      0.7f,
-      glm::vec4{1, 0.5, 0.5, 0.5}
-  );
-
-  cameraMesh = make_unique<OpenGLMesh>(
-      ShapeGenerator::generateCameraLineSegments(glm::mat4{1.0f}, glm::mat3x4{1.0f}),
-      RenderType::LINES,
-      BufferUpdateType::STREAM
-  );
+  renderBuff = make_unique<ImmediateModeBuffer>();
+  translucentRenderBuff = make_unique<ImmediateModeBuffer>();
 }
 
 void WorldRenderer::update(const PrimeWatchInput &input) {
@@ -120,12 +93,8 @@ void WorldRenderer::update(const PrimeWatchInput &input) {
 
   glm::mat4 tf = MathUtils::readAsCTransform(stateManager["player"]["transform"]);
   playerPos = glm::column(tf, 3);
-  GameMember lastKnownNonCollidingTranslation = stateManager["player"]["lastNonCollidingState"]["translation"];
-  lastKnownNonCollidingPos = MathUtils::readAsCVector3f(lastKnownNonCollidingTranslation);
-
-  if (glm::length(lastKnownNonCollidingPos - playerPos) > 0.2) {
-    cout << "uhoh " << glm::length(lastKnownNonCollidingPos - playerPos) << endl;
-  }
+  playerVelocity = MathUtils::readAsCVector3f(stateManager["player"]["velocity"]);
+  lastKnownNonCollidingPos = MathUtils::readAsCVector3f(stateManager["player"]["lastNonCollidingState"]["translation"]);
 
   playerOrientation = MathUtils::readAsCQuaternion(stateManager["player"]["orientation"]);
   playerIsMorphed = stateManager["player"]["morphState"].read_u32() == 1; // Morphed
@@ -140,8 +109,6 @@ void WorldRenderer::update(const PrimeWatchInput &input) {
   gameCam.znear = camera["znear"].read_f32();
   gameCam.zfar = camera["zfar"].read_f32();
   gameCam.aspect = camera["aspect"].read_f32();
-
-  cameraMesh->bufferNewData(ShapeGenerator::generateCameraLineSegments(gameCam.perspective, gameCam.transform));
 }
 
 void WorldRenderer::updateAreas() {
@@ -236,6 +203,9 @@ void WorldRenderer::render() {
     shader = make_unique<OpenGLShader>(meshVertShader, meshFragShader);
   }
 
+  renderBuff->clear();
+  translucentRenderBuff->clear();
+
   glm::mat4 projection{1.0f};
   glm::mat4 view{1.0f};
   glm::vec3 eye;
@@ -266,6 +236,67 @@ void WorldRenderer::render() {
 
 //    view = glm::translate(eye) * glm::toMat4(orient);
   }
+
+  // Player collision
+  if (playerIsMorphed) {
+    glm::mat4 model =
+        glm::translate(playerPos + glm::vec3(0, 0, 0.7)) *
+        glm::toMat4(playerOrientation);
+    renderBuff->setTransform(model);
+    renderBuff->addTris(ShapeGenerator::generateSphere(
+        glm::vec3{0, 0, 0},
+        0.7f,
+        glm::vec4{1, 1, 1, 1}
+    ));
+  } else {
+    renderBuff->setTransform(glm::translate(playerPos));
+    renderBuff->addTris(ShapeGenerator::generateCube(
+        glm::vec3{-0.5, -0.5, 0},
+        glm::vec3{0.5, 0.5, 2.7},
+        glm::vec4{1, 1, 1, 1}
+    ));
+  }
+  // player last known ghost
+  translucentRenderBuff->setTransform(glm::translate(lastKnownNonCollidingPos));
+  translucentRenderBuff->addTris(ShapeGenerator::generateCube(
+      glm::vec3{-0.5, -0.5, 0},
+      glm::vec3{0.5, 0.5, 2.7},
+      glm::vec4{1, 0.5, 0.5, 0.5}
+  ));
+
+  // Camera
+  renderBuff->setTransform(glm::mat3{1.0f});
+  renderBuff->addLines(ShapeGenerator::generateCameraLineSegments(
+      gameCam.perspective,
+      gameCam.transform
+  ));
+
+  // speed
+  if (playerIsMorphed) {
+    renderBuff->setTransform(glm::translate(playerPos + glm::vec3{0, 0, 0.7f}));
+  } else {
+    renderBuff->setTransform(glm::translate(playerPos + glm::vec3{0, 0, 2.7f / 2.0f}));
+  }
+  // calculate "forward" and "degrees from forward
+  glm::vec2 forward = glm::normalize(playerOrientation * glm::vec3(0,1,0));
+  glm::vec2 movement = glm::normalize(playerVelocity);
+  float angle = glm::acos(glm::dot(forward, movement) / (glm::length(forward) * glm::length(movement)));
+
+  glm::vec4 color{0,1,0,1};
+  if (glm::abs(angle) > glm::pi<float>()/2.0f || glm::isnan(angle)) {
+    color = {1,0,0,1};
+  } else {
+    float percent = angle / (glm::pi<float>()/2.0f);
+    color = {0, percent * 0.5f + 0.5f, 0, 1};
+    if (percent > 0.95) {
+      color = {0, 1, 1, 1};
+    }
+  }
+  renderBuff->setColor({1,1,1,1});
+  renderBuff->addLine(glm::vec3{0,0,0}, glm::vec3{forward, 0});
+  renderBuff->setColor(color);
+  renderBuff->addLine(glm::vec3{0,0,0}, playerVelocity * 0.3f);
+
 
 
   shader->setMat4("model", glm::identity<glm::mat4>());
@@ -300,30 +331,14 @@ void WorldRenderer::render() {
   // then player
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
-  if (playerIsMorphed) {
-    glm::mat4 model =
-        glm::translate(playerPos + glm::vec3(0, 0, 0.7)) *
-        glm::toMat4(playerOrientation);
-    shader->setMat4("model", model);
-    playerMorphedMesh->draw();
-  } else {
-    shader->setMat4("model", glm::translate(playerPos));
-    playerUnmorphedMesh->draw();
-  }
+  glLineWidth(2.0f);
+  shader->setMat4("model", glm::mat4{1.0f});
+  renderBuff->draw();
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  shader->setMat4("model", glm::translate(lastKnownNonCollidingPos));
-  playerUnmorphedGhostMesh->draw();
-//  glm::mat4 model =
-//      glm::translate(lastKnownNonCollidingPos + glm::vec3(0, 0, 0.7)) *
-//      glm::toMat4(playerOrientation);
-//  shader->setMat4("model", model);
-//  playerMorphedGhostMesh->draw();
-
-  glLineWidth(2.0f);
   shader->setMat4("model", glm::mat4{1.0f});
-  cameraMesh->draw();
+  translucentRenderBuff->draw();
 }
 
 void WorldRenderer::renderImGui() {

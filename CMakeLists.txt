@@ -70,7 +70,7 @@ set(SOURCE_FILES
         src/world/CollisionMesh.hpp
         src/world/CollisionMesh.cpp
         src/world/WorldRenderer.cpp
-        src/world/WorldRenderer.hpp src/defs/GameOffsets.hpp src/utils/AreaUtils.cpp src/utils/AreaUtils.hpp src/gl/OpenGLMesh.cpp src/gl/OpenGLMesh.hpp src/gl/OpenGLShader.cpp src/gl/OpenGLShader.hpp src/PrimeWatchInput.cpp src/PrimeWatchInput.hpp src/gl/ShapeGenerator.cpp src/gl/ShapeGenerator.hpp src/utils/GameObjectUtils.cpp src/utils/GameObjectUtils.hpp src/utils/MathUtils.cpp src/utils/MathUtils.hpp)
+        src/world/WorldRenderer.hpp src/defs/GameOffsets.hpp src/utils/AreaUtils.cpp src/utils/AreaUtils.hpp src/gl/OpenGLMesh.cpp src/gl/OpenGLMesh.hpp src/gl/OpenGLShader.cpp src/gl/OpenGLShader.hpp src/PrimeWatchInput.cpp src/PrimeWatchInput.hpp src/gl/ShapeGenerator.cpp src/gl/ShapeGenerator.hpp src/utils/GameObjectUtils.cpp src/utils/GameObjectUtils.hpp src/utils/MathUtils.cpp src/utils/MathUtils.hpp src/gl/ImmediateModeBuffer.cpp src/gl/ImmediateModeBuffer.hpp)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
