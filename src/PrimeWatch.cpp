@@ -1,13 +1,17 @@
+#include "PrimeWatch.hpp"
+
 #include <iostream>
 #include <chrono>
 #include <implot.h>
-#include <defs/GameDefinitions.hpp>
-#include <defs/GameObjectRenderers.hpp>
 #include <filesystem>
 #include <fmt/format.h>
-#include <defs/GameOffsets.hpp>
+#include <set>
 
-#include "PrimeWatch.hpp"
+#include <defs/GameDefinitions.hpp>
+#include <defs/GameVtables.hpp>
+#include <defs/GameObjectRenderers.hpp>
+#include <defs/GameOffsets.hpp>
+#include <utils/GameObjectUtils.hpp>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -83,7 +87,7 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   worldRenderer.aspect = (float) width / (float) height;
 
   mem_edit.ReadOnly = false;
-  mem_edit.WriteFn = [](ImU8* data, size_t off, ImU8 d) {
+  mem_edit.WriteFn = [](ImU8 *data, size_t off, ImU8 d) {
     // do nothing
   };
 
@@ -237,6 +241,8 @@ void PrimeWatch::doImGui() {
   }
   ImGui::End();
 
+  drawObjectsWindow();
+
   mem_edit.DrawWindow("Raw view", GameMemory::memory.data(), GameMemory::memory.size());
 
   worldRenderer.renderImGui();
@@ -309,4 +315,84 @@ void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) 
   glViewport(0, 0, width, height);
   PrimeWatch *ptr = (PrimeWatch *) glfwGetWindowUserPointer(window);
   ptr->worldRenderer.aspect = (float) width / (float) height;
+}
+
+struct VtableInfo {
+  int active{0};
+  int inactive{0};
+};
+
+void PrimeWatch::drawObjectsWindow() {
+  if (ImGui::Begin("Objects")) {
+    auto entities = GameObjectUtils::getAllObjects();
+
+    map<uint32_t, VtableInfo> vtables;
+    for (auto &entity: entities) {
+      uint32_t vtable = entity["vtable"].read_u32();
+      if (entity["active"].read_bool()) {
+        vtables[vtable].active += 1;
+      } else {
+        vtables[vtable].inactive += 1;
+      }
+    }
+
+    ImGui::Text("%s", fmt::format("Current object count: {}", entities.size()).c_str());
+
+    static set<uint32_t> unknowns;
+    for (auto &entry: vtables) {
+      if (MP1_VTABLES.count(entry.first) == 0 && entry.first > 0x80000000u && entry.first < 0x80700000u) {
+        // if it's <80000 it's invalid and just not up to date yet
+        unknowns.insert(entry.first);
+      }
+    }
+
+    if (ImGui::Button(fmt::format("Copy unknowns ({})", unknowns.size()).c_str())) {
+      string clip;
+      for (auto &vt : unknowns) {
+        clip +=  fmt::format("{{0x{:08x}, \"\"}},\n", vt);
+      }
+      ImGui::SetClipboardText(clip.c_str());
+    }
+
+    if (ImGui::BeginTable(
+        "vtables", 4,
+        ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit
+    )) {
+      ImGui::TableSetupColumn("address", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch);
+      ImGui::TableSetupColumn("active", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("inactive", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableHeadersRow();
+
+      for (auto &entry: vtables) {
+        auto vtable = entry.first;
+        auto count = entry.second;
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        string vtable_string = fmt::format("{:08x}", vtable);
+        if (ImGui::Selectable(vtable_string.c_str())) {
+          string clip = fmt::format("{{0x{:08x}, \"\"}},", vtable);
+          ImGui::SetClipboardText(clip.c_str());
+        }
+
+        ImGui::TableNextColumn();
+        string name = "unknown";
+        if (MP1_VTABLES.count(vtable)) {
+          name = MP1_VTABLES[vtable];
+        }
+        ImGui::Text("%s", name.c_str());
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%d", count.active);
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%d", count.inactive);
+
+      }
+      ImGui::EndTable();
+    }
+  }
+  ImGui::End();
 }

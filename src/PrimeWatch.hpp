@@ -38,6 +38,7 @@ private:
   void doImGui();
   void doMemoryParse();
   void doMainMenu();
+  void drawObjectsWindow();
 };
 
 

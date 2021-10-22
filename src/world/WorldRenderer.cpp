@@ -139,6 +139,11 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
   auto polyCount = collision["polyCount"].read_u32();
   auto vertCount = collision["vertCount"].read_u32();
 
+  if (edgeCount > 50000 || polyCount > 50000 || vertCount > 50000 || matCount > 50000) {
+    cerr << "Bad read for polys" << endl;
+    return {};
+  }
+
   auto materialStart = collision["materials"].offset;
   auto edgeStart = collision["edges"].offset;
   auto polyStart = collision["polyEdges"].offset;
