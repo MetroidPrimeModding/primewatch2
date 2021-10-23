@@ -105,11 +105,6 @@ void PrimeWatch::mainLoop() {
     auto end = std::chrono::high_resolution_clock::now();
     auto ms = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start).count();
 
-    for (int i = 1; i < frameTimes.size(); i++) {
-      frameTimes[i - 1] = frameTimes[i];
-    }
-    frameTimes[frameTimes.size() - 1] = ms;
-
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
@@ -183,7 +178,6 @@ void PrimeWatch::doFrame() {
   // watch
   doMemoryParse();
 
-
   // imgui
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -198,16 +192,23 @@ void PrimeWatch::doFrame() {
 
   // world render
   worldRenderer.update(input);
-  worldRenderer.render();
+
+  set<uint16_t> highlightedEntities{
+      tableHoveredUid
+  };
+  for (auto &watch: editorIdsToWatch) {
+    highlightedEntities.insert(watch.lastKnownUid);
+  }
+  worldRenderer.render(entities, highlightedEntities);
 
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void PrimeWatch::doImGui() {
-//  ImGui::ShowDemoWindow(nullptr);
+  ImGui::ShowDemoWindow(nullptr);
 //  ImPlot::ShowDemoWindow(nullptr);
 //  ImPlot::ShowMetricsWindow(nullptr);
-//  ImGui::ShowMetricsWindow(nullptr);
+  ImGui::ShowMetricsWindow(nullptr);
 
   doMainMenu();
 
@@ -303,12 +304,41 @@ void PrimeWatch::doMainMenu() {
       }
       ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("Triggers")) {
+      if (ImGui::MenuItem("detectPlayer", nullptr, worldRenderer.triggerRenderConfig.detectPlayer))
+        worldRenderer.triggerRenderConfig.detectPlayer = !worldRenderer.triggerRenderConfig.detectPlayer;
+      if (ImGui::MenuItem("detectAi", nullptr, worldRenderer.triggerRenderConfig.detectAi))
+        worldRenderer.triggerRenderConfig.detectAi = !worldRenderer.triggerRenderConfig.detectAi;
+      if (ImGui::MenuItem("detectProjectiles", nullptr, worldRenderer.triggerRenderConfig.detectProjectiles))
+        worldRenderer.triggerRenderConfig.detectProjectiles = !worldRenderer.triggerRenderConfig.detectProjectiles;
+      if (ImGui::MenuItem("detectBombs", nullptr, worldRenderer.triggerRenderConfig.detectBombs))
+        worldRenderer.triggerRenderConfig.detectBombs = !worldRenderer.triggerRenderConfig.detectBombs;
+      if (ImGui::MenuItem("detectPowerBombs", nullptr, worldRenderer.triggerRenderConfig.detectPowerBombs))
+        worldRenderer.triggerRenderConfig.detectPowerBombs = !worldRenderer.triggerRenderConfig.detectPowerBombs;
+      if (ImGui::MenuItem("killOnEnter", nullptr, worldRenderer.triggerRenderConfig.killOnEnter))
+        worldRenderer.triggerRenderConfig.killOnEnter = !worldRenderer.triggerRenderConfig.killOnEnter;
+      if (ImGui::MenuItem("detectMorphedPlayer", nullptr, worldRenderer.triggerRenderConfig.detectMorphedPlayer))
+        worldRenderer.triggerRenderConfig.detectMorphedPlayer = !worldRenderer.triggerRenderConfig.detectMorphedPlayer;
+      if (ImGui::MenuItem("useCollisionImpluses", nullptr, worldRenderer.triggerRenderConfig.useCollisionImpluses))
+        worldRenderer.triggerRenderConfig.useCollisionImpluses = !worldRenderer.triggerRenderConfig.useCollisionImpluses;
+      if (ImGui::MenuItem("detectCamera", nullptr, worldRenderer.triggerRenderConfig.detectCamera))
+        worldRenderer.triggerRenderConfig.detectCamera = !worldRenderer.triggerRenderConfig.detectCamera;
+      if (ImGui::MenuItem("useBooleanIntersection", nullptr, worldRenderer.triggerRenderConfig.useBooleanIntersection))
+        worldRenderer.triggerRenderConfig.useBooleanIntersection = !worldRenderer.triggerRenderConfig.useBooleanIntersection;
+      if (ImGui::MenuItem("detectUnmorphedPlayer", nullptr, worldRenderer.triggerRenderConfig.detectUnmorphedPlayer))
+        worldRenderer.triggerRenderConfig.detectUnmorphedPlayer = !worldRenderer.triggerRenderConfig.detectUnmorphedPlayer;
+      if (ImGui::MenuItem("blockEnvironmentalEffects", 0, worldRenderer.triggerRenderConfig.blockEnvironmentalEffects))
+        worldRenderer.triggerRenderConfig.blockEnvironmentalEffects = !worldRenderer.triggerRenderConfig.blockEnvironmentalEffects;
+      ImGui::EndMenu();
+    }
     ImGui::EndMainMenuBar();
   }
 }
 
 void PrimeWatch::doMemoryParse() {
   GameMemory::updateFromDolphin();
+  entities = GameObjectUtils::getAllObjects();
 }
 
 void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) {
@@ -323,76 +353,204 @@ struct VtableInfo {
 };
 
 void PrimeWatch::drawObjectsWindow() {
-  if (ImGui::Begin("Objects")) {
-    auto entities = GameObjectUtils::getAllObjects();
+  // TODO: maybe cache this if I start looking at it in multiple places
+  map<uint32_t, GameMember> eidToEntity;
+  map<uint16_t, GameMember> uidToEntity;
 
-    map<uint32_t, VtableInfo> vtables;
-    for (auto &entity: entities) {
-      uint32_t vtable = entity["vtable"].read_u32();
-      if (entity["active"].read_bool()) {
-        vtables[vtable].active += 1;
-      } else {
-        vtables[vtable].inactive += 1;
-      }
+  map<uint32_t, VtableInfo> vtables;
+  for (auto &entity: entities) {
+    uint32_t vtable = entity["vtable"].read_u32();
+    if (entity["active"].read_bool()) {
+      vtables[vtable].active += 1;
+    } else {
+      vtables[vtable].inactive += 1;
     }
+    uint32_t eid = entity["editorID"].read_u32();
+    uint32_t uid = entity["uniqueID"].read_u16();
+    eidToEntity[eid] = entity;
+    uidToEntity[uid] = entity;
+  }
 
+  if (ImGui::Begin("Objects")) {
     ImGui::Text("%s", fmt::format("Current object count: {}", entities.size()).c_str());
 
     static set<uint32_t> unknowns;
-    for (auto &entry: vtables) {
-      if (MP1_VTABLES.count(entry.first) == 0 && entry.first > 0x80000000u && entry.first < 0x80700000u) {
+    for (auto &vtable: vtables) {
+      if (MP1_VTABLES.count(vtable.first) == 0 && vtable.first > 0x80000000u && vtable.first < 0x80700000u) {
         // if it's <80000 it's invalid and just not up to date yet
-        unknowns.insert(entry.first);
+        unknowns.insert(vtable.first);
       }
     }
 
     if (ImGui::Button(fmt::format("Copy unknowns ({})", unknowns.size()).c_str())) {
       string clip;
-      for (auto &vt : unknowns) {
-        clip +=  fmt::format("{{0x{:08x}, \"\"}},\n", vt);
+      for (auto &vt: unknowns) {
+        clip += fmt::format("{{0x{:08x}, \"\"}},\n", vt);
       }
       ImGui::SetClipboardText(clip.c_str());
     }
 
+    if (ImGui::CollapsingHeader("List of types")) {
+      ImGui::Indent();
+      if (ImGui::BeginTable(
+          "vtables", 4,
+          ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit
+      )) {
+        ImGui::TableSetupColumn("address", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("active", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("inactive", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableHeadersRow();
+
+        for (auto &entry: vtables) {
+          auto vtable = entry.first;
+          auto count = entry.second;
+
+          ImGui::TableNextRow();
+
+          ImGui::TableNextColumn();
+          string vtable_string = fmt::format("{:08x}", vtable);
+          if (ImGui::Selectable(vtable_string.c_str())) {
+            string clip = fmt::format("{{0x{:08x}, \"\"}},", vtable);
+            ImGui::SetClipboardText(clip.c_str());
+          }
+
+          ImGui::TableNextColumn();
+          string name = "unknown";
+          if (MP1_VTABLES.count(vtable)) {
+            name = MP1_VTABLES[vtable];
+          }
+          ImGui::Text("%s", name.c_str());
+
+          ImGui::TableNextColumn();
+          ImGui::Text("%d", count.active);
+
+          ImGui::TableNextColumn();
+          ImGui::Text("%d", count.inactive);
+
+        }
+        ImGui::EndTable();
+      }
+      ImGui::Unindent();
+    }
+
+    ImGui::Text("Editor ID: #38 Class: @CPlayer name: &name");
+    ImGui::Text("(or just type what you're looking for)");
+    objectFilter.Draw();
+    ImGui::Checkbox("Show active only", &showActiveInTableOnly);
+
+    tableHoveredUid = 0xFFFF;
+    ImVec2 outer_size = ImVec2(0.0f, 400);
     if (ImGui::BeginTable(
-        "vtables", 4,
-        ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit
+        "entities", 5,
+        ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit |
+        ImGuiTableFlags_ScrollY | ImGuiTableFlags_Hideable
     )) {
-      ImGui::TableSetupColumn("address", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("class", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("editorID", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("uniqueID", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide);
+      ImGui::TableSetupColumn("active", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide);
       ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch);
-      ImGui::TableSetupColumn("active", ImGuiTableColumnFlags_WidthFixed);
-      ImGui::TableSetupColumn("inactive", ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableHeadersRow();
 
-      for (auto &entry: vtables) {
-        auto vtable = entry.first;
-        auto count = entry.second;
+      for (auto &entity: entities) {
+        bool active = entity["active"].read_bool();
+        if (showActiveInTableOnly && !active) continue;
+
+        uint16_t uid = entity["uniqueID"].read_u16();
+        uint32_t eid = entity["editorID"].read_u32();
+        string name = entity["name"].read_string();
+
+        string filterCheck = fmt::format("#{:08x}#{:08}@{}&{}", eid, eid, entity.type, name);
+        if (!objectFilter.PassFilter(filterCheck.c_str())) continue;
 
         ImGui::TableNextRow();
-
+        //class
         ImGui::TableNextColumn();
-        string vtable_string = fmt::format("{:08x}", vtable);
-        if (ImGui::Selectable(vtable_string.c_str())) {
-          string clip = fmt::format("{{0x{:08x}, \"\"}},", vtable);
-          ImGui::SetClipboardText(clip.c_str());
+        string str = fmt::format("{}##eid-{}uid-{}", entity.type, eid, uid);
+        if (ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+          bool alreadyWatched = false;
+          for (auto &toWatch: editorIdsToWatch) {
+            if (toWatch.eid == eid) {
+              toWatch.lastKnownUid = uid;
+              toWatch.type = entity.type;
+              alreadyWatched = true;
+            }
+          }
+          if (!alreadyWatched) {
+            editorIdsToWatch.push_back(WatchedEditorId{
+                .eid = eid,
+                .lastKnownUid = uid,
+                .type = entity.type,
+            });
+          }
+        }
+        if (ImGui::IsItemHovered()) {
+          tableHoveredUid = uid;
         }
 
+        //eid
         ImGui::TableNextColumn();
-        string name = "unknown";
-        if (MP1_VTABLES.count(vtable)) {
-          name = MP1_VTABLES[vtable];
+        str = fmt::format("{:08x}", eid);
+        ImGui::Text("%s", str.c_str());
+
+        //uid
+        ImGui::TableNextColumn();
+        str = fmt::format("{:08x}", uid);
+        ImGui::Text("%s", str.c_str());
+
+        //active
+        ImGui::TableNextColumn();
+        if (active) {
+          ImGui::Text("yes");
+        } else {
+          ImGui::Text("no");
         }
-        ImGui::Text("%s", name.c_str());
 
+        //name
         ImGui::TableNextColumn();
-        ImGui::Text("%d", count.active);
-
-        ImGui::TableNextColumn();
-        ImGui::Text("%d", count.inactive);
-
+        str = fmt::format("{}", name);
+        ImGui::Text("%s", str.c_str());
       }
       ImGui::EndTable();
+      ImGui::Text("tableHoveredUid: %d", tableHoveredUid);
     }
   }
   ImGui::End();
+
+  // Render individual object windows
+  for (auto iter = editorIdsToWatch.begin(); iter != editorIdsToWatch.end();) {
+    WatchedEditorId &eidToWatch = *iter;
+    bool open = true;
+    ImGui::SetNextWindowSizeConstraints(ImVec2(240, 200), ImVec2(1000000, 1000000));
+    string windowTitle = fmt::format("{} {:08x}##{:08x}", eidToWatch.type, eidToWatch.eid, eidToWatch.eid);
+    if (ImGui::Begin(windowTitle.c_str(), &open)) {
+      // first check if we have something based on the last known unique id
+      bool handled = false;
+      if (!handled && uidToEntity.count(eidToWatch.lastKnownUid)) {
+        GameMember entity = uidToEntity[eidToWatch.lastKnownUid];
+        uint32_t eid = entity["editorID"].read_u32();
+        if (eid == eidToWatch.eid && entity.type == eidToWatch.type) {
+          GameObjectRenderers::render(entity, false);
+          handled = true;
+        }
+      }
+      if (!handled && eidToEntity.count(eidToWatch.eid)) {
+        auto entity = eidToEntity[eidToWatch.eid];
+        uint16_t uid = entity["uniqueID"].read_u16();
+        eidToWatch.lastKnownUid = uid;
+        GameObjectRenderers::render(entity, false);
+        handled = true;
+      }
+      if (!handled) {
+        ImGui::Text("Not loaded");
+      }
+    }
+    ImGui::End();
+    if (!open) {
+      iter = editorIdsToWatch.erase(iter);
+    } else {
+      iter++;
+    }
+  }
 }

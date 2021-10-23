@@ -44,6 +44,7 @@ namespace GameDefinitions {
     double read_f64() const;
 
     std::string read_string() const;
+    bool extendsClass(const std::string &className) const;
   };
 
   struct GameStruct {
@@ -56,6 +57,7 @@ namespace GameDefinitions {
     std::map<uint32_t, GameMember> members_by_offset;
 
     std::optional<GameMember> memberByName(const std::string& subName) const;
+    bool extendsClass(const std::string &className);
   };
 
   void loadDefinitionsFromPath(const char *path);

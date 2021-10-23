@@ -4,11 +4,18 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <array>
+#include <set>
 
 #include "imgui.h"
 #include "imgui_memory_editor.h"
 #include "world/WorldRenderer.hpp"
 #include "PrimeWatchInput.hpp"
+
+struct WatchedEditorId {
+  uint32_t eid;
+  uint16_t lastKnownUid;
+  std::string type;
+};
 
 class PrimeWatch {
 public:
@@ -22,13 +29,21 @@ public:
 private:
   bool initialized{false};
   GLFWwindow *window;
-  std::vector<int> pids{};
-  int selectedPidIndex{0};
-  MemoryEditor mem_edit;
   WorldRenderer worldRenderer;
   PrimeWatchInput input;
 
-  std::array<float, 120> frameTimes;
+  // imgui stuff
+  MemoryEditor mem_edit;
+  ImGuiTextFilter objectFilter;
+
+  // imgui state controlling lists
+  std::vector<int> pids{};
+  std::vector<WatchedEditorId> editorIdsToWatch;
+  bool showActiveInTableOnly{true};
+  uint16_t tableHoveredUid{0xFFFF};
+
+  // caching the most recent list of entities
+  std::vector<GameDefinitions::GameMember> entities;
 
   void initGlAndImgui(int width, int height);
   static void framebuffer_size_cb(GLFWwindow *window, int width, int height);

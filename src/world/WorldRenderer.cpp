@@ -203,7 +203,8 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
   return res;
 }
 
-void WorldRenderer::render() {
+void WorldRenderer::render(const std::vector<GameDefinitions::GameMember> &entities,
+                           const set<uint16_t> &highlightedEids) {
   if (!shader) {
     shader = make_unique<OpenGLShader>(meshVertShader, meshFragShader);
   }
@@ -283,26 +284,26 @@ void WorldRenderer::render() {
     renderBuff->setTransform(glm::translate(playerPos + glm::vec3{0, 0, 2.7f / 2.0f}));
   }
   // calculate "forward" and "degrees from forward
-  glm::vec2 forward = glm::normalize(playerOrientation * glm::vec3(0,1,0));
+  glm::vec2 forward = glm::normalize(playerOrientation * glm::vec3(0, 1, 0));
   glm::vec2 movement = glm::normalize(playerVelocity);
   float angle = glm::acos(glm::dot(forward, movement) / (glm::length(forward) * glm::length(movement)));
 
-  glm::vec4 color{0,1,0,1};
-  if (glm::abs(angle) > glm::pi<float>()/2.0f || glm::isnan(angle)) {
-    color = {1,0,0,1};
+  glm::vec4 color{0, 1, 0, 1};
+  if (glm::abs(angle) > glm::pi<float>() / 2.0f || glm::isnan(angle)) {
+    color = {1, 0, 0, 1};
   } else {
-    float percent = angle / (glm::pi<float>()/2.0f);
+    float percent = angle / (glm::pi<float>() / 2.0f);
     color = {0, percent * 0.5f + 0.5f, 0, 1};
     if (percent > 0.95) {
       color = {0, 1, 1, 1};
     }
   }
-  renderBuff->setColor({1,1,1,1});
-  renderBuff->addLine(glm::vec3{0,0,0}, glm::vec3{forward, 0});
+  renderBuff->setColor({1, 1, 1, 1});
+  renderBuff->addLine(glm::vec3{0, 0, 0}, glm::vec3{forward, 0});
   renderBuff->setColor(color);
-  renderBuff->addLine(glm::vec3{0,0,0}, playerVelocity * 0.3f);
+  renderBuff->addLine(glm::vec3{0, 0, 0}, playerVelocity * 0.3f);
 
-
+  renderEntities(entities, highlightedEids);
 
   shader->setMat4("model", glm::identity<glm::mat4>());
   shader->setMat4("view", view);
@@ -340,10 +341,12 @@ void WorldRenderer::render() {
   shader->setMat4("model", glm::mat4{1.0f});
   renderBuff->draw();
 
+  glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   shader->setMat4("model", glm::mat4{1.0f});
   translucentRenderBuff->draw();
+  glEnable(GL_DEPTH_TEST);
 }
 
 void WorldRenderer::renderImGui() {
@@ -407,4 +410,56 @@ void WorldRenderer::renderImGui() {
   }
 
   ImGui::End();
+}
+
+void WorldRenderer::renderEntities(const std::vector<GameDefinitions::GameMember> &entities,
+                                   const set<uint16_t> &highlightedEntities) {
+  renderBuff->setTransform(glm::mat4{1.0f});
+
+  uint32_t triggerRenderFlags = 0;
+  if (triggerRenderConfig.detectPlayer) triggerRenderFlags |= 0x1;
+  if (triggerRenderConfig.detectAi) triggerRenderFlags |= 0x2;
+  if (triggerRenderConfig.detectProjectiles) triggerRenderFlags |= 0x4 | 0x8 | 0x10 | 0x20 | 0x100 | 0x200 | 0x400;
+  if (triggerRenderConfig.detectBombs) triggerRenderFlags |= 0x40;
+  if (triggerRenderConfig.detectPowerBombs) triggerRenderFlags |= 0x80;
+  if (triggerRenderConfig.killOnEnter) triggerRenderFlags |= 0x800;
+  if (triggerRenderConfig.detectMorphedPlayer) triggerRenderFlags |= 0x1000;
+  if (triggerRenderConfig.useCollisionImpluses) triggerRenderFlags |= 0x2000;
+  if (triggerRenderConfig.detectCamera) triggerRenderFlags |= 0x4000;
+  if (triggerRenderConfig.useBooleanIntersection) triggerRenderFlags |= 0x8000;
+  if (triggerRenderConfig.detectUnmorphedPlayer) triggerRenderFlags |= 0x10000;
+  if (triggerRenderConfig.blockEnvironmentalEffects) triggerRenderFlags |= 0x20000;
+
+  for (auto &entity: entities) {
+    bool active = entity["active"].read_bool();
+    if (!active) continue;
+
+    uint16_t uid = entity["uniqueID"].read_u16();
+    bool isHighlighted = highlightedEntities.contains(uid);
+
+    if (entity.extendsClass("CScriptTrigger")) {
+      uint32_t flags = entity["triggerFlags"].read_u32();
+      if (flags & triggerRenderFlags) {
+        drawTrigger(entity, isHighlighted);
+      }
+    }
+  }
+}
+
+void WorldRenderer::drawTrigger(const GameMember &entity, bool isHighlighted) {
+  glm::vec3 min = MathUtils::readAsCVector3f(entity["bounds"]["min"]);
+  glm::vec3 max = MathUtils::readAsCVector3f(entity["bounds"]["max"]);
+  glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
+
+  glm::vec4 color{1, 1, 1, 0.5f};
+
+  if (isHighlighted) {
+    color = {1, 0, 0, 0.5f};
+  }
+
+  translucentRenderBuff->setTransform(transform);
+
+  translucentRenderBuff->addTris(
+      ShapeGenerator::generateCube(min, max, color)
+  );
 }

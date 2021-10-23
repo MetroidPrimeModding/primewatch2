@@ -1,7 +1,9 @@
 #include "GameObjectUtils.hpp"
 #include "defs/GameOffsets.hpp"
+#include "defs/GameVtables.hpp"
 
 #include <fmt/format.h>
+
 
 using namespace GameDefinitions;
 using namespace std;
@@ -43,6 +45,14 @@ namespace GameObjectUtils {
       GameMember currentEntry = entry;
       currentEntry.offset += type.size * currentId;
       GameMember entity = currentEntry["entity"];
+      uint32_t vtable = entity["vtable"].read_u32();
+      if (MP1_VTABLES.count(vtable)) {
+        string vtableType = MP1_VTABLES[vtable];
+        if (GameDefinitions::structByName(vtableType).has_value()) {
+          entity.type = vtableType;
+        }
+      }
+
       allObjects.push_back(entity);
 
       currentId = currentEntry["next"].read_u16();

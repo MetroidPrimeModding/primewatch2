@@ -2,6 +2,7 @@
 
 #include <map>
 #include <vector>
+#include <set>
 #include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -32,6 +33,21 @@ struct GameCamera {
   float aspect;
 };
 
+struct TriggerRenderConfig {
+  bool detectPlayer: 1{true};
+  bool detectAi: 1{false};
+  bool detectProjectiles: 1{false};
+  bool detectBombs: 1{false};
+  bool detectPowerBombs: 1{false};
+  bool killOnEnter: 1{false};
+  bool detectMorphedPlayer: 1{false};
+  bool useCollisionImpluses: 1{false};
+  bool detectCamera: 1{false};
+  bool useBooleanIntersection: 1{false};
+  bool detectUnmorphedPlayer: 1{true};
+  bool blockEnvironmentalEffects: 1{false};
+};
+
 class WorldRenderer {
 public:
   float aspect{0};
@@ -46,8 +62,9 @@ public:
 
   CullType culling{CullType::BACK};
   CameraMode cameraMode{CameraMode::FOLLOW_PLAYER};
+  TriggerRenderConfig triggerRenderConfig;
 
-  glm::vec3 lightDir{0.1,0.2f,0.9f};
+  glm::vec3 lightDir{0.1, 0.2f, 0.9f};
 
   bool playerIsMorphed{false};
   glm::vec3 lastKnownNonCollidingPos;
@@ -57,7 +74,8 @@ public:
 
   void init();
   void update(const PrimeWatchInput &input);
-  void render();
+  void
+  render(const std::vector<GameDefinitions::GameMember> &entities, const std::set<uint16_t> &highlightedEids);
   void renderImGui();
 
 private:
@@ -79,6 +97,9 @@ private:
 
   void updateAreas();
   std::optional<CollisionMesh> loadMesh(const GameDefinitions::GameMember &area);
+  void renderEntities(const std::vector<GameDefinitions::GameMember> &entities,
+                      const std::set<uint16_t> &highlightedEntities);
+  void drawTrigger(const GameDefinitions::GameMember &entity, bool isHighlighted);
 };
 
 

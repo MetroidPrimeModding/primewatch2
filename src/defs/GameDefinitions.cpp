@@ -135,7 +135,7 @@ namespace GameDefinitions {
     if (members_by_name.count(subName)) {
       return members_by_name.at(subName);
     } else {
-      for (auto &extend : extends) {
+      for (auto &extend: extends) {
         auto parent = GameDefinitions::structByName(extend);
         if (parent.has_value()) {
           auto res = parent->memberByName(subName);
@@ -146,6 +146,21 @@ namespace GameDefinitions {
       }
       return {};
     }
+  }
+
+  bool GameStruct::extendsClass(const string &className) {
+    for (auto &extend: extends) {
+      if (extend == className) {
+        return true;
+      }
+      auto parent = GameDefinitions::structByName(extend);
+      if (parent.has_value()) {
+        if (parent->extendsClass(className)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   std::optional<GameMember> GameMember::memberByName(const std::string &subName) const {
@@ -160,6 +175,13 @@ namespace GameDefinitions {
       res.offset = GameMemory::read_u32(res.offset);
     }
     return res;
+  }
+
+  bool GameMember::extendsClass(const string &className) const {
+    if (this->type == className) return true;
+    auto myType = structByName(this->type);
+    if (!myType.has_value()) return false;
+    return myType.value().extendsClass(className);
   }
 
   template<typename T>
