@@ -1,0 +1,5 @@
+struct CScriptWater: CScriptTrigger {
+    vtable 0x803dfe70
+
+
+}

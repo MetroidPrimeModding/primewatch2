@@ -439,8 +439,16 @@ void WorldRenderer::renderEntities(const std::vector<GameDefinitions::GameMember
 
     if (entity.extendsClass("CScriptTrigger")) {
       uint32_t flags = entity["triggerFlags"].read_u32();
-      if (flags & triggerRenderFlags) {
+      if (entity.extendsClass("CScriptWater")) {
+        if (triggerRenderConfig.water) {
+          drawTrigger(entity, isHighlighted);
+        }
+      } else if (flags & triggerRenderFlags) {
         drawTrigger(entity, isHighlighted);
+      }
+    } else if (entity.extendsClass("CScriptDock")) {
+      if (triggerRenderConfig.docks) {
+        drawDock(entity, isHighlighted);
       }
     }
   }
@@ -452,6 +460,28 @@ void WorldRenderer::drawTrigger(const GameMember &entity, bool isHighlighted) {
   glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
 
   glm::vec4 color{1, 1, 1, 0.5f};
+
+  if (entity.extendsClass("CScriptWater")) {
+    color = {0.5f, 0.5f, 1.0f, 0.5f};
+  }
+
+  if (isHighlighted) {
+    color = {1, 0, 0, 0.5f};
+  }
+
+  translucentRenderBuff->setTransform(transform);
+
+  translucentRenderBuff->addTris(
+      ShapeGenerator::generateCube(min, max, color)
+  );
+}
+
+void WorldRenderer::drawDock(const GameMember &entity, bool isHighlighted) {
+  glm::vec3 min = MathUtils::readAsCVector3f(entity["collisionPrimitive"]["aabb"]["min"]);
+  glm::vec3 max = MathUtils::readAsCVector3f(entity["collisionPrimitive"]["aabb"]["max"]);
+  glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
+
+  glm::vec4 color{0.5f, 1.0f, 0.5f, 0.5f};
 
   if (isHighlighted) {
     color = {1, 0, 0, 0.5f};

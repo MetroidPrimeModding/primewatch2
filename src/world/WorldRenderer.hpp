@@ -46,6 +46,8 @@ struct TriggerRenderConfig {
   bool useBooleanIntersection: 1{false};
   bool detectUnmorphedPlayer: 1{true};
   bool blockEnvironmentalEffects: 1{false};
+  bool water: 1{true};
+  bool docks: 1{true};
 };
 
 class WorldRenderer {
@@ -100,6 +102,7 @@ private:
   void renderEntities(const std::vector<GameDefinitions::GameMember> &entities,
                       const std::set<uint16_t> &highlightedEntities);
   void drawTrigger(const GameDefinitions::GameMember &entity, bool isHighlighted);
+  void drawDock(const GameDefinitions::GameMember &entity, bool isHighlighted);
 };
 
 

@@ -328,8 +328,13 @@ void PrimeWatch::doMainMenu() {
         worldRenderer.triggerRenderConfig.useBooleanIntersection = !worldRenderer.triggerRenderConfig.useBooleanIntersection;
       if (ImGui::MenuItem("detectUnmorphedPlayer", nullptr, worldRenderer.triggerRenderConfig.detectUnmorphedPlayer))
         worldRenderer.triggerRenderConfig.detectUnmorphedPlayer = !worldRenderer.triggerRenderConfig.detectUnmorphedPlayer;
-      if (ImGui::MenuItem("blockEnvironmentalEffects", 0, worldRenderer.triggerRenderConfig.blockEnvironmentalEffects))
+      if (ImGui::MenuItem("blockEnvironmentalEffects", nullptr, worldRenderer.triggerRenderConfig.blockEnvironmentalEffects))
         worldRenderer.triggerRenderConfig.blockEnvironmentalEffects = !worldRenderer.triggerRenderConfig.blockEnvironmentalEffects;
+      ImGui::Separator();
+      if (ImGui::MenuItem("Water", nullptr, worldRenderer.triggerRenderConfig.water))
+        worldRenderer.triggerRenderConfig.water = !worldRenderer.triggerRenderConfig.water;
+      if (ImGui::MenuItem("Docks", nullptr, worldRenderer.triggerRenderConfig.docks))
+        worldRenderer.triggerRenderConfig.docks = !worldRenderer.triggerRenderConfig.docks;
       ImGui::EndMenu();
     }
     ImGui::EndMainMenuBar();
