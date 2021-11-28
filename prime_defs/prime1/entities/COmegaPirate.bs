@@ -1,0 +1,28 @@
+struct COmegaPirate: CElitePirate {
+    ESkeletonFadeState skeletonFadeState 0xA30
+    bool heartVisible 0xA4A
+    EXRayFadeState xrayAlphaState 0xA7C
+    u32 armorPiecesHealed 0xB4C
+    f32 armorPieceHealTime 0xB50
+    f32 healTime 0xB58
+    f32 hpLost 0xB5C
+    f32 hpLostInPhase 0xB60
+    bool armorPieceActivated 0xB6E
+    bool codeTrigger 0xB78
+    bool bossPhaseActive 0xB79
+}
+
+enum ESkeletonFadeState: u32 {
+    None,
+    FadeOut,
+    Flash,
+    FadeIn
+}
+
+enum EXRayFadeState: u32 {
+    None,
+    FadeIn,
+    WaitForTrigger,
+    FadeOut
+}
+
