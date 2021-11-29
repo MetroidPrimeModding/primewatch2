@@ -35,7 +35,7 @@ else ()
 endif ()
 
 if (WIN32)
-    set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/libbstruct.lib")
+    set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/bstruct.lib")
     set(LS_CMD tree /f)
 else()
     set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/libbstruct.a")
