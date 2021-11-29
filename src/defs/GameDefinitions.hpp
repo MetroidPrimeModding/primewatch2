@@ -60,7 +60,10 @@ namespace GameDefinitions {
     bool extendsClass(const std::string &className);
   };
 
-  void loadDefinitionsFromPath(const char *path);
+  bool loadDefinitionsFromPath(const char *path);
+
+  bool isLoaded();
+  std::string getError();
 
   std::optional<GameEnum> enumByName(const std::string& name);
   std::optional<GameStruct> structByName(const std::string& name);

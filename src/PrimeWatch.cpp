@@ -55,7 +55,7 @@ int PrimeWatch::initAndCreateWindow() {
   glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_cb);
 
-  GameDefinitions::loadDefinitionsFromPath("prime1.json");
+  loadDefs();
 
   // This won't copy anything, but will init the memory buffer
   GameMemory::updateFromDolphin();
@@ -71,6 +71,8 @@ int PrimeWatch::initAndCreateWindow() {
 
   return 0;
 }
+
+void PrimeWatch::loadDefs() const { loadDefinitionsFromPath("prime_defs/prime1/**/*.bs"); }
 
 void PrimeWatch::initGlAndImgui(const int width, const int height) {
   IMGUI_CHECKVERSION();
@@ -126,11 +128,11 @@ void PrimeWatch::processInput() {
   ImGuiIO &io = ImGui::GetIO();
 
   if (!io.WantCaptureMouse) {
-    if (io.MouseDown[GLFW_MOUSE_BUTTON_LEFT]) {
+    if (io.MouseDown[GLFW_MOUSE_BUTTON_LEFT] || io.MouseDown[GLFW_MOUSE_BUTTON_RIGHT]) {
       input.capturedMouse = true;
     }
   }
-  if (!io.MouseDown[GLFW_MOUSE_BUTTON_LEFT]) {
+  if (!io.MouseDown[GLFW_MOUSE_BUTTON_LEFT] || !io.MouseDown[GLFW_MOUSE_BUTTON_RIGHT]) {
     input.capturedMouse = false;
   }
 
@@ -183,7 +185,20 @@ void PrimeWatch::doFrame() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  doImGui();
+  if (GameDefinitions::isLoaded()) {
+    doImGui();
+  } else {
+    if (ImGui::Begin("NOT LOADED", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse)) {
+      ImGui::Text("Script definitions are not currently loaded.");
+      ImGui::Text("These are required to function.");
+      ImGui::Text("Current error:");
+      ImGui::Text("%s", GameDefinitions::getError().c_str());
+      if (ImGui::Button("Reload")) {
+        this->loadDefs();
+      }
+    }
+    ImGui::End();
+  }
 
   ImGui::Render();
 
@@ -191,24 +206,28 @@ void PrimeWatch::doFrame() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // world render
-  worldRenderer.update(input);
+  if (GameDefinitions::isLoaded()) {
+    worldRenderer.update(input);
 
-  set<uint16_t> highlightedEntities{
-      tableHoveredUid
-  };
-  for (auto &watch: editorIdsToWatch) {
-    highlightedEntities.insert(watch.lastKnownUid);
+    set<uint16_t> highlightedEntities{
+        tableHoveredUid
+    };
+    for (auto &watch: editorIdsToWatch) {
+      highlightedEntities.insert(watch.lastKnownUid);
+    }
+    worldRenderer.render(entities, highlightedEntities);
   }
-  worldRenderer.render(entities, highlightedEntities);
 
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void PrimeWatch::doImGui() {
-  ImGui::ShowDemoWindow(nullptr);
+  if (showDemoView) {
+    ImGui::ShowDemoWindow(&showDemoView);
+  }
 //  ImPlot::ShowDemoWindow(nullptr);
 //  ImPlot::ShowMetricsWindow(nullptr);
-  ImGui::ShowMetricsWindow(nullptr);
+//  ImGui::ShowMetricsWindow(nullptr);
 
   doMainMenu();
 
@@ -244,7 +263,12 @@ void PrimeWatch::doImGui() {
 
   drawObjectsWindow();
 
-  mem_edit.DrawWindow("Raw view", GameMemory::memory.data(), GameMemory::memory.size());
+  if (showRawDataView) {
+    if (ImGui::Begin("Raw view", &showRawDataView)) {
+      mem_edit.DrawContents(GameMemory::memory.data(), GameMemory::memory.size());
+    }
+    ImGui::End();
+  }
 
   worldRenderer.renderImGui();
 }
@@ -328,7 +352,8 @@ void PrimeWatch::doMainMenu() {
         worldRenderer.triggerRenderConfig.useBooleanIntersection = !worldRenderer.triggerRenderConfig.useBooleanIntersection;
       if (ImGui::MenuItem("detectUnmorphedPlayer", nullptr, worldRenderer.triggerRenderConfig.detectUnmorphedPlayer))
         worldRenderer.triggerRenderConfig.detectUnmorphedPlayer = !worldRenderer.triggerRenderConfig.detectUnmorphedPlayer;
-      if (ImGui::MenuItem("blockEnvironmentalEffects", nullptr, worldRenderer.triggerRenderConfig.blockEnvironmentalEffects))
+      if (ImGui::MenuItem("blockEnvironmentalEffects", nullptr,
+                          worldRenderer.triggerRenderConfig.blockEnvironmentalEffects))
         worldRenderer.triggerRenderConfig.blockEnvironmentalEffects = !worldRenderer.triggerRenderConfig.blockEnvironmentalEffects;
       ImGui::Separator();
       if (ImGui::MenuItem("Water", nullptr, worldRenderer.triggerRenderConfig.water))
@@ -337,13 +362,28 @@ void PrimeWatch::doMainMenu() {
         worldRenderer.triggerRenderConfig.docks = !worldRenderer.triggerRenderConfig.docks;
       ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("Tools")) {
+      if (ImGui::MenuItem("Reload Definitions")) {
+        this->loadDefs();
+      }
+      if (ImGui::MenuItem("Raw Data View", nullptr, showRawDataView)) {
+        showRawDataView = !showRawDataView;
+      }
+      if (ImGui::MenuItem("Raw Demo View", nullptr, showDemoView)) {
+        showDemoView = !showDemoView;
+      }
+      ImGui::EndMenu();
+    }
     ImGui::EndMainMenuBar();
   }
 }
 
 void PrimeWatch::doMemoryParse() {
-  GameMemory::updateFromDolphin();
-  entities = GameObjectUtils::getAllObjects();
+  if (GameDefinitions::isLoaded()) {
+    GameMemory::updateFromDolphin();
+    entities = GameObjectUtils::getAllObjects();
+  }
 }
 
 void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) {

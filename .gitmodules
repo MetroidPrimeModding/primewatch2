@@ -25,3 +25,6 @@
 [submodule "extern/glm"]
 	path = extern/glm
 	url = git@github.com:g-truc/glm.git
+[submodule "extern/bstruct_rust"]
+	path = extern/bstruct_rust
+	url = https://github.com/Pwootage/bstruct_rust.git

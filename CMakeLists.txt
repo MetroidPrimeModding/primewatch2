@@ -26,7 +26,30 @@ include_directories(extern/implot)
 include_directories(extern/ImGuiFileDialog)
 include_directories(extern/imgui_club/imgui_memory_editor)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CARGO_CMD cargo build)
+    set(CARGO_TARGET_DIR "debug")
+else ()
+    set(CARGO_CMD cargo build --release)
+    set(CARGO_TARGET_DIR "release")
+endif ()
+
+set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/libbstruct.a")
+set(BSTRUCT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/cargo/bstruct.hpp")
+add_custom_command(
+        OUTPUT ${BSTRUCT_LIB}-dummy
+        OUTPUT ${BSTRUCT_LIB}
+        OUTPUT ${BSTRUCT_HEADER}
+        COMMAND CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/cargo ${CARGO_CMD}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/bstruct_rust)
+
+message(${BSTRUCT_LIB})
+
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/cargo")
+
 set(SOURCE_FILES
+        ${BSTRUCT_HEADER}
+
         extern/imgui/imgui.cpp
         extern/imgui/imgui_draw.cpp
         extern/imgui/imgui_demo.cpp
@@ -70,20 +93,26 @@ set(SOURCE_FILES
         src/world/CollisionMesh.hpp
         src/world/CollisionMesh.cpp
         src/world/WorldRenderer.cpp
-        src/world/WorldRenderer.hpp src/defs/GameOffsets.hpp src/utils/AreaUtils.cpp src/utils/AreaUtils.hpp src/gl/OpenGLMesh.cpp src/gl/OpenGLMesh.hpp src/gl/OpenGLShader.cpp src/gl/OpenGLShader.hpp src/PrimeWatchInput.cpp src/PrimeWatchInput.hpp src/gl/ShapeGenerator.cpp src/gl/ShapeGenerator.hpp src/utils/GameObjectUtils.cpp src/utils/GameObjectUtils.hpp src/utils/MathUtils.cpp src/utils/MathUtils.hpp src/gl/ImmediateModeBuffer.cpp src/gl/ImmediateModeBuffer.hpp src/defs/GameVtables.hpp src/defs/GameVtables.cpp)
-
-add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
-        COMMAND node lib/index.js
-        -i '${CMAKE_SOURCE_DIR}/prime_defs/**/*.bs'
-        -o ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/extern/bstruct"
-)
-add_custom_target(
-        def_gen ALL
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/prime1.json
-)
-
+        src/world/WorldRenderer.hpp
+        src/defs/GameOffsets.hpp
+        src/utils/AreaUtils.cpp
+        src/utils/AreaUtils.hpp
+        src/gl/OpenGLMesh.cpp
+        src/gl/OpenGLMesh.hpp
+        src/gl/OpenGLShader.cpp
+        src/gl/OpenGLShader.hpp
+        src/PrimeWatchInput.cpp
+        src/PrimeWatchInput.hpp
+        src/gl/ShapeGenerator.cpp
+        src/gl/ShapeGenerator.hpp
+        src/utils/GameObjectUtils.cpp
+        src/utils/GameObjectUtils.hpp
+        src/utils/MathUtils.cpp
+        src/utils/MathUtils.hpp
+        src/gl/ImmediateModeBuffer.cpp
+        src/gl/ImmediateModeBuffer.hpp
+        src/defs/GameVtables.hpp
+        src/defs/GameVtables.cpp)
 
 add_executable(primewatch2 ${SOURCE_FILES})
 target_link_libraries(primewatch2
@@ -91,5 +120,5 @@ target_link_libraries(primewatch2
         glfw
         nlohmann_json::nlohmann_json
         fmt::fmt
-        glm)
-add_dependencies(primewatch2 def_gen)
+        glm
+        ${BSTRUCT_LIB})

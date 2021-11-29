@@ -41,6 +41,8 @@ private:
   std::vector<WatchedEditorId> editorIdsToWatch;
   bool showActiveInTableOnly{true};
   uint16_t tableHoveredUid{0xFFFF};
+  bool showRawDataView{false};
+  bool showDemoView{false};
 
   // caching the most recent list of entities
   std::vector<GameDefinitions::GameMember> entities;
@@ -54,6 +56,7 @@ private:
   void doMemoryParse();
   void doMainMenu();
   void drawObjectsWindow();
+  void loadDefs() const;
 };
 
 

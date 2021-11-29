@@ -3,10 +3,12 @@
 #include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <nlohmann/json.hpp>
 #include <GameMemory.h>
 #include <fmt/format.h>
 #include "json_optional.hpp"
+#include <bstruct.hpp>
 
 using namespace nlohmann;
 using namespace std;
@@ -14,22 +16,36 @@ using namespace std;
 namespace GameDefinitions {
   unordered_map<string, GameEnum> enums_by_name;
   unordered_map<string, GameStruct> structs_by_name;
+  string bstruct_error;
 
   void loadEnumsFromJsonList(const json &enums);
 
   void loadStructsFromJsonList(const json &structs);
 
-  void loadDefinitionsFromPath(const char *path) {
+  bool loadDefinitionsFromPath(const char *path) {
     json rawJson;
 
+    enums_by_name.clear();
+    structs_by_name.clear();
+
+    CompileResult result = compile_glob_to_json(path);
+    if (result.err) {
+      bstruct_error = string(result.value);
+      cerr << result.value << endl;
+      return false;
+    }
+
     {
-      std::ifstream instream(path);
-      instream >> rawJson;
+      rawJson = json::parse(result.value);
     }
 
     // load enums
     loadEnumsFromJsonList(rawJson["enums"]);
     loadStructsFromJsonList(rawJson["structs"]);
+
+    release_result(result);
+
+    return isLoaded();
   }
 
   std::optional<GameEnum> enumByName(const std::string &name) {
@@ -46,6 +62,14 @@ namespace GameDefinitions {
     } else {
       return {};
     }
+  }
+
+  bool isLoaded() {
+    return !enums_by_name.empty() && !structs_by_name.empty();
+  }
+
+  std::string getError() {
+    return bstruct_error;
   }
 
   void loadEnumsFromJsonList(const json &enums) {
