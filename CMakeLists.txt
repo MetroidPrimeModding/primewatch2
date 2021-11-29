@@ -34,7 +34,12 @@ else ()
     set(CARGO_TARGET_DIR "release")
 endif ()
 
-set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/libbstruct.a")
+if (WIN32)
+    set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/libbstruct.lib")
+else()
+    set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/libbstruct.a")
+endif()
+
 set(BSTRUCT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/cargo/bstruct.hpp")
 add_custom_command(
         OUTPUT ${BSTRUCT_LIB}-dummy
