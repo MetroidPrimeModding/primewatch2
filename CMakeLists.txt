@@ -36,8 +36,10 @@ endif ()
 
 if (WIN32)
     set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/libbstruct.lib")
+    set(LS_CMD tree /f)
 else()
     set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/libbstruct.a")
+    set(LS_CMD ls -lr)
 endif()
 
 set(BSTRUCT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/cargo/bstruct.hpp")
@@ -47,6 +49,12 @@ add_custom_command(
         OUTPUT ${BSTRUCT_HEADER}
         COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/cargo ${CARGO_CMD}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/bstruct_rust)
+
+add_custom_target(print_lib_dir
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/bstruct_rust
+        COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/cargo ${CARGO_CMD}
+        COMMAND ${LS_CMD} ${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}
+        )
 
 message(${BSTRUCT_LIB})
 
