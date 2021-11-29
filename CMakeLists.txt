@@ -37,10 +37,10 @@ endif ()
 if (WIN32)
     set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/bstruct.lib")
     set(LS_CMD tree /f)
-else()
+else ()
     set(BSTRUCT_LIB "${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}/libbstruct.a")
     set(LS_CMD ls -lr)
-endif()
+endif ()
 
 set(BSTRUCT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/cargo/bstruct.hpp")
 add_custom_command(
@@ -135,3 +135,10 @@ target_link_libraries(primewatch2
         fmt::fmt
         glm
         ${BSTRUCT_LIB})
+
+if (WIN32)
+    target_link_libraries(primewatch2
+            ws2_32
+            userenv
+            advapi32)
+endif ()
