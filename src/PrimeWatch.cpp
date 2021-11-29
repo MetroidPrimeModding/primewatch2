@@ -132,7 +132,7 @@ void PrimeWatch::processInput() {
       input.capturedMouse = true;
     }
   }
-  if (!io.MouseDown[GLFW_MOUSE_BUTTON_LEFT] || !io.MouseDown[GLFW_MOUSE_BUTTON_RIGHT]) {
+  if (!io.MouseDown[GLFW_MOUSE_BUTTON_LEFT] && !io.MouseDown[GLFW_MOUSE_BUTTON_RIGHT]) {
     input.capturedMouse = false;
   }
 

@@ -5,3 +5,4 @@
 *.cap
 /.vs
 /out
+/imgui.ini
