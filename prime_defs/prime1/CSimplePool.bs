@@ -1,5 +1,5 @@
 struct CSimplePool {
     // TODO: don't currently support this
     // need some fancier handling of templates
-    rstl::rbtree<rstl::pair<SObjectTag, u32>> resources 0x8
+    rstl::rbtree<rstl::pair<SObjectTag, *CObjectReference>> resources 0x8
 }

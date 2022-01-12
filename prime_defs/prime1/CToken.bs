@@ -18,9 +18,10 @@ struct CToken {
 struct CObjectReference {
     u16 refCount 0x0
     u16 lockCount 0x2
-    u8 loading 0x3
+    bool loading 0x3:0:1
     SObjectTag objTag 0x4
     *IObjectStore objectStore 0xC
+    u32 obj_ptr 0x10
     *IObj obj 0x10
     //CVParamTransfer params 0x1
 }

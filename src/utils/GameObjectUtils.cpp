@@ -61,4 +61,46 @@ namespace GameObjectUtils {
     return allObjects;
   }
 
+  void inOrderTraversal(vector<GameMember> &res, const GameMember &member, int depth);
+
+  vector<GameMember> getAllCObjectReferences() {
+    GameMember mainPool = g_main["globalObjects"]["mainPool"];
+    GameMember tree = mainPool["resources"];
+
+    vector<GameMember> res;
+    res.reserve(tree["size"].read_u32());
+    inOrderTraversal(res, tree["root"], 0);
+    return res;
+  }
+
+  void inOrderTraversal(vector<GameMember> &res, const GameMember &member, int depth) {
+    if (member.offset == 0) return;
+    if (depth > 100) return; // emergency exit!
+
+    inOrderTraversal(res, member["left"], depth + 1);
+
+    GameMember value = member["data"]["b"];
+    res.push_back(value);
+
+    inOrderTraversal(res, member["right"], depth + 1);
+  };
+
+  string objectTagToString(GameDefinitions::GameMember sObjectTag) {
+    string res;
+    res.reserve(9);
+    res += fmt::format("{:08x}", sObjectTag["id"].read_u32());
+    uint32_t fourCC = sObjectTag["fourCC"].read_u32();
+    res += ".";
+    res += fourCCToString(fourCC);
+    return res;
+  }
+
+  string fourCCToString(uint32_t cc) {
+    string res = "    ";
+    for (int i = 0; i < 4; i++) {
+      char c = static_cast<char>(cc >> ((3 - i) * 8));
+      res[i] = c;
+    }
+    return res;
+  }
 };

@@ -35,12 +35,11 @@ struct rstl::rbtree<T> {
 }
 
 struct rstl::rbtree_node<T> {
-    u32 size 0x0
     *rstl::rbtree_node<T> left 0x0
     *rstl::rbtree_node<T> right 0x4
     *rstl::rbtree_node<T> parent 0x8
     u32 redOrBlack 0xC
-    *T data 0x10
+    T data 0x10
 }
 
 struct rstl::pair<A, B> {

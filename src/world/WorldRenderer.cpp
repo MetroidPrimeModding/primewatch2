@@ -9,6 +9,7 @@
 #include "utils/AreaUtils.hpp"
 #include "utils/GameObjectUtils.hpp"
 #include "gl/ShapeGenerator.hpp"
+#include "defs/GameObjectRenderers.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_access.hpp>
@@ -407,6 +408,42 @@ void WorldRenderer::renderImGui() {
       ImGui::Text("%s", occludedText.c_str());
     }
     ImGui::EndTable();
+  }
+
+  // and now we show the like, load stats
+  auto objectRefs = GameObjectUtils::getAllCObjectReferences();
+  int loaded = 0;
+  int loading = 0;
+  int totalRefs = 0;
+
+  int shownLoading = 0;
+  GameMember firstLoading{.offset = 0};
+  for (auto &object: objectRefs) {
+    uint16_t lock_count = object["lockCount"].read_u16();
+    bool isLoading = lock_count & 1;
+    lock_count = lock_count >> 1;
+    uint16_t ref_count = object["refCount"].read_u16();
+    uint32_t ptr = object["obj_ptr"].read_u32();
+
+    totalRefs += ref_count;
+    if (isLoading && lock_count > 0 && ptr == 0) {
+      if (shownLoading < 10) {
+        ImGui::Text("%s",
+                    GameObjectUtils::objectTagToString(object["objTag"]).c_str());
+        shownLoading++;
+        if (firstLoading.offset == 0) {
+          firstLoading = object;
+        }
+      }
+      loading++;
+    } else {
+      loaded++;
+    }
+  }
+  ImGui::Text("Objs: %d loaded/%d loading", loaded, loading);
+  ImGui::Text("Total ref count: %d", totalRefs);
+  if (firstLoading.offset > 0) {
+    GameObjectRenderers::render(firstLoading);
   }
 
   ImGui::End();
