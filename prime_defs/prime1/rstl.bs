@@ -46,3 +46,16 @@ struct rstl::pair<A, B> {
     A a
     B b
 }
+
+struct rstl::list<T> {
+    u32 unknown 0x0
+    *rstl::list_node<T> start 0x4
+    *rstl::list_node<T> end 0x8
+    u32 count 0x14
+}
+
+struct rstl::list_node<T> {
+    *rstl::list_node<T> prev 0x0
+    *rstl::list_node<T> next 0x4
+    T item 0x8
+}
