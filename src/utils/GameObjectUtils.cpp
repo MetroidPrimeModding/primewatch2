@@ -68,21 +68,22 @@ namespace GameObjectUtils {
     GameMember tree = mainPool["resources"];
 
     vector<GameMember> res;
-    res.reserve(tree["size"].read_u32());
+    unsigned long size = tree["size"].read_u32();
+    res.reserve(size);
     inOrderTraversal(res, tree["root"], 0);
     return res;
   }
 
-  void inOrderTraversal(vector<GameMember> &res, const GameMember &member, int depth) {
+  void inOrderTraversal(vector<GameMember> &res, const GameMember &member, int size) {
     if (member.offset == 0) return;
-    if (depth > 100) return; // emergency exit!
+    if (res.size() > size) return; // emergency exit!
 
-    inOrderTraversal(res, member["left"], depth + 1);
+    inOrderTraversal(res, member["left"], size);
 
     GameMember value = member["data"]["b"];
     res.push_back(value);
 
-    inOrderTraversal(res, member["right"], depth + 1);
+    inOrderTraversal(res, member["right"], size);
   };
 
   string objectTagToString(GameDefinitions::GameMember sObjectTag) {
@@ -105,15 +106,24 @@ namespace GameObjectUtils {
   }
 
   vector<GameMember> getAllLoadingDatas() {
-    vector<GameMember> res;
 
     GameMember resFactory = g_main["globalObjects"]["gameResFactory"];
 
-    GameMember list = g_main["loadList"];
+    GameMember list = resFactory["loadList"];
 
-    GameMember current = list["start"];
+    uint32_t size = list["size"].read_u32();
+    vector<GameMember> res;
+    res.reserve(size);
 
+    GameMember current = list["first"];
+    GameMember end = list["end"];
+    while (current.offset != end.offset && current.offset != 0){
+      // Emergency exit
+      if (res.size() > size) break;
+      res.push_back(current["item"]);
+      current = current["next"];
+    };
 
-    return std::vector<GameDefinitions::GameMember>();
+    return res;
   }
 };

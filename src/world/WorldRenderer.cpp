@@ -411,40 +411,32 @@ void WorldRenderer::renderImGui() {
   }
 
   // and now we show the like, load stats
-  auto objectRefs = GameObjectUtils::getAllCObjectReferences();
-  int loaded = 0;
-  int loading = 0;
-  int totalRefs = 0;
+  // load queue
+  auto loadingDatas = GameObjectUtils::getAllLoadingDatas();
+  if (loadingDatas.size() > 0) {
+    ImGui::Text("Loading %ld", loadingDatas.size());
+    int shownLoading = 0;
+    int loadQueueSize = 0;
+    uint32_t shownSize = 0;
+    uint32_t restSize = 0;
+    for (auto &loadingData: loadingDatas) {
+      uint32_t size = loadingData["resLen"].read_u32();
+      if (shownLoading < 5) {
+        string tag = GameObjectUtils::objectTagToString(loadingData["tag"]);
 
-  int shownLoading = 0;
-  GameMember firstLoading{.offset = 0};
-  for (auto &object: objectRefs) {
-    uint16_t lock_count = object["lockCount"].read_u16();
-    bool isLoading = lock_count & 1;
-    lock_count = lock_count >> 1;
-    uint16_t ref_count = object["refCount"].read_u16();
-    uint32_t ptr = object["obj_ptr"].read_u32();
-
-    totalRefs += ref_count;
-    if (isLoading && lock_count > 0 && ptr == 0) {
-      if (shownLoading < 10) {
-        ImGui::Text("%s",
-                    GameObjectUtils::objectTagToString(object["objTag"]).c_str());
+        string msg = fmt::format("{}: {}", tag.c_str(), size);
+        ImGui::Text("%s", msg.c_str());
         shownLoading++;
-        if (firstLoading.offset == 0) {
-          firstLoading = object;
-        }
+        shownSize += size;
+      } else {
+        restSize += size;
       }
-      loading++;
-    } else {
-      loaded++;
+    }
+    if (shownSize > 0 || restSize > 0) {
+      ImGui::Text("+%dk = %dk", restSize / 1024, (shownSize + restSize) / 1024);
     }
   }
-  ImGui::Text("Objs: %d loaded/%d loading", loaded, loading);
-  ImGui::Text("Total ref count: %d", totalRefs);
-  if (firstLoading.offset > 0) {
-    GameObjectRenderers::render(firstLoading);
-  }
+
 
   ImGui::End();
 }

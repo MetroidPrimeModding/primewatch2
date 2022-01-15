@@ -14,11 +14,12 @@ struct CFactoryMgr {
 
 struct SLoadingData {
     SObjectTag tag 0x0
-    *IDvdRequest dvdReq 0x8
-    *IObj targetPtr 0xC
-    *u8 loadBuffer 0x10
-    u32 resSize 0x14
-    //CVParamTransfer cvXfer 0x18
+    rstl::autoptr<IDvdRequest> dvdReq 0x8
+    *IObj targetPtr 0x10
+    *u8 loadBuffer 0x14
+    u32 resLen 0x2C
+    u32 compressed 0x30
+    //CVParamTransfer cvXfer 0x34
 }
 
 struct IDvdRequest {

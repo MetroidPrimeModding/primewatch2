@@ -48,12 +48,11 @@ struct rstl::pair<A, B> {
 }
 
 struct rstl::list<T> {
-    u32 unknown 0x0
-    //*rstl::list_node<T> first 0x0
-    *rstl::list_node<T> start 0x4
-    *rstl::list_node<T> end 0x8
-    u32 count 0xC
-    //u32 count 0x14
+    //u32 unknown 0x0
+    *rstl::list_node<T> end 0x0
+    *rstl::list_node<T> last 0x4
+    *rstl::list_node<T> first 0x8
+    u32 size 0xC
 }
 
 struct rstl::list_node<T> {
