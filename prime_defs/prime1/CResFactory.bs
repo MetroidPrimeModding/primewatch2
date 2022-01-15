@@ -1,7 +1,7 @@
 struct CResFactory {
     CResLoader loader 0x4
     CFactoryMgr factoryManager 0x5c
-    rstl::list<SLoadingData> loadList 0xB0
+    rstl::list<SLoadingData> loadList 0x8C
 }
 
 struct CResLoader {

@@ -103,4 +103,17 @@ namespace GameObjectUtils {
     }
     return res;
   }
+
+  vector<GameMember> getAllLoadingDatas() {
+    vector<GameMember> res;
+
+    GameMember resFactory = g_main["globalObjects"]["gameResFactory"];
+
+    GameMember list = g_main["loadList"];
+
+    GameMember current = list["start"];
+
+
+    return std::vector<GameDefinitions::GameMember>();
+  }
 };

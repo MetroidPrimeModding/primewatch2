@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <fmt/format.h>
 #include "GameMemory.h"
+#include "utils/GameObjectUtils.hpp"
 
 using namespace std;
 using namespace GameDefinitions;
@@ -24,6 +25,7 @@ namespace GameObjectRenderers {
       {"CQuaternion", &CQuaternionRenderer},
       {"CTransform",  &CTransformRenderer},
       {"CMatrix4f",   &CMatrix4fRenderer},
+      {"SObjectTag", &SObjectTagRenderer},
   };
 
   void render(const GameMember &member, bool addTree) {
@@ -345,6 +347,19 @@ namespace GameObjectRenderers {
 
     ImGui::PopID();
     ImGui::Unindent();
+  }
+
+  void SObjectTagRenderer(const GameDefinitions::GameMember &member) {
+    string str = GameObjectUtils::objectTagToString(member);
+    string msg = fmt::format("{} {}", member.name, str);
+    ImGui::Text("%s", msg.c_str());
+    if (ImGui::IsItemClicked()) {
+      ImGui::SetClipboardText(str.c_str());
+    }
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+    }
+    hoverTooltip(member);
   }
 }
 

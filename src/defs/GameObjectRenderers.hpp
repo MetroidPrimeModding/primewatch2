@@ -17,6 +17,7 @@ namespace GameObjectRenderers {
   void CTransformRenderer(const GameDefinitions::GameMember &member);
   void CMatrix4fRenderer(const GameDefinitions::GameMember &member);
   void renderVector(const GameDefinitions::GameMember &member);
+  void SObjectTagRenderer(const GameDefinitions::GameMember &member);
 
   using RenderFunc = void (*)(const GameDefinitions::GameMember&);
 
