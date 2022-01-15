@@ -416,7 +416,6 @@ void WorldRenderer::renderImGui() {
   if (loadingDatas.size() > 0) {
     ImGui::Text("Loading %ld", loadingDatas.size());
     int shownLoading = 0;
-    int loadQueueSize = 0;
     uint32_t shownSize = 0;
     uint32_t restSize = 0;
     for (auto &loadingData: loadingDatas) {

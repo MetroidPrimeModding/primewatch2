@@ -8,6 +8,8 @@ struct CScriptSpecialFunction: CActor {
     CVector3f vector3f 0x10C
     CColor color 0x118
     // TODO: rest of these
+    f32 spinImpulseMaybe 0x180
+    f32 progressMaybe 0x138
 }
 
 enum ESpecialFunction {
