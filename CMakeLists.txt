@@ -140,5 +140,7 @@ if (WIN32)
     target_link_libraries(primewatch2
             ws2_32
             userenv
-            advapi32)
+            advapi32
+            bcrypt
+            )
 endif ()
