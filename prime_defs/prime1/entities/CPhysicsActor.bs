@@ -12,6 +12,7 @@ struct CPhysicsActor: CActor {
     CVector3f impulse 0x168
     CVector3f torque 0x174
     CVector3f angularImpulse 0x180
+    CAABB baseBoundingBox 0x1A4
     CAABBPrimitive collisionPrimitive 0x1C0
     CVector3f primitiveOffset 0x1E8
     CMotionState lastNonCollidingState 0x1F4

@@ -12,6 +12,7 @@
 #include <gl/ImmediateModeBuffer.hpp>
 #include <PrimeWatchInput.hpp>
 #include "./CollisionMesh.hpp"
+#include "utils/GameObjectUtils.hpp"
 
 enum class CullType {
   BACK,
@@ -21,6 +22,7 @@ enum class CullType {
 
 enum class CameraMode {
   FOLLOW_PLAYER,
+  DETATCHED,
   GAME_CAM
 };
 
@@ -50,6 +52,13 @@ struct TriggerRenderConfig {
   bool docks: 1{true};
 };
 
+struct ActorRenderConfig {
+  bool renderPhysicsActors: 1{true};
+  bool renderProjectiles: 1{true};
+  bool renderActors: 1{false};
+  bool renderAllActors: 1{false};
+};
+
 class WorldRenderer {
 public:
   float aspect{0};
@@ -61,10 +70,12 @@ public:
   float pitch{0.3f};
   float distance{10.f};
   glm::vec3 up{0, 0, 1};
+  glm::vec3 manualCameraPos;
 
   CullType culling{CullType::BACK};
   CameraMode cameraMode{CameraMode::FOLLOW_PLAYER};
   TriggerRenderConfig triggerRenderConfig;
+  ActorRenderConfig actorRenderConfig;
 
   glm::vec3 lightDir{0.1, 0.2f, 0.9f};
 
@@ -77,7 +88,7 @@ public:
   void init();
   void update(const PrimeWatchInput &input);
   void
-  render(const std::vector<GameDefinitions::GameMember> &entities, const std::set<uint16_t> &highlightedEids);
+  render(const std::map<TUniqueID, GameDefinitions::GameMember> &entities, const std::set<uint16_t> &highlightedEids);
   void renderImGui();
 
 private:
@@ -99,10 +110,15 @@ private:
 
   void updateAreas();
   std::optional<CollisionMesh> loadMesh(const GameDefinitions::GameMember &area);
-  void renderEntities(const std::vector<GameDefinitions::GameMember> &entities,
+  void renderEntities(const std::map<TUniqueID, GameDefinitions::GameMember> &entities,
                       const std::set<uint16_t> &highlightedEntities);
   void drawTrigger(const GameDefinitions::GameMember &entity, bool isHighlighted);
   void drawDock(const GameDefinitions::GameMember &entity, bool isHighlighted);
+  void drawActor(const GameDefinitions::GameMember &member, bool highlighted);
+  void drawPhysicsActor(const GameDefinitions::GameMember &member, bool highlighted);
+  void drawChozoGhost(const GameDefinitions::GameMember &ghost, bool highlighted,
+                      const std::map<TUniqueID, GameDefinitions::GameMember> &entities);
+  void drawProjectile(const GameDefinitions::GameMember &member, bool highlighted);
 };
 
 

@@ -1,0 +1,17 @@
+struct CScriptCoverPoint: CActor {
+    bool landHere 0xE8:5:1
+    bool wallHang 0xE8:4:1
+    bool stay 0xE8:3:1
+    bool unknown1 0xE8:2:1
+    bool attackDirection 0xE8:1:1
+    bool unknown2 0xE8:0:1
+
+    f32 cosHorizontalAngle 0xEC
+    f32 sinVerticalAngle 0xF0
+    f32 coverTime 0xF4
+
+    bool crouch 0xF8:7:1
+    bool inUse 0xF8:6:1
+
+    f32 timeLeft 0x11C
+}

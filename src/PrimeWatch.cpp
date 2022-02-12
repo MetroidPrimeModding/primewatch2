@@ -173,6 +173,32 @@ void PrimeWatch::processInput() {
     if (io.KeysDown[GLFW_KEY_PAGE_DOWN]) {
       input.camZoom += zoomSpeed;
     }
+
+    if (worldRenderer.cameraMode == CameraMode::DETATCHED) {
+      float dist = 1;
+      glm::quat angle = glm::quat(glm::vec3(0, 0, worldRenderer.yaw));
+      glm::vec3 forward = angle * glm::vec4{dist, 0, 0, 1};
+      glm::vec3 right = angle * glm::vec4{0, dist, 0, 1};
+      glm::vec3 up{0, 0, dist};
+      if (io.KeysDown[GLFW_KEY_W]) {
+        worldRenderer.manualCameraPos += forward;
+      }
+      if (io.KeysDown[GLFW_KEY_S]) {
+        worldRenderer.manualCameraPos -= forward;
+      }
+      if (io.KeysDown[GLFW_KEY_A]) {
+        worldRenderer.manualCameraPos += right;
+      }
+      if (io.KeysDown[GLFW_KEY_D]) {
+        worldRenderer.manualCameraPos -= right;
+      }
+      if (io.KeysDown[GLFW_KEY_Q]) {
+        worldRenderer.manualCameraPos -= up;
+      }
+      if (io.KeysDown[GLFW_KEY_E]) {
+        worldRenderer.manualCameraPos += up;
+      }
+    }
   }
 }
 
@@ -326,40 +352,38 @@ void PrimeWatch::doMainMenu() {
       if (ImGui::MenuItem("Game Cam", nullptr, worldRenderer.cameraMode == CameraMode::GAME_CAM)) {
         worldRenderer.cameraMode = CameraMode::GAME_CAM;
       }
+      if (ImGui::MenuItem("Detatched", nullptr, worldRenderer.cameraMode == CameraMode::DETATCHED)) {
+        worldRenderer.cameraMode = CameraMode::DETATCHED;
+      }
       ImGui::EndMenu();
     }
 
+#define TOGGLE_MENU(label, path)  if (ImGui::MenuItem((label), nullptr, (path))) (path) = !(path);
     if (ImGui::BeginMenu("Triggers")) {
-      if (ImGui::MenuItem("detectPlayer", nullptr, worldRenderer.triggerRenderConfig.detectPlayer))
-        worldRenderer.triggerRenderConfig.detectPlayer = !worldRenderer.triggerRenderConfig.detectPlayer;
-      if (ImGui::MenuItem("detectAi", nullptr, worldRenderer.triggerRenderConfig.detectAi))
-        worldRenderer.triggerRenderConfig.detectAi = !worldRenderer.triggerRenderConfig.detectAi;
-      if (ImGui::MenuItem("detectProjectiles", nullptr, worldRenderer.triggerRenderConfig.detectProjectiles))
-        worldRenderer.triggerRenderConfig.detectProjectiles = !worldRenderer.triggerRenderConfig.detectProjectiles;
-      if (ImGui::MenuItem("detectBombs", nullptr, worldRenderer.triggerRenderConfig.detectBombs))
-        worldRenderer.triggerRenderConfig.detectBombs = !worldRenderer.triggerRenderConfig.detectBombs;
-      if (ImGui::MenuItem("detectPowerBombs", nullptr, worldRenderer.triggerRenderConfig.detectPowerBombs))
-        worldRenderer.triggerRenderConfig.detectPowerBombs = !worldRenderer.triggerRenderConfig.detectPowerBombs;
-      if (ImGui::MenuItem("killOnEnter", nullptr, worldRenderer.triggerRenderConfig.killOnEnter))
-        worldRenderer.triggerRenderConfig.killOnEnter = !worldRenderer.triggerRenderConfig.killOnEnter;
-      if (ImGui::MenuItem("detectMorphedPlayer", nullptr, worldRenderer.triggerRenderConfig.detectMorphedPlayer))
-        worldRenderer.triggerRenderConfig.detectMorphedPlayer = !worldRenderer.triggerRenderConfig.detectMorphedPlayer;
-      if (ImGui::MenuItem("useCollisionImpluses", nullptr, worldRenderer.triggerRenderConfig.useCollisionImpluses))
-        worldRenderer.triggerRenderConfig.useCollisionImpluses = !worldRenderer.triggerRenderConfig.useCollisionImpluses;
-      if (ImGui::MenuItem("detectCamera", nullptr, worldRenderer.triggerRenderConfig.detectCamera))
-        worldRenderer.triggerRenderConfig.detectCamera = !worldRenderer.triggerRenderConfig.detectCamera;
-      if (ImGui::MenuItem("useBooleanIntersection", nullptr, worldRenderer.triggerRenderConfig.useBooleanIntersection))
-        worldRenderer.triggerRenderConfig.useBooleanIntersection = !worldRenderer.triggerRenderConfig.useBooleanIntersection;
-      if (ImGui::MenuItem("detectUnmorphedPlayer", nullptr, worldRenderer.triggerRenderConfig.detectUnmorphedPlayer))
-        worldRenderer.triggerRenderConfig.detectUnmorphedPlayer = !worldRenderer.triggerRenderConfig.detectUnmorphedPlayer;
-      if (ImGui::MenuItem("blockEnvironmentalEffects", nullptr,
-                          worldRenderer.triggerRenderConfig.blockEnvironmentalEffects))
-        worldRenderer.triggerRenderConfig.blockEnvironmentalEffects = !worldRenderer.triggerRenderConfig.blockEnvironmentalEffects;
+      TOGGLE_MENU("detectPlayer", worldRenderer.triggerRenderConfig.detectPlayer)
+      TOGGLE_MENU("detectPlayer", worldRenderer.triggerRenderConfig.detectPlayer)
+      TOGGLE_MENU("detectAi", worldRenderer.triggerRenderConfig.detectAi)
+      TOGGLE_MENU("detectProjectiles", worldRenderer.triggerRenderConfig.detectProjectiles)
+      TOGGLE_MENU("detectBombs", worldRenderer.triggerRenderConfig.detectBombs)
+      TOGGLE_MENU("detectPowerBombs", worldRenderer.triggerRenderConfig.detectPowerBombs)
+      TOGGLE_MENU("killOnEnter", worldRenderer.triggerRenderConfig.killOnEnter)
+      TOGGLE_MENU("detectMorphedPlayer", worldRenderer.triggerRenderConfig.detectMorphedPlayer)
+      TOGGLE_MENU("useCollisionImpluses", worldRenderer.triggerRenderConfig.useCollisionImpluses)
+      TOGGLE_MENU("detectCamera", worldRenderer.triggerRenderConfig.detectCamera)
+      TOGGLE_MENU("useBooleanIntersection", worldRenderer.triggerRenderConfig.useBooleanIntersection)
+      TOGGLE_MENU("detectUnmorphedPlayer", worldRenderer.triggerRenderConfig.detectUnmorphedPlayer)
+      TOGGLE_MENU("blockEnvironmentalEffects", worldRenderer.triggerRenderConfig.blockEnvironmentalEffects)
       ImGui::Separator();
-      if (ImGui::MenuItem("Water", nullptr, worldRenderer.triggerRenderConfig.water))
-        worldRenderer.triggerRenderConfig.water = !worldRenderer.triggerRenderConfig.water;
-      if (ImGui::MenuItem("Docks", nullptr, worldRenderer.triggerRenderConfig.docks))
-        worldRenderer.triggerRenderConfig.docks = !worldRenderer.triggerRenderConfig.docks;
+      TOGGLE_MENU("Water", worldRenderer.triggerRenderConfig.water)
+      TOGGLE_MENU("Docks", worldRenderer.triggerRenderConfig.docks)
+      ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Actors")) {
+      TOGGLE_MENU("Render physics actors", worldRenderer.actorRenderConfig.renderActors)
+      TOGGLE_MENU("Render actors", worldRenderer.actorRenderConfig.renderActors)
+      TOGGLE_MENU("Render all actors", worldRenderer.actorRenderConfig.renderAllActors)
+
       ImGui::EndMenu();
     }
 
@@ -403,7 +427,8 @@ void PrimeWatch::drawObjectsWindow() {
   map<uint16_t, GameMember> uidToEntity;
 
   map<uint32_t, VtableInfo> vtables;
-  for (auto &entity: entities) {
+  for (auto &pair: entities) {
+    auto &entity = pair.second;
     uint32_t vtable = entity["vtable"].read_u32();
     if (entity["active"].read_bool()) {
       vtables[vtable].active += 1;
@@ -498,7 +523,8 @@ void PrimeWatch::drawObjectsWindow() {
       ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch);
       ImGui::TableHeadersRow();
 
-      for (auto &entity: entities) {
+      for (auto &pair: entities) {
+        auto &entity = pair.second;
         bool active = entity["active"].read_bool();
         if (showActiveInTableOnly && !active) continue;
 
@@ -541,7 +567,7 @@ void PrimeWatch::drawObjectsWindow() {
 
         //uid
         ImGui::TableNextColumn();
-        str = fmt::format("{:08x}", uid);
+        str = fmt::format("{:04x}", uid);
         ImGui::Text("%s", str.c_str());
 
         //active

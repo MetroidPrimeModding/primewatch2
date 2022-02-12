@@ -2,9 +2,11 @@
 
 #include "defs/GameDefinitions.hpp"
 
+using TUniqueID = uint16_t;
+
 namespace GameObjectUtils {
   GameDefinitions::GameMember getObjectByEntityID(uint16_t eid);
-  std::vector<GameDefinitions::GameMember> getAllObjects();
+  std::map<TUniqueID, GameDefinitions::GameMember> getAllObjects();
   std::vector<GameDefinitions::GameMember> getAllCObjectReferences();
   std::vector<GameDefinitions::GameMember> getAllLoadingDatas();
 

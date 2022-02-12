@@ -1,0 +1,87 @@
+struct CBeamProjectile: CGameProjectile {
+
+}
+
+struct CElectricBeamProjectile: CGameProjectile {
+
+}
+
+struct CEnergyProjectile: CGameProjectile {
+
+}
+
+struct CFlaahgraProjectile: CGameProjectile {
+
+}
+
+struct CFlameThrower: CGameProjectile {
+
+}
+
+struct CMetroidPrimeProjectile: CGameProjectile {
+
+}
+
+struct CNewFlameThrower: CGameProjectile {
+
+}
+
+struct CPlasmaProjectile: CGameProjectile {
+
+}
+
+struct CTargetableProjectile: CGameProjectile {
+
+}
+
+struct CWaveBuster: CGameProjectile {
+
+}
+
+
+struct CGameProjectile: CWeapon {
+  bool projectileActive 0x2e4:7:1
+  f32 projExtent 0x2A4
+  CProjectileWeapon projectile 0x170
+  CVector3f previousPos 0x298
+}
+
+struct CProjectileWeapon {
+  CTransform localToWorldXf 0x14
+  CTransform localXf 0x44
+  CVector3f worldOffset 0x74
+  CVector3f localOffset 0x80
+  CVector3f projOffset 0x8C
+  CVector3f scale 0x98
+  CVector3f localOffset2 0xA4
+  CVector3f velocity 0xB0
+  CVector3f gravity 0xBC
+
+  i32 lifetime 0xE8
+  f64 curTime 0xD0
+  f64 remainderTime 0xD8
+
+}
+
+struct CWeapon: CActor {
+    EWeaponType weaponType 0xF0
+}
+
+enum EWeaponType {
+  None = -1,
+  Power = 0,
+  Ice = 1,
+  Wave = 2,
+  Plasma = 3,
+  Bomb = 4,
+  PowerBomb = 5,
+  Missile = 6,
+  BoostBall = 7,
+  Phazon = 8,
+  AI = 9,
+  PoisonWater = 10,
+  Lava = 11,
+  Heat = 12,
+  Unused1 = 13,
+  OrangePhazon = 14
+}

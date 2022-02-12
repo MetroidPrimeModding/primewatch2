@@ -45,7 +45,7 @@ private:
   bool showDemoView{false};
 
   // caching the most recent list of entities
-  std::vector<GameDefinitions::GameMember> entities;
+  std::map<TUniqueID, GameDefinitions::GameMember> entities;
 
   void initGlAndImgui(int width, int height);
   static void framebuffer_size_cb(GLFWwindow *window, int width, int height);

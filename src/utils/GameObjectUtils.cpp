@@ -23,7 +23,7 @@ namespace GameObjectUtils {
     return result;
   }
 
-  vector<GameMember> getAllObjects() {
+  map<TUniqueID, GameMember> getAllObjects() {
     GameMember globalList = g_stateManager["allObjects"];
     uint16_t first = globalList["firstID"].read_u16();
     uint16_t size = globalList["size"].read_u16();
@@ -32,8 +32,7 @@ namespace GameObjectUtils {
     GameMember entry = globalList["list"];
     GameStruct type = *GameDefinitions::structByName(entry.type);
 
-    vector<GameMember> allObjects;
-    allObjects.reserve(size);
+    map<TUniqueID, GameMember> allObjects;
 
     int count = 0;
     uint16_t currentId = first;
@@ -53,7 +52,7 @@ namespace GameObjectUtils {
         }
       }
 
-      allObjects.push_back(entity);
+      allObjects[currentId] = entity;
 
       currentId = currentEntry["next"].read_u16();
     }

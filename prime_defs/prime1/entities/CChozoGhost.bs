@@ -1,0 +1,26 @@
+struct CChozoGhost: CPatterned {
+    f32 hurlRecoverTime 0x638
+    u16 coverPoint 0x674
+    f32 spaceWarpTime 0x6C8
+    CVector3f spaceWarpPosition 0x6CC
+    EBehaveType behaveType 0x680
+
+    CBehaveChance farBehavior 0x5c8
+    CBehaveChance midBehavior 0x5c8
+    CBehaveChance closeBehavior 0x5c8
+}
+
+struct CBehaveChance {
+    u32 propertyCount 0x0
+    f32 lurk 0x4
+    f32 taunt 0x8
+    f32 attack 0xC
+    f32 move 0x10
+    f32 lurkTime 0x14
+    f32 charge_attack 0x18
+    u32 numBolts 0x1c
+}
+
+enum EBehaveType {
+    Lurk, Taunt, Attack, Move, None
+}

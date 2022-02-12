@@ -204,7 +204,7 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
   return res;
 }
 
-void WorldRenderer::render(const std::vector<GameDefinitions::GameMember> &entities,
+void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember> &entities,
                            const set<uint16_t> &highlightedEids) {
   if (!shader) {
     shader = make_unique<OpenGLShader>(meshVertShader, meshFragShader);
@@ -223,6 +223,7 @@ void WorldRenderer::render(const std::vector<GameDefinitions::GameMember> &entit
     // we look at the lastKnownNonCollidingPos because it's less jumpy
     eye = glm::vec4(lastKnownNonCollidingPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
     view = glm::lookAt(eye, lastKnownNonCollidingPos, up);
+    manualCameraPos = lastKnownNonCollidingPos;
   } else if (cameraMode == CameraMode::GAME_CAM) {
     projection = gameCam.perspective;
     view = glm::inverse(gameCam.transform);
@@ -242,6 +243,12 @@ void WorldRenderer::render(const std::vector<GameDefinitions::GameMember> &entit
     );
 
 //    view = glm::translate(eye) * glm::toMat4(orient);
+  } else if (cameraMode == CameraMode::DETATCHED) {
+    projection = glm::perspective(fov, aspect, zNear, zFar);
+    glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
+
+    eye = glm::vec4(manualCameraPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
+    view = glm::lookAt(eye, manualCameraPos, up);
   }
 
   // Player collision
@@ -440,7 +447,7 @@ void WorldRenderer::renderImGui() {
   ImGui::End();
 }
 
-void WorldRenderer::renderEntities(const std::vector<GameDefinitions::GameMember> &entities,
+void WorldRenderer::renderEntities(const map<TUniqueID, GameMember> &entities,
                                    const set<uint16_t> &highlightedEntities) {
   renderBuff->setTransform(glm::mat4{1.0f});
 
@@ -458,7 +465,8 @@ void WorldRenderer::renderEntities(const std::vector<GameDefinitions::GameMember
   if (triggerRenderConfig.detectUnmorphedPlayer) triggerRenderFlags |= 0x10000;
   if (triggerRenderConfig.blockEnvironmentalEffects) triggerRenderFlags |= 0x20000;
 
-  for (auto &entity: entities) {
+  for (auto &pair: entities) {
+    auto &entity = pair.second;
     bool active = entity["active"].read_bool();
     if (!active) continue;
 
@@ -477,6 +485,24 @@ void WorldRenderer::renderEntities(const std::vector<GameDefinitions::GameMember
     } else if (entity.extendsClass("CScriptDock")) {
       if (triggerRenderConfig.docks) {
         drawDock(entity, isHighlighted);
+      }
+    } else if (entity.extendsClass("CGameProjectile")) {
+      if (actorRenderConfig.renderProjectiles) {
+        drawProjectile(entity, isHighlighted);
+      }
+    } else if (entity.extendsClass("CPlayer")) {
+      // player render is handled elsewhere
+    } else if (entity.extendsClass("CChozoGhost")) {
+      if (actorRenderConfig.renderPhysicsActors) {
+        drawChozoGhost(entity, isHighlighted, entities);
+      }
+    } else if (entity.extendsClass("CPhysicsActor")) {
+      if (actorRenderConfig.renderPhysicsActors) {
+        drawPhysicsActor(entity, isHighlighted);
+      }
+    } else if (entity.extendsClass("CActor")) {
+      if (actorRenderConfig.renderActors) {
+        drawActor(entity, isHighlighted);
       }
     }
   }
@@ -520,4 +546,143 @@ void WorldRenderer::drawDock(const GameMember &entity, bool isHighlighted) {
   translucentRenderBuff->addTris(
       ShapeGenerator::generateCube(min, max, color)
   );
+}
+
+void WorldRenderer::drawPhysicsActor(const GameMember &entity, bool isHighlighted) {
+  glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
+  glm::vec3 pos = transform[3];
+
+  glm::vec3 min = pos + MathUtils::readAsCVector3f(entity["collisionPrimitive"]["aabb"]["min"]);
+  glm::vec3 max = pos + MathUtils::readAsCVector3f(entity["collisionPrimitive"]["aabb"]["max"]);
+
+  if (glm::abs(glm::length(min - max)) < 0.1) {
+    min = pos + MathUtils::readAsCVector3f(entity["baseBoundingBox"]["min"]);
+    max = pos + MathUtils::readAsCVector3f(entity["baseBoundingBox"]["max"]);
+  }
+
+  if (glm::abs(glm::length(min - max)) < 0.1) {
+    min = MathUtils::readAsCVector3f(entity["renderBounds"]["min"]);
+    max = MathUtils::readAsCVector3f(entity["renderBounds"]["max"]);
+  }
+
+
+  glm::vec4 color{1, 1, 1, 0.5f};
+
+  if (isHighlighted) {
+    color = {1, 0, 0, 0.5f};
+  }
+
+  translucentRenderBuff->setColor(color);
+  translucentRenderBuff->setTransform(glm::identity<glm::mat4>());
+
+  translucentRenderBuff->addTris(
+      ShapeGenerator::generateCube(min, max, color)
+  );
+
+  translucentRenderBuff->setTransform(transform);
+  translucentRenderBuff->addLine(glm::vec3{0, -0.5f, 0}, glm::vec3{0, 0.5f, 0});
+  translucentRenderBuff->addLine(glm::vec3{-0.5f, 0, 0}, glm::vec3{0.5f, 0, 0});
+  translucentRenderBuff->addLine(glm::vec3{0, 0, -0.5f}, glm::vec3{0, 0, 0.5f});
+}
+
+void WorldRenderer::drawActor(const GameMember &entity, bool isHighlighted) {
+  GameMember model = entity["modelData"];
+
+  if (model.offset == 0) {
+    if (!isHighlighted && !actorRenderConfig.renderAllActors) {
+
+      return;
+    }
+  }
+
+  glm::vec3 min = MathUtils::readAsCVector3f(entity["renderBounds"]["min"]);
+  glm::vec3 max = MathUtils::readAsCVector3f(entity["renderBounds"]["max"]);
+
+  glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
+
+  glm::vec4 color{1, 1, 1, 0.5f};
+
+  if (isHighlighted) {
+    color = {1, 0, 0, 0.5f};
+  }
+
+  translucentRenderBuff->setColor(color);
+  translucentRenderBuff->setTransform(glm::identity<glm::mat4>());
+
+  translucentRenderBuff->addTris(
+      ShapeGenerator::generateCube(min, max, color)
+  );
+
+  translucentRenderBuff->setTransform(transform);
+  translucentRenderBuff->addLine(glm::vec3{0, -0.5f, 0}, glm::vec3{0, 0.5f, 0});
+  translucentRenderBuff->addLine(glm::vec3{-0.5f, 0, 0}, glm::vec3{0.5f, 0, 0});
+  translucentRenderBuff->addLine(glm::vec3{0, 0, -0.5f}, glm::vec3{0, 0, 0.5f});
+}
+
+void WorldRenderer::drawChozoGhost(const GameMember &ghost, bool highlighted,
+                                   const std::map<TUniqueID, GameDefinitions::GameMember> &entities) {
+  drawPhysicsActor(ghost, highlighted);
+
+  glm::vec3 spaceWarpPos = MathUtils::readAsCVector3f(ghost["spaceWarpPosition"]);
+  glm::mat4 ghostTransform = MathUtils::readAsCTransform(ghost["transform"]);
+  glm::vec3 ghostPos = ghostTransform[3];
+
+//  translucentRenderBuff->setTransform(glm::identity<glm::mat4>());
+//  translucentRenderBuff->setColor(glm::vec4{0,1,1,1});
+//  translucentRenderBuff->addLine(ghostPos, spaceWarpPos);
+
+  TUniqueID coverPointId = ghost["coverPoint"].read_u16() & 0x3FF;
+  if (entities.contains(coverPointId)) {
+    // find the entity
+    const GameMember &coverPoint = entities.at(coverPointId);
+    glm::mat4 coverTransform = MathUtils::readAsCTransform(coverPoint["transform"]);
+    glm::vec3 coverPos = coverTransform[3];
+
+    translucentRenderBuff->setColor(glm::vec4{1, 0, 1, 1});
+    translucentRenderBuff->addLine(ghostPos, coverPos);
+  }
+}
+
+void WorldRenderer::drawProjectile(const GameMember &entity, bool isHighlighted) {
+  bool projectileActive = entity["projectileActive"].read_bool();
+  if (!projectileActive) return;
+
+  GameMember projectile = entity["projectile"];
+  glm::mat4 localToWorldXf = MathUtils::readAsCTransform(projectile["localToWorldXf"]);
+  glm::mat4 localXf = MathUtils::readAsCTransform(projectile["localXf"]);
+  glm::vec4 projOffset = glm::vec4(MathUtils::readAsCVector3f(projectile["projOffset"]), 0.0f);
+  glm::vec4 localOffset = glm::vec4(MathUtils::readAsCVector3f(projectile["localOffset"]), 0.0f);
+  glm::vec4 worldOffset = glm::vec4(MathUtils::readAsCVector3f(projectile["worldOffset"]), 0.0f);
+
+  glm::vec3 pos = localToWorldXf * (localXf * projOffset + localOffset) + worldOffset;
+  glm::vec3 scale = MathUtils::readAsCVector3f(projectile["scale"]);
+  glm::vec3 vel = localToWorldXf * localXf * glm::vec4(MathUtils::readAsCVector3f(projectile["velocity"]), 0.0f);
+
+  float extent = entity["projExtent"].read_f32();
+
+  const glm::vec3 &size = glm::vec3{extent, extent, extent} / 2.0f * scale;
+  glm::vec3 min = pos - size;
+  glm::vec3 max = pos + size;
+
+  glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
+
+  glm::vec4 color{0.8f, 0.4f, 0.4f, 0.8f};
+
+  if (isHighlighted) {
+    color = {1, 0, 0, 0.5f};
+  }
+
+  translucentRenderBuff->setColor(color);
+  translucentRenderBuff->setTransform(glm::identity<glm::mat4>());
+
+  translucentRenderBuff->addTris(
+      ShapeGenerator::generateCube(min, max, color)
+  );
+
+  if (isHighlighted) {
+    translucentRenderBuff->setColor(glm::vec4{0.8, 0.8, 0.8, 0.5f});
+    translucentRenderBuff->addLine(pos, pos + (glm::normalize(vel) * 1000.f));
+  }
+  translucentRenderBuff->setColor(glm::vec4{1, 0.5, 0.5, 1});
+  translucentRenderBuff->addLine(pos, pos + (glm::normalize(vel) * 0.5f));
 }
