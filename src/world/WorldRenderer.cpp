@@ -638,6 +638,7 @@ void WorldRenderer::drawChozoGhost(const GameMember &ghost, bool highlighted,
     glm::mat4 coverTransform = MathUtils::readAsCTransform(coverPoint["transform"]);
     glm::vec3 coverPos = coverTransform[3];
 
+    translucentRenderBuff->setTransform(glm::identity<glm::mat4>());
     translucentRenderBuff->setColor(glm::vec4{1, 0, 1, 1});
     translucentRenderBuff->addLine(ghostPos, coverPos);
   }

@@ -361,7 +361,6 @@ void PrimeWatch::doMainMenu() {
 #define TOGGLE_MENU(label, path)  if (ImGui::MenuItem((label), nullptr, (path))) (path) = !(path);
     if (ImGui::BeginMenu("Triggers")) {
       TOGGLE_MENU("detectPlayer", worldRenderer.triggerRenderConfig.detectPlayer)
-      TOGGLE_MENU("detectPlayer", worldRenderer.triggerRenderConfig.detectPlayer)
       TOGGLE_MENU("detectAi", worldRenderer.triggerRenderConfig.detectAi)
       TOGGLE_MENU("detectProjectiles", worldRenderer.triggerRenderConfig.detectProjectiles)
       TOGGLE_MENU("detectBombs", worldRenderer.triggerRenderConfig.detectBombs)
