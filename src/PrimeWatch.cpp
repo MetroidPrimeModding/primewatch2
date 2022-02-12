@@ -380,7 +380,7 @@ void PrimeWatch::doMainMenu() {
     }
 
     if (ImGui::BeginMenu("Actors")) {
-      TOGGLE_MENU("Render physics actors", worldRenderer.actorRenderConfig.renderActors)
+      TOGGLE_MENU("Render physics actors", worldRenderer.actorRenderConfig.renderPhysicsActors)
       TOGGLE_MENU("Render projectiles", worldRenderer.actorRenderConfig.renderProjectiles)
       TOGGLE_MENU("Render actors", worldRenderer.actorRenderConfig.renderActors)
       TOGGLE_MENU("Render all actors", worldRenderer.actorRenderConfig.renderAllActors)
