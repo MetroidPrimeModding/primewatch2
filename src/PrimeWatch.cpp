@@ -287,6 +287,21 @@ void PrimeWatch::doImGui() {
   }
   ImGui::End();
 
+  if (showExactCameraControls) {
+    if (ImGui::Begin("Camera Controls", &showExactCameraControls, ImGuiWindowFlags_AlwaysAutoResize)) {
+      float yawDeg = fmod(glm::degrees(worldRenderer.yaw), 360.f);
+      float pitchDeg = glm::degrees(worldRenderer.pitch);
+      ImGui::DragFloat3("Position", &worldRenderer.manualCameraPos.x, 1, -FLT_MAX, FLT_MAX, "%0.3f");
+      if (ImGui::DragFloat("Yaw", &yawDeg, 1, -360, 360, "%0.3f")) {
+        worldRenderer.yaw = glm::radians(yawDeg);
+      }
+      if (ImGui::DragFloat("Pitch", &pitchDeg, 1, -89, 89, "%0.3f")) {
+        worldRenderer.pitch = glm::radians(pitchDeg);
+      }
+    }
+    ImGui::End();
+  }
+
   drawObjectsWindow();
 
   if (showRawDataView) {
@@ -354,6 +369,9 @@ void PrimeWatch::doMainMenu() {
       }
       if (ImGui::MenuItem("Detatched", nullptr, worldRenderer.cameraMode == CameraMode::DETATCHED)) {
         worldRenderer.cameraMode = CameraMode::DETATCHED;
+      }
+      if (ImGui::MenuItem("Show camera controls", nullptr, showExactCameraControls)) {
+        showExactCameraControls = !showExactCameraControls;
       }
       ImGui::EndMenu();
     }

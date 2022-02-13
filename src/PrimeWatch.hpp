@@ -43,6 +43,7 @@ private:
   uint16_t tableHoveredUid{0xFFFF};
   bool showRawDataView{false};
   bool showDemoView{false};
+  bool showExactCameraControls{false};
 
   // caching the most recent list of entities
   std::map<TUniqueID, GameDefinitions::GameMember> entities;
