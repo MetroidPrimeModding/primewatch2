@@ -1,0 +1,3 @@
+struct CPuffer: CPatterned {
+
+}

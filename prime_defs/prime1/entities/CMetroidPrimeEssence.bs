@@ -1,0 +1,3 @@
+struct CMetroidPrimeEssence: CPatterned {
+
+}

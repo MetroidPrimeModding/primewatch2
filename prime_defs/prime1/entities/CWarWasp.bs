@@ -1,0 +1,3 @@
+struct CWarWasp: CPatterned {
+
+}

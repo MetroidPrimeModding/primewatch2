@@ -86,6 +86,7 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   io.Fonts->AddFontDefault();
 
   glViewport(0, 0, width, height);
+  worldRenderer.camViewport = glm::vec4{0, 0, width, height};
   worldRenderer.aspect = (float) width / (float) height;
 
   mem_edit.ReadOnly = false;
@@ -226,8 +227,6 @@ void PrimeWatch::doFrame() {
     ImGui::End();
   }
 
-  ImGui::Render();
-
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -244,6 +243,7 @@ void PrimeWatch::doFrame() {
     worldRenderer.render(entities, highlightedEntities);
   }
 
+  ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
@@ -397,8 +397,10 @@ void PrimeWatch::doMainMenu() {
     }
 
     if (ImGui::BeginMenu("Actors")) {
-      TOGGLE_MENU("Render physics actors", worldRenderer.actorRenderConfig.renderPhysicsActors)
       TOGGLE_MENU("Render projectiles", worldRenderer.actorRenderConfig.renderProjectiles)
+      TOGGLE_MENU("Render AI", worldRenderer.actorRenderConfig.renderAI)
+      TOGGLE_MENU("Render Pickups", worldRenderer.actorRenderConfig.renderPickups)
+      TOGGLE_MENU("Render physics actors", worldRenderer.actorRenderConfig.renderPhysicsActors)
       TOGGLE_MENU("Render actors", worldRenderer.actorRenderConfig.renderActors)
       TOGGLE_MENU("Render all actors", worldRenderer.actorRenderConfig.renderAllActors)
 
@@ -432,6 +434,7 @@ void PrimeWatch::framebuffer_size_cb(GLFWwindow *window, int width, int height) 
   glViewport(0, 0, width, height);
   PrimeWatch *ptr = (PrimeWatch *) glfwGetWindowUserPointer(window);
   ptr->worldRenderer.aspect = (float) width / (float) height;
+  ptr->worldRenderer.camViewport = glm::vec4{0, 0, width, height};
 }
 
 struct VtableInfo {

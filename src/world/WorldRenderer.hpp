@@ -53,8 +53,10 @@ struct TriggerRenderConfig {
 };
 
 struct ActorRenderConfig {
-  bool renderPhysicsActors: 1{true};
   bool renderProjectiles: 1{true};
+  bool renderAI: 1{true};
+  bool renderPickups: 1{true};
+  bool renderPhysicsActors: 1{false};
   bool renderActors: 1{false};
   bool renderAllActors: 1{false};
 };
@@ -71,6 +73,11 @@ public:
   float distance{10.f};
   glm::vec3 up{0, 0, 1};
   glm::vec3 manualCameraPos;
+  glm::mat4 camProjection{1.0f};
+  glm::mat4 camView{1.0f};
+  glm::vec3 camEye;
+  glm::quat camPointing;
+  glm::vec4 camViewport;
 
   CullType culling{CullType::BACK};
   CameraMode cameraMode{CameraMode::FOLLOW_PLAYER};
@@ -119,6 +126,9 @@ private:
   void drawChozoGhost(const GameDefinitions::GameMember &ghost, bool highlighted,
                       const std::map<TUniqueID, GameDefinitions::GameMember> &entities);
   void drawProjectile(const GameDefinitions::GameMember &member, bool highlighted);
+  void drawAi(const GameDefinitions::GameMember &member, bool highlighted);
+  void drawPickup(const GameDefinitions::GameMember &member, bool highlighted);
+  glm::vec3 getScreenspacePosForPhysicsActor(const GameDefinitions::GameMember &physicsActor);
 };
 
 

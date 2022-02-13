@@ -1,3 +1,4 @@
 struct CAi: CPhysicsActor {
-
+  CHealthInfo healthInfo 0x258
+  CDamageVulnerability damageVulnerability 0x260
 }

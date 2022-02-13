@@ -10,6 +10,7 @@
 #include "utils/GameObjectUtils.hpp"
 #include "gl/ShapeGenerator.hpp"
 #include "defs/GameObjectRenderers.hpp"
+#include "defs/EItemType.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_access.hpp>
@@ -213,42 +214,37 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
   renderBuff->clear();
   translucentRenderBuff->clear();
 
-  glm::mat4 projection{1.0f};
-  glm::mat4 view{1.0f};
-  glm::vec3 eye;
-
   if (cameraMode == CameraMode::FOLLOW_PLAYER) {
-    projection = glm::perspective(fov, aspect, zNear, zFar);
+    camProjection = glm::perspective(fov, aspect, zNear, zFar);
     glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
     // we look at the lastKnownNonCollidingPos because it's less jumpy
-    eye = glm::vec4(lastKnownNonCollidingPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
-    view = glm::lookAt(eye, lastKnownNonCollidingPos, up);
+    camEye = glm::vec4(lastKnownNonCollidingPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
+    camView = glm::lookAt(camEye, lastKnownNonCollidingPos, up);
     manualCameraPos = lastKnownNonCollidingPos;
   } else if (cameraMode == CameraMode::GAME_CAM) {
-    projection = gameCam.perspective;
-    view = glm::inverse(gameCam.transform);
+    camProjection = gameCam.perspective;
+    camView = glm::inverse(gameCam.transform);
+//    view = glm::translate(eye) * glm::toMat4(orient);
+  } else if (cameraMode == CameraMode::DETATCHED) {
+    camProjection = glm::perspective(fov, aspect, zNear, zFar);
+    glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
 
+    camEye = glm::vec4(manualCameraPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
+    camView = glm::lookAt(camEye, manualCameraPos, up);
+  }
+  {
     glm::vec3 scale;
-    glm::quat orient;
     glm::vec3 skew;
     glm::vec4 perspective;
 
     glm::decompose(
-        view, // mat
+        camView, // mat
         scale, //scale
-        orient, //orient
-        eye, // translation,
+        camPointing, //orient
+        camEye, // translation,
         skew, //skew
         perspective // perspective
     );
-
-//    view = glm::translate(eye) * glm::toMat4(orient);
-  } else if (cameraMode == CameraMode::DETATCHED) {
-    projection = glm::perspective(fov, aspect, zNear, zFar);
-    glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
-
-    eye = glm::vec4(manualCameraPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
-    view = glm::lookAt(eye, manualCameraPos, up);
   }
 
   // Player collision
@@ -314,10 +310,10 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
   renderEntities(entities, highlightedEids);
 
   shader->setMat4("model", glm::identity<glm::mat4>());
-  shader->setMat4("view", view);
-  shader->setMat4("projection", projection);
+  shader->setMat4("view", camView);
+  shader->setMat4("projection", camProjection);
   shader->setVec3("lightDir", glm::normalize(lightDir));
-  shader->setVec3("viewPos", eye);
+  shader->setVec3("viewPos", camEye);
 
   shader->use();
   glEnable(GL_DEPTH_TEST);
@@ -493,8 +489,16 @@ void WorldRenderer::renderEntities(const map<TUniqueID, GameMember> &entities,
     } else if (entity.extendsClass("CPlayer")) {
       // player render is handled elsewhere
     } else if (entity.extendsClass("CChozoGhost")) {
-      if (actorRenderConfig.renderPhysicsActors) {
+      if (actorRenderConfig.renderAI) {
         drawChozoGhost(entity, isHighlighted, entities);
+      }
+    } else if (entity.extendsClass("CScriptPickup")) {
+      if (actorRenderConfig.renderPickups) {
+        drawPickup(entity, isHighlighted);
+      }
+    } else if (entity.extendsClass("CAi")) {
+      if (actorRenderConfig.renderAI) {
+        drawAi(entity, isHighlighted);
       }
     } else if (entity.extendsClass("CPhysicsActor")) {
       if (actorRenderConfig.renderPhysicsActors) {
@@ -621,7 +625,7 @@ void WorldRenderer::drawActor(const GameMember &entity, bool isHighlighted) {
 
 void WorldRenderer::drawChozoGhost(const GameMember &ghost, bool highlighted,
                                    const std::map<TUniqueID, GameDefinitions::GameMember> &entities) {
-  drawPhysicsActor(ghost, highlighted);
+  drawAi(ghost, highlighted);
 
   glm::vec3 spaceWarpPos = MathUtils::readAsCVector3f(ghost["spaceWarpPosition"]);
   glm::mat4 ghostTransform = MathUtils::readAsCTransform(ghost["transform"]);
@@ -686,4 +690,73 @@ void WorldRenderer::drawProjectile(const GameMember &entity, bool isHighlighted)
   }
   translucentRenderBuff->setColor(glm::vec4{1, 0.5, 0.5, 1});
   translucentRenderBuff->addLine(pos, pos + (glm::normalize(vel) * 0.5f));
+}
+
+void WorldRenderer::drawAi(const GameMember &ai, bool highlighted) {
+  drawPhysicsActor(ai, highlighted);
+  glm::vec3 screenSpace = getScreenspacePosForPhysicsActor(ai);
+
+  float health = ai["healthInfo"]["health"].read_f32();
+
+//  cout << screenSpace.x << "," << screenSpace.y << "," << screenSpace.z << endl;
+  ImDrawList *dl = ImGui::GetBackgroundDrawList();
+  string hp = fmt::format("{:0.1f}", health);
+  float centerX = ImGui::CalcTextSize(hp.c_str()).x / 2;
+  dl->AddText(ImVec2(screenSpace.x - centerX, screenSpace.y - ImGui::GetTextLineHeight() / 2), ImColor(0xFFFFFFFF),
+              hp.c_str());
+}
+
+glm::vec3 WorldRenderer::getScreenspacePosForPhysicsActor(const GameMember &physicsActor) {
+  glm::mat4 transform = MathUtils::readAsCTransform(physicsActor["transform"]);
+  glm::vec3 pos = transform[3];
+
+  glm::vec3 min = MathUtils::readAsCVector3f(physicsActor["collisionPrimitive"]["aabb"]["min"]);
+  glm::vec3 max = MathUtils::readAsCVector3f(physicsActor["collisionPrimitive"]["aabb"]["max"]);
+
+  if (glm::abs(glm::length(min - max)) < 0.1) {
+    min = MathUtils::readAsCVector3f(physicsActor["baseBoundingBox"]["min"]);
+    max = MathUtils::readAsCVector3f(physicsActor["baseBoundingBox"]["max"]);
+  }
+
+  if (glm::abs(glm::length(min - max)) < 0.1) {
+    min = MathUtils::readAsCVector3f(physicsActor["renderBounds"]["min"]) - pos;
+    max = MathUtils::readAsCVector3f(physicsActor["renderBounds"]["max"]) - pos;
+  }
+
+  glm::vec3 textPos = (min + max) / 2.0f;// Y is inverted in imgui
+  glm::vec3 screenSpace = glm::project(pos + textPos, camView, camProjection, camViewport);
+  screenSpace.y = camViewport[3] - screenSpace.y;
+  return screenSpace;
+}
+
+void WorldRenderer::drawPickup(const GameMember &pickup, bool highlighted) {
+  drawPhysicsActor(pickup, highlighted);
+  glm::vec3 screenSpace = getScreenspacePosForPhysicsActor(pickup);
+
+  EItemType itemType = static_cast<EItemType>(pickup["itemType"].read_u32());
+  int32_t amount = static_cast<int32_t>(pickup["amount"].read_u32());
+  int32_t capacity = static_cast<int32_t>(pickup["capacity"].read_u32());;
+  float lifeTime = pickup["lifeTime"].read_f32();
+  float curTime = pickup["curTime"].read_f32();
+
+//  cout << screenSpace.x << "," << screenSpace.y << "," << screenSpace.z << endl;
+  ImDrawList *dl = ImGui::GetBackgroundDrawList();
+  {
+    string line1 = fmt::format("{} {}/{}", itemTypeToName(itemType), amount, capacity);
+    float centerX = ImGui::CalcTextSize(line1.c_str()).x / 2;
+    dl->AddText(
+        ImVec2(screenSpace.x - centerX, screenSpace.y - ImGui::GetTextLineHeight()),
+        ImColor(0xFFFFFFFF),
+        line1.c_str()
+    );
+  }
+  {
+    string line2 = fmt::format("{:0.1f}/{:0.1f}", curTime, lifeTime);
+    float centerX = ImGui::CalcTextSize(line2.c_str()).x / 2;
+    dl->AddText(
+        ImVec2(screenSpace.x - centerX, screenSpace.y),
+        ImColor(0xFFFFFFFF),
+        line2.c_str()
+    );
+  }
 }

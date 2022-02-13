@@ -1,0 +1,7 @@
+struct CScriptPickup: CPhysicsActor {
+  CPlayerState::EItemType itemType 0x258
+  i32 amount 0x25c
+  i32 capacity 0x260
+  f32 lifeTime 0x26c
+  f32 curTime 0x270
+}

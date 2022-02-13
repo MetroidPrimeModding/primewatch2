@@ -125,7 +125,7 @@ set(SOURCE_FILES
         src/gl/ImmediateModeBuffer.cpp
         src/gl/ImmediateModeBuffer.hpp
         src/defs/GameVtables.hpp
-        src/defs/GameVtables.cpp)
+        src/defs/GameVtables.cpp src/defs/EItemType.cpp src/defs/EItemType.hpp)
 
 add_executable(primewatch2 ${SOURCE_FILES})
 target_link_libraries(primewatch2

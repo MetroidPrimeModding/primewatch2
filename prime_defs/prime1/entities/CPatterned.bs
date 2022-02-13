@@ -1,3 +1,5 @@
 struct CPatterned: CAi {
-
+  f32 currentDamageRemTime 0x420
+  f32 damageWaitTime 0x424
+  f32 damageCooldownTimer 0x428
 }

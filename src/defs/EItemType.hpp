@@ -1,12 +1,8 @@
-struct CPlayerState {
-    u32 currentBeam 0x8
-    CHealthInfo healthInfo 0xC
-    u32 currentVisor 0x14
-    u32 currentSuit 0x20
-    u32 items 0x14 // TODO: this is wrong
-}
+#pragma once
 
-enum CPlayerState::EItemType {
+#include <string>
+
+enum class EItemType {
   Invalid = -1,
   PowerBeam = 0,
   IceBeam = 1,
@@ -49,5 +45,9 @@ enum CPlayerState::EItemType {
   World = 38,
   Spirit = 39,
   Newborn = 40,
+
+  /* This must remain at the end of the list */
   Max
-}
+};
+
+std::string itemTypeToName(EItemType type);
