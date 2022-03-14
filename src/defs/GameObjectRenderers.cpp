@@ -335,7 +335,13 @@ namespace GameObjectRenderers {
 
     auto first = *member.memberByName("first");
     auto baseOffset = first.offset;
-    auto sizePer = GameDefinitions::structByName(first.type)->size;
+    uint32_t sizePer;
+    auto struc = GameDefinitions::structByName(first.type);
+    if (struc.has_value()) {
+      sizePer = struc->size;
+    } else {
+      sizePer = GameDefinitions::primitiveSize(first.type);
+    }
 
     ImGui::Indent();
     GameMember vecItem = first;

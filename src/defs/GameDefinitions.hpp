@@ -67,6 +67,7 @@ namespace GameDefinitions {
 
   std::optional<GameEnum> enumByName(const std::string& name);
   std::optional<GameStruct> structByName(const std::string& name);
+  uint32_t primitiveSize(const std::string &name);
 
 //  extern std::unordered_map<std::string, GameEnum> enums_by_name;
 //  extern  std::unordered_map<std::string, GameStruct> structs_by_name;

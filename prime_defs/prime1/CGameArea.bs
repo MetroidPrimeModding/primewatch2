@@ -20,6 +20,20 @@ enum EOcclusionState {
   Visible
 }
 
+struct SDockReference {
+  u32 area 0x0
+  i16 dock 0x4
+  bool loadOther 0x6:7:1
+  u8 loadOther2 0x6
+}
+
+struct CGameArea::Dock {
+  size 0x4C
+  i32 referenceCount 0x0
+  u32 dockCount 0x8
+  rstl::vector<SDockReference> dockReferences 0x8
+}
+
 struct CGameArea {
   size 0x13c
   u32 vtable 0x0
@@ -27,6 +41,8 @@ struct CGameArea {
   u32 nameStrg 0x8
   u32 mrea 0x84
   u32 areaID 0x88
+  rstl::vector<u16> attachedAreaIndices 0x90
+  rstl::vector<CGameArea::Dock> docks 0xD0
   // TODO: bit struct
   u32 flags 0xF0
   bool isPostConstructed 0xF0:7:1

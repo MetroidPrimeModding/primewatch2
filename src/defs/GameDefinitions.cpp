@@ -72,6 +72,29 @@ namespace GameDefinitions {
     return bstruct_error;
   }
 
+  uint32_t primitiveSize(const string &name) {
+    if (name == "u8") {
+      return 1;
+    } else if (name == "u16") {
+      return 2;
+    } else if (name == "u32") {
+      return 4;
+    } else if (name == "i8") {
+      return 1;
+    } else if (name == "i16") {
+      return 2;
+    } else if (name == "i32") {
+      return 4;
+    } else if (name == "bool") {
+      return 1;
+    } else if (name == "f32") {
+      return 4;
+    } else if (name == "f64") {
+      return 8;
+    }
+    return 4;
+  }
+
   void loadEnumsFromJsonList(const json &enums) {
     for (auto jsonEnum: enums) {
       map<uint32_t, GameEnumValue> values_by_value;

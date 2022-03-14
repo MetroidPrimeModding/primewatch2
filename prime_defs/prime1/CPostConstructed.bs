@@ -2,4 +2,5 @@ struct CPostConstructed {
     rstl::autoptr<CAreaOctTree> collision 0x0
     u32 collisionSize 0x8
     EOcclusionState occlusionState 0x10DC
+    f32 worldLightingLevel 0x1128
 }
