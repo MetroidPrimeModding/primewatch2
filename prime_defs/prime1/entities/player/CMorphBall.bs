@@ -1,5 +1,5 @@
 struct CMorphBall {
-    CSpherePrimitive collisionSphere 0x38
+    CSphere collisionSphere 0x38
     // TODO: this may be handy later   CCollisionInfoList x74_collisionInfos;\
 
     ESpiderBallState spiderBallState 0x187C

@@ -22,6 +22,10 @@ struct rstl::rc_ptr<T> {
     *rstl::CRefData<T> ref
 }
 
+struct rstl::single_ptr<T> {
+    *T value 0x0
+}
+
 struct rstl::CRefData<T> {
   *T value
   u32 refCount

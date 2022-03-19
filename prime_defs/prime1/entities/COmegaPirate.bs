@@ -10,6 +10,27 @@ struct COmegaPirate: CElitePirate {
     bool armorPieceActivated 0xB6E
     bool codeTrigger 0xB78
     bool bossPhaseActive 0xB79
+
+//    x9a1_fadeIn
+    bool heartVisible 0xA4A
+    bool targetable 0xA44
+    //u32 collisionActorMgr1 0xa38
+    *CCollisionActorManager collisionActorMgr1 0xa38
+    //collisionActorMgr2
+    u16 uidUsedForDamage 0xa46
+    bool cover 0xAD8
+    EScaleState scaleState 0x9c8
+}
+
+enum EScaleState {
+  None=0,
+  ScaleDownX,
+  ScaleDownY,
+  ScaleDownZ,
+  WaitForTrigger,
+  ScaleUpX,
+  ScaleUpY,
+  ScaleUpZ,
 }
 
 enum ESkeletonFadeState: u32 {

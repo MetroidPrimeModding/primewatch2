@@ -1,0 +1,7 @@
+struct CCollisionActorManager {
+  //std::vector<CJointCollisionDescription> x0_jointDescriptions;
+  i32 ownerId 0x10
+  bool active 0x12
+  bool destroyed 0x13
+  bool movable 0x14
+}

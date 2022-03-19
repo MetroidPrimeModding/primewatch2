@@ -1,3 +1,55 @@
 struct CCollisionActor: CPhysicsActor {
-    vtable 0x803e4b18
+  vtable 0x803e4b18
+
+  *CCollidableOBBTreeGroupContainer obbContainer 0x278
+  *CCollidableOBBTreeGroup obbTreeGroupPrimitive 0x27c
+  *CCollidableAABox aaboxPrimitive 0x280
+  *CCollidableSphere spherePrimitive 0x284
+  }
+
+struct CCollisionPrimitive {
+  *u8 info 0x4
+}
+
+struct CCollidableSphere: CCollisionPrimitive {
+  CSphere sphere 0x10
+}
+
+struct CCollidableAABox: CCollisionPrimitive {
+  CAABB aabb 0x10
+}
+
+struct CCollidableOBBTreeGroup: CCollisionPrimitive {
+  *CCollidableOBBTreeGroupContainer container 0x10
+}
+
+struct CCollidableOBBTreeGroupContainer {
+    rstl::vector<*COBBTree> trees 0x4
+    rstl::vector<CAABB> aabbs 0x14
+    CAABB aabox 0x20
+}
+
+struct COBBTree {
+  u32 magic 0x0
+  u32 version 0x4
+  u32 memsize 0x8
+  SIndexData indexData 0x18
+  *CNode root 0x88
+}
+
+struct SIndexData {
+  rstl::vector<u32> materials 0x0
+  rstl::vector<u8> vertMaterials 0x10
+  rstl::vector<u8> edgeMaterials 0x20
+  rstl::vector<u8> surfaceMaterials 0x30
+  rstl::vector<CCollisionEdge> edges 0x40
+  rstl::vector<u16> surfaceIndices 0x50
+  rstl::vector<CVector3f> vertices 0x60
+  //*u32 materials 0x4
+  //*u8 vertMaterials 0x8
+  //*u8 edgeMaterials 0xC
+  //*u8 surfaceMaterials 0x10
+  //*CCollisionEdge edges 0x14
+  //*u16 surfaceIndices 0x18
+  //*CVector3f vertices 0x1C
 }
