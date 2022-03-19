@@ -14,7 +14,8 @@ public:
   ImmediateModeBuffer &operator=(const ImmediateModeBuffer &) = delete;
 
   void clear();
-  void draw();
+  void drawTris();
+  void drawLines();
 
   void setColor(const glm::vec4 &color);
   void setTransform(const glm::mat4 &transform);

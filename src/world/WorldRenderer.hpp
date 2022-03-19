@@ -56,6 +56,7 @@ struct ActorRenderConfig {
   bool renderProjectiles: 1{true};
   bool renderAI: 1{true};
   bool renderPickups: 1{true};
+  bool renderCollisionActors: 1{true};
   bool renderPhysicsActors: 1{false};
   bool renderActors: 1{false};
   bool renderAllActors: 1{false};
@@ -99,7 +100,8 @@ public:
   void renderImGui();
 
 private:
-  std::unique_ptr<OpenGLShader> shader{};
+  std::unique_ptr<OpenGLShader> meshShader{};
+  std::unique_ptr<OpenGLShader> lineShader{};
   std::unique_ptr<ImmediateModeBuffer> renderBuff;
   std::unique_ptr<ImmediateModeBuffer> translucentRenderBuff;
 
@@ -129,6 +131,7 @@ private:
   void drawAi(const GameDefinitions::GameMember &member, bool highlighted);
   void drawPickup(const GameDefinitions::GameMember &member, bool highlighted);
   glm::vec3 getScreenspacePosForPhysicsActor(const GameDefinitions::GameMember &physicsActor);
+  void drawCollisionActor(const GameDefinitions::GameMember &entity, bool isHighlighted);
 };
 
 

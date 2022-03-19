@@ -136,6 +136,9 @@ target_link_libraries(primewatch2
         glm
         ${BSTRUCT_LIB})
 
+target_include_directories(primewatch2 PRIVATE include)
+target_compile_definitions(primewatch2 PRIVATE -DIMGUI_IMPL_OPENGL_LOADER_GLAD)
+
 if (WIN32)
     target_link_libraries(primewatch2
             ws2_32

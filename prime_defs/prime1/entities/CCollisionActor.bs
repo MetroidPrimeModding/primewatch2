@@ -3,7 +3,7 @@ struct CCollisionActor: CPhysicsActor {
 
   *CCollidableOBBTreeGroupContainer obbContainer 0x278
   *CCollidableOBBTreeGroup obbTreeGroupPrimitive 0x27c
-  *CCollidableAABox aaboxPrimitive 0x280
+  *CCollidableAABox aabbPrimitive 0x280
   *CCollidableSphere spherePrimitive 0x284
   }
 
@@ -26,7 +26,7 @@ struct CCollidableOBBTreeGroup: CCollisionPrimitive {
 struct CCollidableOBBTreeGroupContainer {
     rstl::vector<*COBBTree> trees 0x4
     rstl::vector<CAABB> aabbs 0x14
-    CAABB aabox 0x20
+    CAABB aabb 0x20
 }
 
 struct COBBTree {

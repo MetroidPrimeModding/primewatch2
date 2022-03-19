@@ -75,6 +75,52 @@ namespace ShapeGenerator {
     return generateCube(center - size / 2.0f, center + size / 2.0f, color);
   }
 
+  std::vector<Vert> generateCubeLines(glm::vec3 min, glm::vec3 max, glm::vec4 color) {
+    vector<Vert> verts;
+
+    // Z: -X -Y
+    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    // Z: -X Y
+    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    // Z: X Y
+    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    // Z: X -Y
+    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {0, 0, -1},});
+
+    // X: -Y -Z
+    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    // X: -Y Z
+    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    // X: Y Z
+    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    // X: -Y Z
+    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {0, 0, -1},});
+
+    // Y: -X -Z
+    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    // Y: -X Z
+    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    // Y: X Z
+    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 0, -1},});
+    // Y: X -Z
+    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {0, 0, -1},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {0, 0, -1},});
+
+    return verts;
+  }
+
+
   std::vector<Vert> generateSphere(glm::vec3 center, float radius, glm::vec4 color) {
     vector<Vert> verts;
 

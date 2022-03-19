@@ -76,6 +76,26 @@ void main() {
 }
 )src";
 
+const char *lineFragShader = R"src(#version 330 core
+out vec4 FragColor;
+
+in vec4 vertexColor;
+in vec3 normal;
+in vec3 fragPos;
+
+uniform vec3 viewPos;
+uniform vec3 lightDir;
+
+void main() {
+  vec3 lightColor = vec3(1,1,1);
+  // ambient
+  float ambientStrength = 1;
+  vec3 ambient = ambientStrength * lightColor;
+
+  FragColor = vec4(ambient, 1.0) * vertexColor;
+}
+)src";
+
 void WorldRenderer::init() {
   renderBuff = make_unique<ImmediateModeBuffer>();
   translucentRenderBuff = make_unique<ImmediateModeBuffer>();
@@ -207,8 +227,9 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
 
 void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember> &entities,
                            const set<uint16_t> &highlightedEids) {
-  if (!shader) {
-    shader = make_unique<OpenGLShader>(meshVertShader, meshFragShader);
+  if (!meshShader) {
+    meshShader = make_unique<OpenGLShader>(meshVertShader, meshFragShader);
+    lineShader = make_unique<OpenGLShader>(meshVertShader, lineFragShader);
   }
 
   renderBuff->clear();
@@ -309,13 +330,21 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
 
   renderEntities(entities, highlightedEids);
 
-  shader->setMat4("model", glm::identity<glm::mat4>());
-  shader->setMat4("view", camView);
-  shader->setMat4("projection", camProjection);
-  shader->setVec3("lightDir", glm::normalize(lightDir));
-  shader->setVec3("viewPos", camEye);
+  meshShader->use();
+  meshShader->setMat4("model", glm::identity<glm::mat4>());
+  meshShader->setMat4("view", camView);
+  meshShader->setMat4("projection", camProjection);
+  meshShader->setVec3("lightDir", glm::normalize(lightDir));
+  meshShader->setVec3("viewPos", camEye);
 
-  shader->use();
+  lineShader->use();
+  lineShader->setMat4("model", glm::identity<glm::mat4>());
+  lineShader->setMat4("view", camView);
+  lineShader->setMat4("projection", camProjection);
+  lineShader->setVec3("lightDir", glm::normalize(lightDir));
+  lineShader->setVec3("viewPos", camEye);
+
+  meshShader->use();
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glFrontFace(GL_CW);
@@ -342,15 +371,27 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
   glLineWidth(2.0f);
-  shader->setMat4("model", glm::mat4{1.0f});
-  renderBuff->draw();
+  meshShader->use();
+  meshShader->setMat4("model", glm::mat4{1.0f});
+  renderBuff->drawTris();
+
+  lineShader->use();
+  lineShader->setMat4("model", glm::mat4{1.0f});
+  renderBuff->drawLines();
 
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  shader->setMat4("model", glm::mat4{1.0f});
-  translucentRenderBuff->draw();
+  meshShader->use();
+  meshShader->setMat4("model", glm::mat4{1.0f});
+  translucentRenderBuff->drawTris();
+
+  lineShader->use();
+  lineShader->setMat4("model", glm::mat4{1.0f});
+  translucentRenderBuff->drawLines();
   glEnable(GL_DEPTH_TEST);
+
+  meshShader->use();
 }
 
 void WorldRenderer::renderImGui() {
@@ -495,6 +536,10 @@ void WorldRenderer::renderEntities(const map<TUniqueID, GameMember> &entities,
     } else if (entity.extendsClass("CScriptPickup")) {
       if (actorRenderConfig.renderPickups) {
         drawPickup(entity, isHighlighted);
+      }
+    } else if (entity.extendsClass("CCollisionActor")) {
+      if (actorRenderConfig.renderCollisionActors) {
+        drawCollisionActor(entity, isHighlighted);
       }
     } else if (entity.extendsClass("CAi")) {
       if (actorRenderConfig.renderAI) {
@@ -760,3 +805,54 @@ void WorldRenderer::drawPickup(const GameMember &pickup, bool highlighted) {
     );
   }
 }
+
+void WorldRenderer::drawCollisionActor(const GameMember &entity, bool isHighlighted) {
+  glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
+  glm::vec3 pos = transform[3];
+
+  glm::vec4 color{1, 1, 1, 0.5f};
+
+  if (isHighlighted) {
+    color = {1, 0, 0, 0.5f};
+  }
+  glm::vec4 solidColor = color;
+  solidColor.a = 1;
+
+  GameMember aabbPrimitive = entity["aabbPrimitive"];
+  GameMember spherePrimitive = entity["spherePrimitive"];
+  GameMember obbTreeGroupPrimitive = entity["obbTreeGroupPrimitive"];
+  // this is handled by the TreeGroup, it's always there
+//  GameMember obbContainer = entity["obbContainer"];
+
+  translucentRenderBuff->setColor(color);
+  translucentRenderBuff->setTransform(transform);
+  renderBuff->setColor(solidColor);
+  renderBuff->setTransform(transform);
+
+  renderBuff->addLine(glm::vec3{-0.2, 0, 0}, glm::vec3{0.2, 0, 0});
+  renderBuff->addLine(glm::vec3{0, -0.2, 0}, glm::vec3{0, 0.2, 0});
+  renderBuff->addLine(glm::vec3{0, 0, -0.2}, glm::vec3{0, 0, 0.2});
+
+  if (aabbPrimitive.offset) {
+    glm::vec3 min = MathUtils::readAsCVector3f(aabbPrimitive["aabb"]["min"]);
+    glm::vec3 max = MathUtils::readAsCVector3f(aabbPrimitive["aabb"]["max"]);
+    translucentRenderBuff->addTris(
+      ShapeGenerator::generateCube(min, max, color)
+    );
+  } else if (spherePrimitive.offset) {
+    glm::vec3 center = MathUtils::readAsCVector3f(spherePrimitive["sphere"]["origin"]);
+    float radius = spherePrimitive["sphere"]["radius"].read_f32();
+    translucentRenderBuff->addTris(
+        ShapeGenerator::generateSphere(center, radius, color)
+    );
+  } else if (obbTreeGroupPrimitive.offset) {
+    glm::vec3 min = MathUtils::readAsCVector3f(obbTreeGroupPrimitive["container"]["aabb"]["min"]);
+    glm::vec3 max = MathUtils::readAsCVector3f(obbTreeGroupPrimitive["container"]["aabb"]["max"]);
+    renderBuff->addLines(
+        ShapeGenerator::generateCubeLines(min, max, color)
+    );
+  } else {
+    fprintf(stderr, "Uhoh! unknown collision actor!\n");
+  }
+}
+

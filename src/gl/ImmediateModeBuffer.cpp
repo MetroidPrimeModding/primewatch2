@@ -21,11 +21,13 @@ void ImmediateModeBuffer::clear() {
   lineVerts.clear();
 }
 
-void ImmediateModeBuffer::draw() {
+void ImmediateModeBuffer::drawTris() {
   triMesh->bufferNewData(triVerts, BufferUpdateType::STREAM);
-  linesMesh->bufferNewData(lineVerts, BufferUpdateType::STREAM);
-
   triMesh->draw();
+}
+
+void ImmediateModeBuffer::drawLines() {
+  linesMesh->bufferNewData(lineVerts, BufferUpdateType::STREAM);
   linesMesh->draw();
 }
 
