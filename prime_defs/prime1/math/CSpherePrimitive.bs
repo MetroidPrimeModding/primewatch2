@@ -1,4 +1,4 @@
 struct CSphere {
-    CVector3f origin 0x10
-    f32 radius 0x1C
+    CVector3f origin 0x0
+    f32 radius 0xC
 }
