@@ -220,6 +220,9 @@ optional<CollisionMesh> WorldRenderer::loadMesh(const GameMember &area) {
     );
   }
 
+  res.min = MathUtils::readAsCVector3f(area["aabb"]["min"]);
+  res.max = MathUtils::readAsCVector3f(area["aabb"]["max"]);
+
   res.initGlMesh();
 
   return res;
@@ -365,6 +368,12 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
 
   for (auto &[k, v]: mesh_by_mrea) {
     v.draw();
+
+    renderBuff->addLines(ShapeGenerator::generateCubeLines(
+        v.min,
+        v.max,
+        glm::vec4{1, 1, 1, 1}
+    ));
   }
 
   // then player

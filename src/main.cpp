@@ -1,8 +1,5 @@
 #include <iostream>
 
-#include <cstdio>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include "PrimeWatch.hpp"
 
 int main() {

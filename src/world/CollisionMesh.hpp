@@ -65,6 +65,8 @@ public:
   std::vector<glm::vec<3, glm::uint16_t, glm::defaultp>> raw_polys;
   std::vector<uint16_t> raw_poly_materials;
 
+  glm::vec3 min;
+  glm::vec3 max;
 
   std::vector<ECollisionMaterial> materials;
 

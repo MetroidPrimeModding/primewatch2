@@ -39,6 +39,8 @@ struct CGameArea {
   u32 vtable 0x0
   u32 selfIDX 0x4
   u32 nameStrg 0x8
+  CTransform transform 0xC
+  CAABB aabb 0x6C
   u32 mrea 0x84
   u32 areaID 0x88
   rstl::vector<u16> attachedAreaIndices 0x90
