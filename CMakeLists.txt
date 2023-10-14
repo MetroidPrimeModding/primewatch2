@@ -47,12 +47,12 @@ add_custom_command(
         OUTPUT ${BSTRUCT_LIB}-dummy
         OUTPUT ${BSTRUCT_LIB}
         OUTPUT ${BSTRUCT_HEADER}
-        COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/cargo ${CARGO_CMD}
+        COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/cargo RUSTFLAGS=--print=native-static-libs ${CARGO_CMD}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/bstruct_rust)
 
 add_custom_target(print_lib_dir
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/bstruct_rust
-        COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/cargo ${CARGO_CMD}
+        COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/cargo RUSTFLAGS=--print=native-static-libs ${CARGO_CMD}
         COMMAND ${LS_CMD} ${CMAKE_CURRENT_BINARY_DIR}/cargo/${CARGO_TARGET_DIR}
         )
 
