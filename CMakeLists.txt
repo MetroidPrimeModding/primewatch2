@@ -140,10 +140,18 @@ target_include_directories(primewatch2 PRIVATE include)
 target_compile_definitions(primewatch2 PRIVATE -DIMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 if (WIN32)
+    # courtesy the output of rustc.
     target_link_libraries(primewatch2
-            ws2_32
-            userenv
+            kernel32
             advapi32
             bcrypt
+#            kernel32
+            ntdll
+            userenv
+            ws2_32
+#            kernel32
+#            ws2_32
+#            kernel32
+            msvcrt
             )
 endif ()
