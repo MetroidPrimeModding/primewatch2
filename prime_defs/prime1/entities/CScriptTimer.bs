@@ -1,3 +1,10 @@
 struct CScriptTimer: CEntity {
     vtable 0x803dadd8
+
+    f32 time 0x34
+    f32 startTime 0x38
+    f32 maxRandDelay 0x3c
+    bool loop 0x40
+    bool autoStart 0x41
+    bool isTiming 0x42
 }
