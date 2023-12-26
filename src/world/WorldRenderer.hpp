@@ -79,6 +79,7 @@ public:
   glm::vec3 camEye;
   glm::quat camPointing;
   glm::vec4 camViewport;
+  float camLineLength{10.f};
 
   CullType culling{CullType::BACK};
   CameraMode cameraMode{CameraMode::FOLLOW_PLAYER};

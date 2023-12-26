@@ -180,7 +180,7 @@ namespace ShapeGenerator {
     return res / res.w;
   }
 
-  std::vector<Vert> generateCameraLineSegments(glm::mat4 perspective, glm::mat4 transform) {
+  std::vector<Vert> generateCameraLineSegments(glm::mat4 perspective, glm::mat4 transform, float centerLineLength) {
     vector <Vert> res;
 
     glm::mat4 inverted = glm::inverse(perspective);
@@ -209,7 +209,7 @@ namespace ShapeGenerator {
 
 //    glm::vec3 pos = glm::unProject(glm::vec3{0, 0, 0}, modelView, perspective, viewport)
 
-    auto center = addCamLine(glm::vec3{0, 0, 0}, glm::vec3{0, 0, 1}, 10.0f, red);
+    auto center = addCamLine(glm::vec3{0, 0, 0}, glm::vec3{0, 0, 1}, centerLineLength, red);
 
     auto bl = addCamLine(glm::vec3{-1, -1, 0}, glm::vec3{-1, -1, 1}, 2.0f, white);
     auto tl = addCamLine(glm::vec3{-1, 1, 0}, glm::vec3{-1, 1, 1}, 2.0f, white);

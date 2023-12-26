@@ -302,7 +302,8 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
   renderBuff->setTransform(glm::mat3{1.0f});
   renderBuff->addLines(ShapeGenerator::generateCameraLineSegments(
       gameCam.perspective,
-      gameCam.transform
+      gameCam.transform,
+      camLineLength
   ));
 
   // speed
@@ -846,7 +847,7 @@ void WorldRenderer::drawCollisionActor(const GameMember &entity, bool isHighligh
     glm::vec3 min = MathUtils::readAsCVector3f(aabbPrimitive["aabb"]["min"]);
     glm::vec3 max = MathUtils::readAsCVector3f(aabbPrimitive["aabb"]["max"]);
     translucentRenderBuff->addTris(
-      ShapeGenerator::generateCube(min, max, color)
+        ShapeGenerator::generateCube(min, max, color)
     );
   } else if (spherePrimitive.offset) {
     glm::vec3 center = MathUtils::readAsCVector3f(spherePrimitive["sphere"]["origin"]);

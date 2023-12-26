@@ -289,6 +289,7 @@ void PrimeWatch::doImGui() {
 
   if (showExactCameraControls) {
     if (ImGui::Begin("Camera Controls", &showExactCameraControls, ImGuiWindowFlags_AlwaysAutoResize)) {
+      ImGui::DragFloat("Camera line length", &worldRenderer.camLineLength, 1.f, 2.f, 250.f, "%0.3f");
       float yawDeg = fmod(glm::degrees(worldRenderer.yaw), 360.f);
       float pitchDeg = glm::degrees(worldRenderer.pitch);
       ImGui::DragFloat3("Position", &worldRenderer.manualCameraPos.x, 1, -FLT_MAX, FLT_MAX, "%0.3f");
