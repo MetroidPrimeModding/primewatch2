@@ -13,6 +13,12 @@
 #elif defined(__APPLE__)
 
 #include <libkern/OSByteOrder.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <cstring>
+#import <sys/proc_info.h>
+#import <libproc.h>
 
 #elif defined(WIN32)
 
@@ -151,7 +157,6 @@ namespace MemoryAccess {
   uint64_t hostToBe64(uint64_t value) {
     return htobe64(value);
   }
-
 #elif defined(WIN32)
 int attachedPid = -1;
 HANDLE dolphinProcHandle = 0;
@@ -354,6 +359,123 @@ uint64_t hostToBe64(uint64_t value) {
         ((value & 0x00000000000000FFL) << 56);
 }
 
+#elif defined(__APPLE__)
+  int attachedPid = -1;
+  uint8_t *emuRAMAddressStart = nullptr;
+
+  vector<int> getDolphinPids() {
+    vector<int> res{};
+
+    int numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, NULL, 0);
+    pid_t pids[numberOfProcesses];
+    bzero(pids, sizeof(pids));
+    proc_listpids(PROC_ALL_PIDS, 0, pids, sizeof(pids));
+    for (int i = 0; i < numberOfProcesses; ++i) {
+      if (pids[i] == 0) { continue; }
+      char pathBuffer[PROC_PIDPATHINFO_MAXSIZE];
+      bzero(pathBuffer, PROC_PIDPATHINFO_MAXSIZE);
+      proc_pidpath(pids[i], pathBuffer, sizeof(pathBuffer));
+      if (strlen(pathBuffer) > 0) {
+        printf("path: %s\n", pathBuffer);
+        string exePath = pathBuffer;
+        if (exePath.ends_with("Dolphin")) {
+          printf("pid: %d path %s\n", pids[i], exePath.c_str());
+          res.push_back(pids[i]);
+        }
+      }
+    }
+
+    return res;
+  }
+
+
+  bool attachToProcess(int pid) {
+    constexpr size_t size = 0x2040000;
+
+    detachFromProcess();
+
+    cout << "Dolphin found, PID " << pid << endl;
+    const string file_name = "/dolphin-emu." + to_string(pid);
+    int fd = shm_open(file_name.c_str(), O_RDWR, 0600);
+
+    if (fd < 0) {
+      cerr << "Failed to open shared memory" << endl;
+      return false;
+    }
+
+    cout << "Opened shmem" << endl;
+
+    void *mem = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (mem == MAP_FAILED) {
+      cerr << "failed to map shared memory" << endl;
+      close(fd);
+      return false;
+    }
+
+    emuRAMAddressStart = reinterpret_cast<uint8_t *>(mem);
+    attachedPid = pid;
+    close(fd);
+    return true;
+  }
+
+  void detachFromProcess() {
+    constexpr size_t size = 0x2040000;
+    if (emuRAMAddressStart != nullptr) {
+      cout << "Closing old shared memory" << endl;
+      if (munmap(emuRAMAddressStart, size) < 0) {
+        cerr << "Failed to close old memory" << endl;
+        exit(4);
+      }
+      emuRAMAddressStart = nullptr;
+      attachedPid = -1;
+    }
+  }
+
+  int getAttachedPid() {
+    return attachedPid;
+  }
+
+  uint32_t getRealPtr(uint32_t address) {
+    uint32_t masked = address & 0x7FFFFFFFu;
+    if (masked > DOLPHIN_MEMORY_SIZE) {
+      return 0;
+    }
+    return masked;
+  }
+
+  void dolphin_memcpy(void *dest, size_t offset, size_t size) {
+    if (emuRAMAddressStart == nullptr) {
+      return;
+    }
+    if (size > DOLPHIN_MEMORY_SIZE) {
+      size = DOLPHIN_MEMORY_SIZE;
+    }
+    memcpy(dest, emuRAMAddressStart + getRealPtr(offset), size);
+  }
+
+  uint32_t beToHost16(uint32_t bigEndian) {
+    return OSSwapBigToHostInt16(bigEndian);
+  }
+
+  uint32_t hostToBe16(uint32_t value) {
+    return OSSwapHostToBigInt16(value);
+  }
+
+  uint32_t beToHost32(uint32_t bigEndian) {
+    return OSSwapBigToHostInt32(bigEndian);
+  }
+
+  uint32_t hostToBe32(uint32_t value) {
+    return OSSwapHostToBigInt32(value);
+  }
+
+  uint64_t beToHost64(uint64_t bigEndian) {
+    return OSSwapBigToHostInt64(bigEndian);
+  }
+
+  uint64_t hostToBe64(uint64_t value) {
+    return OSSwapHostToBigInt64(value);
+  }
 #else
 #warning Not yet implemented properly for other platforms
   char *fakeMemory{nullptr};
@@ -377,32 +499,5 @@ uint64_t hostToBe64(uint64_t value) {
   int getAttachedPid() {
     return 0;
   }
-
-#if defined(__APPLE__)
-    uint32_t beToHost16(uint32_t bigEndian) {
-      return OSSwapBigToHostInt16(bigEndian);
-    }
-
-    uint32_t hostToBe16(uint32_t value) {
-      return OSSwapHostToBigInt16(value);
-    }
-
-    uint32_t beToHost32(uint32_t bigEndian) {
-      return OSSwapBigToHostInt32(bigEndian);
-    }
-
-    uint32_t hostToBe32(uint32_t value) {
-      return OSSwapHostToBigInt32(value);
-    }
-
-    uint64_t beToHost64(uint64_t bigEndian) {
-      return OSSwapBigToHostInt64(bigEndian);
-    }
-
-    uint64_t hostToBe64(uint64_t value) {
-      return OSSwapHostToBigInt64(value);
-    }
-#endif
-
 #endif
 }

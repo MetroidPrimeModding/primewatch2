@@ -117,6 +117,7 @@ void WorldRenderer::update(const PrimeWatchInput &input) {
   playerPos = glm::column(tf, 3);
   playerVelocity = MathUtils::readAsCVector3f(stateManager["player"]["velocity"]);
   lastKnownNonCollidingPos = MathUtils::readAsCVector3f(stateManager["player"]["lastNonCollidingState"]["translation"]);
+  playerLookVec = MathUtils::readAsCVector3f(stateManager["player"]["lookDir"]);
 
   playerOrientation = MathUtils::readAsCQuaternion(stateManager["player"]["orientation"]);
   playerIsMorphed = stateManager["player"]["morphState"].read_u32() == 1; // Morphed
@@ -416,81 +417,114 @@ void WorldRenderer::renderImGui() {
       ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
       ImGuiWindowFlags_AlwaysAutoResize
   );
+  {
+    auto areas = AreaUtils::getAreas();
 
-  auto areas = AreaUtils::getAreas();
+    GameEnum EChain = *GameDefinitions::enumByName("EChain");
+    GameEnum EPhase = *GameDefinitions::enumByName("EPhase");
 
-  GameEnum EChain = *GameDefinitions::enumByName("EChain");
-  GameEnum EPhase = *GameDefinitions::enumByName("EPhase");
+    ImGuiTableFlags flags = ImGuiTableFlags_Borders;
+    if (ImGui::BeginTable("areas", 4, flags)) {
+      // Display headers so we can inspect their interaction with borders.
+      // (Headers are not the main purpose of this section of the demo, so we are not elaborating on them too much. See other sections for details)
+      ImGui::TableSetupColumn("MREA");
+      ImGui::TableSetupColumn("Chain");
+      ImGui::TableSetupColumn("Phase");
+      ImGui::TableSetupColumn("Occluded");
+      ImGui::TableHeadersRow();
 
-  ImGuiTableFlags flags = ImGuiTableFlags_Borders;
-  if (ImGui::BeginTable("areas", 4, flags)) {
-    // Display headers so we can inspect their interaction with borders.
-    // (Headers are not the main purpose of this section of the demo, so we are not elaborating on them too much. See other sections for details)
-    ImGui::TableSetupColumn("MREA");
-    ImGui::TableSetupColumn("Chain");
-    ImGui::TableSetupColumn("Phase");
-    ImGui::TableSetupColumn("Occluded");
-    ImGui::TableHeadersRow();
+      for (auto &area: areas) {
+        uint32_t chain = area["curChain"].read_u32();
+        if (chain == 1 /* deallocated */) continue;
 
-    for (auto &area: areas) {
-      uint32_t chain = area["curChain"].read_u32();
-      if (chain == 1 /* deallocated */) continue;
+        ImGui::TableNextRow();
 
-      ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        uint32_t mrea = area["mrea"].read_u32();
+        ImGui::Text("%s", fmt::format("{:08x}", mrea).c_str());
 
-      ImGui::TableNextColumn();
-      uint32_t mrea = area["mrea"].read_u32();
-      ImGui::Text("%s", fmt::format("{:08x}", mrea).c_str());
+        ImGui::TableNextColumn();
+        string chainText = EChain.valueByValue(chain).name;
+        ImGui::Text("%s", chainText.c_str());
 
-      ImGui::TableNextColumn();
-      string chainText = EChain.valueByValue(chain).name;
-      ImGui::Text("%s", chainText.c_str());
+        ImGui::TableNextColumn();
+        uint32_t phase = area["phase"].read_u32();
+        string phaseText = EPhase.valueByValue(phase).name;
+        ImGui::Text("%s", phaseText.c_str());
 
-      ImGui::TableNextColumn();
-      uint32_t phase = area["phase"].read_u32();
-      string phaseText = EPhase.valueByValue(phase).name;
-      ImGui::Text("%s", phaseText.c_str());
+        ImGui::TableNextColumn();
+        string occludedText = "yes";
+        if (area["isPostConstructed"].read_bool()) {
+          uint32_t occluded = area["postConstructed"]["occlusionState"].read_u32();
+          if (occluded == 1) {
+            occludedText = "no";
+          }
+        }
+        ImGui::Text("%s", occludedText.c_str());
+      }
+      ImGui::EndTable();
+    }
 
-      ImGui::TableNextColumn();
-      string occludedText = "yes";
-      if (area["isPostConstructed"].read_bool()) {
-        uint32_t occluded = area["postConstructed"]["occlusionState"].read_u32();
-        if (occluded == 1) {
-          occludedText = "no";
+    // and now we show the like, load stats
+    // load queue
+    auto loadingDatas = GameObjectUtils::getAllLoadingDatas();
+    if (loadingDatas.size() > 0) {
+      ImGui::Text("Loading %ld", loadingDatas.size());
+      int shownLoading = 0;
+      uint32_t shownSize = 0;
+      uint32_t restSize = 0;
+      for (auto &loadingData: loadingDatas) {
+        uint32_t size = loadingData["resLen"].read_u32();
+        if (shownLoading < 5) {
+          string tag = GameObjectUtils::objectTagToString(loadingData["tag"]);
+
+          string msg = fmt::format("{}: {}", tag.c_str(), size);
+          ImGui::Text("%s", msg.c_str());
+          shownLoading++;
+          shownSize += size;
+        } else {
+          restSize += size;
         }
       }
-      ImGui::Text("%s", occludedText.c_str());
-    }
-    ImGui::EndTable();
-  }
-
-  // and now we show the like, load stats
-  // load queue
-  auto loadingDatas = GameObjectUtils::getAllLoadingDatas();
-  if (loadingDatas.size() > 0) {
-    ImGui::Text("Loading %ld", loadingDatas.size());
-    int shownLoading = 0;
-    uint32_t shownSize = 0;
-    uint32_t restSize = 0;
-    for (auto &loadingData: loadingDatas) {
-      uint32_t size = loadingData["resLen"].read_u32();
-      if (shownLoading < 5) {
-        string tag = GameObjectUtils::objectTagToString(loadingData["tag"]);
-
-        string msg = fmt::format("{}: {}", tag.c_str(), size);
-        ImGui::Text("%s", msg.c_str());
-        shownLoading++;
-        shownSize += size;
-      } else {
-        restSize += size;
+      if (shownSize > 0 || restSize > 0) {
+        ImGui::Text("+%dk = %dk", restSize / 1024, (shownSize + restSize) / 1024);
       }
     }
-    if (shownSize > 0 || restSize > 0) {
-      ImGui::Text("+%dk = %dk", restSize / 1024, (shownSize + restSize) / 1024);
-    }
   }
+  ImGui::End();
 
+  ImGui::SetNextWindowPos(
+      ImVec2(10, ImGui::GetIO().DisplaySize.y - 10),
+      0,
+      ImVec2(0, 1)
+  );
+  ImGui::Begin(
+      "PlayerStatus", nullptr,
+      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+      ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize
+  );
+  {
+    auto forward = playerLookVec;
 
+    auto hforward = normalize(glm::vec2(forward.x, forward.y));
+    auto hvel = glm::vec2(playerVelocity.x, playerVelocity.y);
+
+    ImGui::Text(
+        "pos: %8.3fx %8.3fy %8.3fz",
+        playerPos.x, playerPos.y, playerPos.z);
+
+    ImGui::Text("vel: %8.3fx %8.3fy %8.3fz %8.3fh",
+                playerVelocity.x, playerVelocity.y, playerVelocity.z, glm::length(hvel));
+
+    auto hveldir = normalize(hvel);
+    auto forwardAngle = glm::atan(hforward.y, hforward.x);
+    auto velAngle = glm::atan(hveldir.y, hveldir.x);
+    auto angle = forwardAngle - velAngle;
+    ImGui::Text("look: %6.3fx %6.3fy %6.1fdeg | vel %6.3fx %6.3fy %6.1fdeg | %6.1f deg",
+                hforward.x, hforward.y, glm::degrees(forwardAngle),
+                hveldir.x, hveldir.y, glm::degrees(velAngle),
+                glm::degrees(angle));
+  }
   ImGui::End();
 }
 

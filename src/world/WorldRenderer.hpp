@@ -93,6 +93,7 @@ public:
   glm::vec3 playerPos;
   glm::vec3 playerVelocity;
   glm::quat playerOrientation;
+  glm::vec3 playerLookVec;
 
   void init();
   void update(const PrimeWatchInput &input);
