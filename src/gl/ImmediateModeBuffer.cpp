@@ -67,16 +67,19 @@ void ImmediateModeBuffer::addTri(const glm::vec3 &a, const glm::vec3 &b, const g
           .pos = a,
           .color = currentColor,
           .normal = n,
+          .barycentric = {1, 0, 0},
       },
       Vert{
           .pos = b,
           .color = currentColor,
           .normal = n,
+          .barycentric = {0, 1, 0},
       },
       Vert{
           .pos = c,
           .color = currentColor,
           .normal = n,
+          .barycentric = {0, 0, 1},
       }
   );
 }
@@ -92,21 +95,25 @@ void ImmediateModeBuffer::addQuad(const glm::vec3 &a, const glm::vec3 &b, const 
           .pos = a,
           .color = currentColor,
           .normal = n,
+          .barycentric = {1, 0, 0},
       },
       Vert{
           .pos = b,
           .color = currentColor,
           .normal = n,
+          .barycentric = {0, 1, 0},
       },
       Vert{
           .pos = c,
           .color = currentColor,
           .normal = n,
+          .barycentric = {0, 0, 1},
       },
       Vert{
           .pos = d,
           .color = currentColor,
           .normal = n,
+          .barycentric = {1, 0, 0},
       }
   );
 }
@@ -124,7 +131,8 @@ void ImmediateModeBuffer::addLines(const std::vector<Vert> &newLineVerts) {
         Vert v{
             .pos = glm::vec3{vt * glm::vec4{in.pos, 1.0f}},
             .color = in.color,
-            .normal = glm::normalize(nt * in.normal)
+            .normal = glm::normalize(nt * in.normal),
+            .barycentric = in.barycentric,
         };
         return v;
       }
@@ -140,7 +148,8 @@ void ImmediateModeBuffer::addTris(const std::vector<Vert> &newTriVerts) {
         Vert v{
             .pos = glm::vec3{vt * glm::vec4{in.pos, 1.0f}},
             .color = in.color,
-            .normal = glm::normalize(nt * in.normal)
+            .normal = glm::normalize(nt * in.normal),
+            .barycentric = in.barycentric,
         };
         return v;
       }

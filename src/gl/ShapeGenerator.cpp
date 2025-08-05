@@ -3,6 +3,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
@@ -20,53 +21,52 @@ namespace ShapeGenerator {
     vector<Vert> verts;
 
     // -Z
-    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {0, 0, -1},});
-    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 0, -1},});
-    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, 0, -1},});
-    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, 0, -1},});
-    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {0, 0, -1},});
-    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {0, 0, -1},});
-
+    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {0, 0, -1}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 0, -1}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, 0, -1}, .barycentric = {0, 0, 1},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, 0, -1}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {0, 0, -1}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {0, 0, -1}, .barycentric = {0, 0, 1},});
 
     // +Z
-    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {0, 0, 1},});
-    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {0, 0, 1},});
-    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 0, 1},});
-    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 0, 1},});
-    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {0, 0, 1},});
-    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {0, 0, 1},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {0, 0, 1}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {0, 0, 1}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 0, 1}, .barycentric = {0, 0, 1},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 0, 1}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {0, 0, 1}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {0, 0, 1}, .barycentric = {0, 0, 1},});
 
     // -X
-    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {-1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {-1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {-1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {-1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {-1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {-1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {-1, 0, 0}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {-1, 0, 0}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {-1, 0, 0}, .barycentric = {0, 0, 1},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {-1, 0, 0}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {-1, 0, 0}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {-1, 0, 0}, .barycentric = {0, 0, 1},});
 
     // +X
-    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {1, 0, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {1, 0, 0}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {1, 0, 0}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {1, 0, 0}, .barycentric = {0, 0, 1},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {1, 0, 0}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {1, 0, 0}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {1, 0, 0}, .barycentric = {0, 0, 1},});
 
     // -Y
-    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {0, -1, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {0, -1, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, -1, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, -1, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {0, -1, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {0, -1, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {0, -1, 0}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, min.z}, .color = color, .normal = {0, -1, 0}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, -1, 0}, .barycentric = {0, 0, 1},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, min.z}, .color = color, .normal = {0, -1, 0}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, min.y, max.z}, .color = color, .normal = {0, -1, 0}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, min.y, max.z}, .color = color, .normal = {0, -1, 0}, .barycentric = {0, 0, 1},});
 
     // +Y
-    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 1, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {0, 1, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 1, 0},});
-    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 1, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {0, 1, 0},});
-    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 1, 0}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, min.z}, .color = color, .normal = {0, 1, 0}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 1, 0}, .barycentric = {0, 0, 1},});
+    verts.emplace_back(Vert{.pos = {max.x, max.y, max.z}, .color = color, .normal = {0, 1, 0}, .barycentric = {1, 0, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, max.z}, .color = color, .normal = {0, 1, 0}, .barycentric = {0, 1, 0},});
+    verts.emplace_back(Vert{.pos = {min.x, max.y, min.z}, .color = color, .normal = {0, 1, 0}, .barycentric = {0, 0, 1},});
 
     return verts;
   }
@@ -162,13 +162,13 @@ namespace ShapeGenerator {
           n = glm::normalize(glm::cross(topRight - bottomLeft, topRight - bottomRight));
         }
 
-        verts.emplace_back(Vert{.pos = center + topLeft * radius, .color = color, .normal = n});
-        verts.emplace_back(Vert{.pos = center + topRight * radius, .color = color, .normal = n});
-        verts.emplace_back(Vert{.pos = center + bottomRight * radius, .color = color, .normal = n});
+        verts.emplace_back(Vert{.pos = center + topLeft * radius, .color = color, .normal = n, .barycentric = {1, 0, 0},});
+        verts.emplace_back(Vert{.pos = center + topRight * radius, .color = color, .normal = n, .barycentric = {0, 1, 0},});
+        verts.emplace_back(Vert{.pos = center + bottomRight * radius, .color = color, .normal = n, .barycentric = {0, 0, 1},});
 
-        verts.emplace_back(Vert{.pos = center + bottomRight * radius, .color = color, .normal = n});
-        verts.emplace_back(Vert{.pos = center + bottomLeft * radius, .color = color, .normal = n});
-        verts.emplace_back(Vert{.pos = center + topLeft * radius, .color = color, .normal = n});
+        verts.emplace_back(Vert{.pos = center + bottomRight * radius, .color = color, .normal = n, .barycentric = {1, 0, 0},});
+        verts.emplace_back(Vert{.pos = center + bottomLeft * radius, .color = color, .normal = n, .barycentric = {0, 1, 0},});
+        verts.emplace_back(Vert{.pos = center + topLeft * radius, .color = color, .normal = n, .barycentric = {0, 0, 1},});
       }
     }
 
@@ -199,7 +199,7 @@ namespace ShapeGenerator {
 
       res.emplace_back(Vert{.pos=seg.start, .color=color});
       res.emplace_back(Vert{.pos=seg.end, .color=color});
-      
+
       return seg;
     };
 

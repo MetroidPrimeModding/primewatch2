@@ -14,6 +14,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_access.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -28,10 +29,12 @@ const char *meshVertShader = R"src(#version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec3 aNormal;
+layout (location = 3) in vec3 aBarycentric;
 
 out vec4 vertexColor;
 out vec3 normal;
 out vec3 fragPos;
+out vec3 barycentric;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -42,6 +45,7 @@ void main() {
   vertexColor = aColor;
   normal = mat3(transpose(inverse(model))) * aNormal;
   fragPos = vec3(model * vec4(aPos, 1.0f));
+  barycentric = aBarycentric;
 }
 )src";
 
@@ -51,28 +55,37 @@ out vec4 FragColor;
 in vec4 vertexColor;
 in vec3 normal;
 in vec3 fragPos;
+in vec3 barycentric;
 
 uniform vec3 viewPos;
 uniform vec3 lightDir;
 
 void main() {
-  vec3 lightColor = vec3(1,1,1);
-  // ambient
-  float ambientStrength = 0.2;
-  vec3 ambient = ambientStrength * lightColor;
+  float edgeThickness = 0.015;
+  float minBary = min(min(barycentric.x, barycentric.y), barycentric.z);
+  if (minBary > 0 && minBary < edgeThickness) { // draw edges
+    float color = 0.2;
+    FragColor = vec4(color, color, color, 1);
+  } else {
+    vec3 lightColor = vec3(1,1,1);
+    // ambient
+    float ambientStrength = 0.7;
+    vec3 ambient = ambientStrength * lightColor;
 
-  // diffuse
-  float diff = max(dot(normal, lightDir), 0.0);
-  vec3 diffuse = diff * lightColor;
+    // diffuse
+    float diffStrength = 0.5;
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor * diffStrength;
 
-  // specular
-  float specularStrength = 0.3;
-  vec3 viewDir = normalize(viewPos - fragPos);
-  vec3 reflectDir = reflect(-lightDir, normal);
-  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
-  vec3 specular = specularStrength * spec * lightColor;
+    // specular
+    float specularStrength = 0.2;
+    vec3 viewDir = normalize(viewPos - fragPos);
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
+    vec3 specular = specularStrength * spec * lightColor;
 
-  FragColor = vec4(ambient + diffuse + specular, 1.0) * vertexColor;
+    FragColor = vec4(ambient + diffuse + specular, 1.0) * vertexColor;
+  }
 }
 )src";
 
@@ -390,7 +403,7 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
   lineShader->setMat4("model", glm::mat4{1.0f});
   renderBuff->drawLines();
 
-  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   meshShader->use();
@@ -400,7 +413,7 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
   lineShader->use();
   lineShader->setMat4("model", glm::mat4{1.0f});
   translucentRenderBuff->drawLines();
-  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
 
   meshShader->use();
 }

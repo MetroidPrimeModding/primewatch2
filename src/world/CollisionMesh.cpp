@@ -52,31 +52,34 @@ void CollisionMesh::initGlMesh() {
 
     auto n = glm::normalize(glm::cross(v1 - v3, v1 - v2));
 
-    glm::vec4 color{1, 1, 1, 1};
+    glm::vec4 color{0.2f, 0.2f, 0.2f, 1};
 
     // this is how the game calculates standability
     if (!!(polyFlags & ECollisionMaterial::FLOOR) || n.z > 0.85) {
-      color = glm::vec4{0.5f, 1.0f, 0.5f, 1.0f};
+      color = glm::vec4{0.4f, 0.6f, 0.4f, 1.0f};
     } else if (!!(polyFlags & ECollisionMaterial::WALL) || n.z > 0.85) {
-      color = glm::vec4{0.5f, 0.5f, 1.0f, 1.0f};
+      color = glm::vec4{0.6f, 0.6f, 0.6f, 1.0f};
     } else if (!!(polyFlags & ECollisionMaterial::CEILING) || n.z > 0.85) {
-      color = glm::vec4{1.0f, 0.5f, 0.5f, 1.0f};
+      color = glm::vec4{0.8f, 0.5f, 0.5f, 1.0f};
     }
 
     verts.emplace_back(Vert{
         .pos = v1,
         .color = color,
-        .normal = n
+        .normal = n,
+        .barycentric = {1, 0, 0},
     });
     verts.emplace_back(Vert{
         .pos = v2,
         .color = color,
-        .normal = n
+        .normal = n,
+        .barycentric = {0, 1, 0},
     });
     verts.emplace_back(Vert{
         .pos = v3,
         .color = color,
-        .normal = n
+        .normal = n,
+        .barycentric = {0, 0, 1},
     });
   }
 

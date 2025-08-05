@@ -13,6 +13,7 @@ struct __attribute__ ((packed))
   glm::vec3 pos;
   glm::vec4 color;
   glm::vec3 normal;
+  glm::vec3 barycentric{-1,-1,-1};
 };
 #ifdef WIN32
 #pragma pack(pop)

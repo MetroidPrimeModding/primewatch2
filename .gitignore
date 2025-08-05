@@ -1,6 +1,6 @@
 /cmake-build-*
 /.idea
-/mem1.raw
+/*.raw
 .DS_Store
 *.cap
 /.vs
