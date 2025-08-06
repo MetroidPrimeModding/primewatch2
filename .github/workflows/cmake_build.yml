@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: stable
 
@@ -36,15 +36,15 @@ jobs:
         cp build/${{env.BUILD_TYPE}}/primewatch2.exe primewatch2/
         tar -a -c -f primewatch2.zip primewatch2
 
-    - name: Upload Arifacts
-      uses: actions/upload-artifact@v3
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
       with:
         name: primewatch2
         path: primewatch2/**
         if-no-files-found: error
 
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/v')
       with:
         files: primewatch2.zip
