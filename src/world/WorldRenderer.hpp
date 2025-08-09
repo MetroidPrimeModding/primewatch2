@@ -70,7 +70,9 @@ struct ActorRenderConfig {
 };
 
 struct PlayerGhost {
+  bool enabled{false};
   glm::vec3 position;
+  glm::quat orientation;
   glm::vec3 velocity;
   bool isMorphed{false};
 };
@@ -103,16 +105,14 @@ public:
 
   glm::vec3 lightDir{0.1, 0.2f, 0.9f};
 
-  bool playerIsMorphed{false};
   glm::vec3 lastKnownNonCollidingPos;
-  glm::vec3 playerPos;
-  glm::vec3 playerVelocity;
-  glm::quat playerOrientation;
   glm::vec3 playerLookVec;
-  std::vector<PlayerGhost> playerGhosts;
+
+  PlayerGhost player;
+  std::array<PlayerGhost, 5> playerGhosts;
 
   void init();
-  void update(const PrimeWatchInput &input);
+  void update(const PrimeWatchInput &input);\
   void
   render(const std::map<TUniqueID, GameDefinitions::GameMember> &entities, const std::set<uint16_t> &highlightedEids);
   void renderImGui();
@@ -139,6 +139,7 @@ private:
   std::optional<CollisionMesh> loadMesh(const GameDefinitions::GameMember &area);
   void renderEntities(const std::map<TUniqueID, GameDefinitions::GameMember> &entities,
                       const std::set<uint16_t> &highlightedEntities);
+  void drawPlayer(const PlayerGhost &ghost, glm::vec4 color);
   void drawTrigger(const GameDefinitions::GameMember &entity, bool isHighlighted);
   void drawDock(const GameDefinitions::GameMember &entity, bool isHighlighted);
   void drawActor(const GameDefinitions::GameMember &member, bool highlighted);

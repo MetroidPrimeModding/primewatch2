@@ -39,6 +39,7 @@ int PrimeWatch::initAndCreateWindow() {
   constexpr int width = 1200;
   constexpr int height = 800;
 
+  glfwWindowHint(GLFW_SAMPLES, 4); // Enable anti-aliasing
   window = glfwCreateWindow(width, height, "Prime Watch 2", nullptr, nullptr);
   if (window == nullptr) {
     std::cerr << "Failed to create GLFW window" << std::endl;
@@ -85,6 +86,7 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   ImGui_ImplOpenGL3_Init("#version 150");
   io.Fonts->AddFontDefault();
 
+  glEnable(GL_MULTISAMPLE);
   glViewport(0, 0, width, height);
   worldRenderer.camViewport = glm::vec4{0, 0, width, height};
   worldRenderer.aspect = (float) width / (float) height;
@@ -136,6 +138,33 @@ void PrimeWatch::processInput() {
   if (!io.MouseDown[GLFW_MOUSE_BUTTON_LEFT] && !io.MouseDown[GLFW_MOUSE_BUTTON_RIGHT]) {
     input.capturedMouse = false;
   }
+
+
+  // if shift + '1', save and enable ghost 1, etc for 1-5
+  auto keys = std::array{ GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5 };
+  static_assert(worldRenderer.playerGhosts.size() == keys.size(),
+                "Player ghosts size must match the number of keys for ghost saving");
+  for (int i = 0; i < keys.size(); i++) {
+    if (io.KeysDown[keys[i]]) {
+      if (io.KeyShift) {
+        worldRenderer.playerGhosts[i].enabled = true;
+        worldRenderer.playerGhosts[i].position = worldRenderer.player.position;
+        worldRenderer.playerGhosts[i].orientation = worldRenderer.player.orientation;
+        worldRenderer.playerGhosts[i].velocity = worldRenderer.player.velocity;
+        worldRenderer.playerGhosts[i].isMorphed = worldRenderer.player.isMorphed;
+      } else if (io.KeyCtrl) {
+        worldRenderer.playerGhosts[i].enabled = false;
+      }
+    }
+  }
+  // if (io.KeyShift && io.KeysDown[GLFW_KEY_1]) {
+  //   worldRenderer.playerGhosts[0].enabled = true;
+  //   worldRenderer.playerGhosts[0].position = worldRenderer.player.position;
+  //   worldRenderer.playerGhosts[0].orientation = worldRenderer.player.orientation;
+  //   worldRenderer.playerGhosts[0].velocity = worldRenderer.player.velocity;
+  //   worldRenderer.playerGhosts[0].isMorphed = worldRenderer.playerIsMorphed;
+  // }
+
 
   if (input.capturedMouse) {
     float pitchSpeed = 0.005;

@@ -22,6 +22,9 @@
 #include <glad/glad.h>
 #include <utils/MathUtils.hpp>
 
+#include "CollisionMesh.hpp"
+#include "CollisionMesh.hpp"
+
 using namespace GameDefinitions;
 using namespace std;
 
@@ -127,13 +130,13 @@ void WorldRenderer::update(const PrimeWatchInput &input) {
   GameMember stateManager = g_stateManager;
 
   glm::mat4 tf = MathUtils::readAsCTransform(stateManager["player"]["transform"]);
-  playerPos = glm::column(tf, 3);
-  playerVelocity = MathUtils::readAsCVector3f(stateManager["player"]["velocity"]);
+  player.position = glm::column(tf, 3);
+  player.velocity = MathUtils::readAsCVector3f(stateManager["player"]["velocity"]);
   lastKnownNonCollidingPos = MathUtils::readAsCVector3f(stateManager["player"]["lastNonCollidingState"]["translation"]);
   playerLookVec = MathUtils::readAsCVector3f(stateManager["player"]["lookDir"]);
 
-  playerOrientation = MathUtils::readAsCQuaternion(stateManager["player"]["orientation"]);
-  playerIsMorphed = stateManager["player"]["morphState"].read_u32() == 1; // Morphed
+  player.orientation = MathUtils::readAsCQuaternion(stateManager["player"]["orientation"]);
+  player.isMorphed = stateManager["player"]["morphState"].read_u32() == 1; // Morphed
 
   GameMember cameraManager = stateManager["cameraManager"];
   uint16_t cameraID = cameraManager["curCameraId"].read_u16();
@@ -259,14 +262,14 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
     auto lookPos = lastKnownNonCollidingPos;
     switch (orbitPlayerCameraOrigin) {
       case OrbitPlayerCameraOrigin::TOP:
-        if (playerIsMorphed) {
+        if (player.isMorphed) {
           lookPos.z += 1.4f;
         } else {
           lookPos.z += 2.7f;
         }
         break;
       case OrbitPlayerCameraOrigin::CENTER:
-        if (playerIsMorphed) {
+        if (player.isMorphed) {
           lookPos.z += 0.7f;
         } else {
           lookPos.z += 1.35f;
@@ -306,25 +309,14 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
     );
   }
 
-  // Player collision
-  if (playerIsMorphed) {
-    glm::mat4 model =
-        glm::translate(playerPos + glm::vec3(0, 0, 0.7)) *
-        glm::toMat4(playerOrientation);
-    renderBuff->setTransform(model);
-    renderBuff->addTris(ShapeGenerator::generateSphere(
-        glm::vec3{0, 0, 0},
-        0.7f,
-        glm::vec4{1, 1, 1, 1}
-    ));
-  } else {
-    renderBuff->setTransform(glm::translate(playerPos));
-    renderBuff->addTris(ShapeGenerator::generateCube(
-        glm::vec3{-0.5, -0.5, 0},
-        glm::vec3{0.5, 0.5, 2.7},
-        glm::vec4{1, 1, 1, 1}
-    ));
+  drawPlayer(player, glm::vec4{1,1,1,1})
+;  for (auto &ghost: playerGhosts) {
+    if (ghost.enabled) {
+      // teal
+      drawPlayer(ghost, glm::vec4{0, 1, 1, 0.5f});
+    }
   }
+
   // player last known ghost
   translucentRenderBuff->setTransform(glm::translate(lastKnownNonCollidingPos));
   translucentRenderBuff->addTris(ShapeGenerator::generateCube(
@@ -340,32 +332,6 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
       gameCam.transform,
       camLineLength
   ));
-
-  // speed
-  if (playerIsMorphed) {
-    renderBuff->setTransform(glm::translate(playerPos + glm::vec3{0, 0, 0.7f}));
-  } else {
-    renderBuff->setTransform(glm::translate(playerPos + glm::vec3{0, 0, 2.7f / 2.0f}));
-  }
-  // calculate "forward" and "degrees from forward
-  glm::vec2 forward = glm::normalize(playerOrientation * glm::vec3(0, 1, 0));
-  glm::vec2 movement = glm::normalize(playerVelocity);
-  float angle = glm::acos(glm::dot(forward, movement) / (glm::length(forward) * glm::length(movement)));
-
-  glm::vec4 color{0, 1, 0, 1};
-  if (glm::abs(angle) > glm::pi<float>() / 2.0f || glm::isnan(angle)) {
-    color = {1, 0, 0, 1};
-  } else {
-    float percent = angle / (glm::pi<float>() / 2.0f);
-    color = {0, percent * 0.5f + 0.5f, 0, 1};
-    if (percent > 0.95) {
-      color = {0, 1, 1, 1};
-    }
-  }
-  renderBuff->setColor({1, 1, 1, 1});
-  renderBuff->addLine(glm::vec3{0, 0, 0}, glm::vec3{forward, 0});
-  renderBuff->setColor(color);
-  renderBuff->addLine(glm::vec3{0, 0, 0}, playerVelocity * 0.3f);
 
   renderEntities(entities, highlightedEids);
 
@@ -541,14 +507,14 @@ void WorldRenderer::renderImGui() {
     auto forward = playerLookVec;
 
     auto hforward = normalize(glm::vec2(forward.x, forward.y));
-    auto hvel = glm::vec2(playerVelocity.x, playerVelocity.y);
+    auto hvel = glm::vec2(player.velocity.x, player.velocity.y);
 
     ImGui::Text(
         "pos: %8.3fx %8.3fy %8.3fz",
-        playerPos.x, playerPos.y, playerPos.z);
+        player.position.x, player.position.y, player.position.z);
 
     ImGui::Text("vel: %8.3fx %8.3fy %8.3fz %8.3fh",
-                playerVelocity.x, playerVelocity.y, playerVelocity.z, glm::length(hvel));
+                player.velocity.x, player.velocity.y, player.velocity.z, glm::length(hvel));
 
     auto hveldir = normalize(hvel);
     auto forwardAngle = glm::atan(hforward.y, hforward.x);
@@ -560,6 +526,58 @@ void WorldRenderer::renderImGui() {
                 glm::degrees(angle));
   }
   ImGui::End();
+}
+
+void WorldRenderer::drawPlayer(const PlayerGhost &ghost, glm::vec4 color) {
+  auto *buf = renderBuff.get();
+  if (color.a < 0.99f) {
+    buf = translucentRenderBuff.get();
+  }
+  // Player collision
+  if (ghost.isMorphed) {
+    glm::mat4 model =
+        glm::translate(ghost.position + glm::vec3(0, 0, 0.7)) *
+        glm::toMat4(ghost.orientation);
+    buf->setTransform(model);
+    buf->addTris(ShapeGenerator::generateSphere(
+        glm::vec3{0, 0, 0},
+        0.7f,
+        color
+    ));
+  } else {
+    buf->setTransform(glm::translate(ghost.position));
+    buf->addTris(ShapeGenerator::generateCube(
+        glm::vec3{-0.5, -0.5, 0},
+        glm::vec3{0.5, 0.5, 2.7},
+        color
+    ));
+  }
+
+  // speed
+  if (ghost.isMorphed) {
+    renderBuff->setTransform(glm::translate(ghost.position + glm::vec3{0, 0, 0.7f}));
+  } else {
+    renderBuff->setTransform(glm::translate(ghost.position + glm::vec3{0, 0, 2.7f / 2.0f}));
+  }
+  // calculate "forward" and "degrees from forward
+  glm::vec2 forward = glm::normalize(ghost.orientation * glm::vec3(0, 1, 0));
+  glm::vec2 movement = glm::normalize(ghost.velocity);
+  float angle = glm::acos(glm::dot(forward, movement) / (glm::length(forward) * glm::length(movement)));
+
+  glm::vec4 speedColor{0, 1, 0, 1};
+  if (glm::abs(angle) > glm::pi<float>() / 2.0f || glm::isnan(angle)) {
+    speedColor = {1, 0, 0, 1};
+  } else {
+    float percent = angle / (glm::pi<float>() / 2.0f);
+    speedColor = {0, percent * 0.5f + 0.5f, 0, 1};
+    if (percent > 0.95) {
+      speedColor = {0, 1, 1, 1};
+    }
+  }
+  renderBuff->setColor({1, 1, 1, 1});
+  renderBuff->addLine(glm::vec3{0, 0, 0}, glm::vec3{forward, 0});
+  renderBuff->setColor(speedColor);
+  renderBuff->addLine(glm::vec3{0, 0, 0}, ghost.velocity * 0.3f);
 }
 
 void WorldRenderer::renderEntities(const map<TUniqueID, GameMember> &entities,
