@@ -256,9 +256,30 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
     camProjection = glm::perspective(fov, aspect, zNear, zFar);
     glm::quat angle = glm::quat(glm::vec3(0, pitch, yaw));
     // we look at the lastKnownNonCollidingPos because it's less jumpy
-    camEye = glm::vec4(lastKnownNonCollidingPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
-    camView = glm::lookAt(camEye, lastKnownNonCollidingPos, up);
-    manualCameraPos = lastKnownNonCollidingPos;
+    auto lookPos = lastKnownNonCollidingPos;
+    switch (orbitPlayerCameraOrigin) {
+      case OrbitPlayerCameraOrigin::TOP:
+        if (playerIsMorphed) {
+          lookPos.z += 1.4f;
+        } else {
+          lookPos.z += 2.7f;
+        }
+        break;
+      case OrbitPlayerCameraOrigin::CENTER:
+        if (playerIsMorphed) {
+          lookPos.z += 0.7f;
+        } else {
+          lookPos.z += 1.35f;
+        }
+        break;
+      case OrbitPlayerCameraOrigin::BOTTOM:
+        // already correct
+        break;
+    }
+
+    camEye = glm::vec4(lookPos, 1.0f) - (angle * glm::vec4{distance, 0, 0, 1});
+    camView = glm::lookAt(camEye, lookPos, up);
+    manualCameraPos = lookPos;
   } else if (cameraMode == CameraMode::GAME_CAM) {
     camProjection = gameCam.perspective;
     camView = glm::inverse(gameCam.transform);

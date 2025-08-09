@@ -27,6 +27,12 @@ enum class CameraMode {
   GAME_CAM
 };
 
+enum class OrbitPlayerCameraOrigin {
+  TOP,
+  CENTER,
+  BOTTOM
+};
+
 struct GameCamera {
   glm::mat4 perspective;
   glm::mat4 transform;
@@ -63,6 +69,12 @@ struct ActorRenderConfig {
   bool renderAllActors: 1{false};
 };
 
+struct PlayerGhost {
+  glm::vec3 position;
+  glm::vec3 velocity;
+  bool isMorphed{false};
+};
+
 class WorldRenderer {
 public:
   float aspect{0};
@@ -75,6 +87,7 @@ public:
   float distance{10.f};
   glm::vec3 up{0, 0, 1};
   glm::vec3 manualCameraPos;
+  float manualCameraSpeed{1.0f};
   glm::mat4 camProjection{1.0f};
   glm::mat4 camView{1.0f};
   glm::vec3 camEye;
@@ -84,6 +97,7 @@ public:
 
   CullType culling{CullType::BACK};
   CameraMode cameraMode{CameraMode::FOLLOW_PLAYER};
+  OrbitPlayerCameraOrigin orbitPlayerCameraOrigin{OrbitPlayerCameraOrigin::CENTER};
   TriggerRenderConfig triggerRenderConfig;
   ActorRenderConfig actorRenderConfig;
 
@@ -95,6 +109,7 @@ public:
   glm::vec3 playerVelocity;
   glm::quat playerOrientation;
   glm::vec3 playerLookVec;
+  std::vector<PlayerGhost> playerGhosts;
 
   void init();
   void update(const PrimeWatchInput &input);

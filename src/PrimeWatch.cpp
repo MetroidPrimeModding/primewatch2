@@ -181,23 +181,24 @@ void PrimeWatch::processInput() {
       glm::vec3 forward = angle * glm::vec4{dist, 0, 0, 1};
       glm::vec3 right = angle * glm::vec4{0, dist, 0, 1};
       glm::vec3 up{0, 0, dist};
+      float speed = worldRenderer.manualCameraSpeed * 0.2f;
       if (io.KeysDown[GLFW_KEY_W]) {
-        worldRenderer.manualCameraPos += forward;
+        worldRenderer.manualCameraPos += forward * speed;
       }
       if (io.KeysDown[GLFW_KEY_S]) {
-        worldRenderer.manualCameraPos -= forward;
+        worldRenderer.manualCameraPos -= forward * speed;
       }
       if (io.KeysDown[GLFW_KEY_A]) {
-        worldRenderer.manualCameraPos += right;
+        worldRenderer.manualCameraPos += right * speed;
       }
       if (io.KeysDown[GLFW_KEY_D]) {
-        worldRenderer.manualCameraPos -= right;
+        worldRenderer.manualCameraPos -= right * speed;
       }
       if (io.KeysDown[GLFW_KEY_Q]) {
-        worldRenderer.manualCameraPos -= up;
+        worldRenderer.manualCameraPos -= up * speed;
       }
       if (io.KeysDown[GLFW_KEY_E]) {
-        worldRenderer.manualCameraPos += up;
+        worldRenderer.manualCameraPos += up * speed;
       }
     }
   }
@@ -365,14 +366,37 @@ void PrimeWatch::doMainMenu() {
       if (ImGui::MenuItem("Follow Player", nullptr, worldRenderer.cameraMode == CameraMode::FOLLOW_PLAYER)) {
         worldRenderer.cameraMode = CameraMode::FOLLOW_PLAYER;
       }
+      if (worldRenderer.cameraMode == CameraMode::FOLLOW_PLAYER) {
+        ImGui::Separator();
+        // indent a bit too
+        ImGui::Indent();
+        if (ImGui::MenuItem("Top", nullptr, worldRenderer.orbitPlayerCameraOrigin == OrbitPlayerCameraOrigin::TOP)) {
+          worldRenderer.orbitPlayerCameraOrigin = OrbitPlayerCameraOrigin::TOP;
+        }
+        if (ImGui::MenuItem("Center", nullptr, worldRenderer.orbitPlayerCameraOrigin == OrbitPlayerCameraOrigin::CENTER)) {
+          worldRenderer.orbitPlayerCameraOrigin = OrbitPlayerCameraOrigin::CENTER;
+        }
+        if (ImGui::MenuItem("Bottom", nullptr, worldRenderer.orbitPlayerCameraOrigin == OrbitPlayerCameraOrigin::BOTTOM)) {
+          worldRenderer.orbitPlayerCameraOrigin = OrbitPlayerCameraOrigin::BOTTOM;
+        }
+        ImGui::Unindent();
+        ImGui::Separator();
+      }
       if (ImGui::MenuItem("Game Cam", nullptr, worldRenderer.cameraMode == CameraMode::GAME_CAM)) {
         worldRenderer.cameraMode = CameraMode::GAME_CAM;
       }
       if (ImGui::MenuItem("Detatched", nullptr, worldRenderer.cameraMode == CameraMode::DETATCHED)) {
         worldRenderer.cameraMode = CameraMode::DETATCHED;
       }
-      if (ImGui::MenuItem("Show camera controls", nullptr, showExactCameraControls)) {
-        showExactCameraControls = !showExactCameraControls;
+      if (worldRenderer.cameraMode == CameraMode::DETATCHED) {
+        ImGui::Separator();
+        ImGui::Indent();
+        ImGui::SliderFloat("Speed", &worldRenderer.manualCameraSpeed, 0.1f, 2.f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+        if (ImGui::MenuItem("Show camera controls", nullptr, showExactCameraControls)) {
+          showExactCameraControls = !showExactCameraControls;
+        }
+        ImGui::Unindent();
+        ImGui::Separator();
       }
       ImGui::EndMenu();
     }
