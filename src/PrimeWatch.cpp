@@ -142,8 +142,7 @@ void PrimeWatch::processInput() {
 
   // if shift + '1', save and enable ghost 1, etc for 1-5
   auto keys = std::array{ GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5 };
-  static_assert(worldRenderer.playerGhosts.size() == keys.size(),
-                "Player ghosts size must match the number of keys for ghost saving");
+  assert(worldRenderer.playerGhosts == keys.size());
   for (int i = 0; i < keys.size(); i++) {
     if (io.KeysDown[keys[i]]) {
       if (io.KeyShift) {
