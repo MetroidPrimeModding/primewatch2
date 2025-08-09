@@ -309,8 +309,8 @@ void WorldRenderer::render(const std::map<TUniqueID, GameDefinitions::GameMember
     );
   }
 
-  drawPlayer(player, glm::vec4{1,1,1,1})
-;  for (auto &ghost: playerGhosts) {
+  drawPlayer(player, glm::vec4{1,1,1,1});
+  for (PlayerGhost &ghost: playerGhosts) {
     if (ghost.enabled) {
       // teal
       drawPlayer(ghost, glm::vec4{0, 1, 1, 0.5f});

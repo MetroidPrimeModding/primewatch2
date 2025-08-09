@@ -35,11 +35,11 @@ int PrimeWatch::initAndCreateWindow() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_SAMPLES, 4); // Enable anti-aliasing=
 
   constexpr int width = 1200;
   constexpr int height = 800;
 
-  glfwWindowHint(GLFW_SAMPLES, 4); // Enable anti-aliasing
   window = glfwCreateWindow(width, height, "Prime Watch 2", nullptr, nullptr);
   if (window == nullptr) {
     std::cerr << "Failed to create GLFW window" << std::endl;
@@ -86,7 +86,6 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   ImGui_ImplOpenGL3_Init("#version 150");
   io.Fonts->AddFontDefault();
 
-  glEnable(GL_MULTISAMPLE);
   glViewport(0, 0, width, height);
   worldRenderer.camViewport = glm::vec4{0, 0, width, height};
   worldRenderer.aspect = (float) width / (float) height;
@@ -259,6 +258,7 @@ void PrimeWatch::doFrame() {
 
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_MULTISAMPLE);
 
   // world render
   if (GameDefinitions::isLoaded()) {
