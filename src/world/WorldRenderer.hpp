@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <set>
+#include <array>
 #include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>

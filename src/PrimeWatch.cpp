@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fmt/format.h>
 #include <set>
+#include <array>
 
 #include <defs/GameDefinitions.hpp>
 #include <defs/GameVtables.hpp>
