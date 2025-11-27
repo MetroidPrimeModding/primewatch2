@@ -9,6 +9,7 @@ using namespace std;
 using namespace GameDefinitions;
 
 namespace GameObjectRenderers {
+  bool render_exact_values = false;
   unordered_map<string, RenderFunc> specialRenderers{ // NOLINT(cert-err58-cpp) // it won't throw (or at least I don't care if it does right now)
       {"u8",          &primitiveRenderer},
       {"u16",         &primitiveRenderer},
@@ -194,12 +195,22 @@ namespace GameObjectRenderers {
     } else if (typ[0] == 'f') {
       if (typ == "f32") {
         float f = member.read_f32();
-        itemText += fmt::format("{:0.3f}", f);
-        clip = fmt::format("{:f}", f);
+        if (render_exact_values) {
+          itemText += fmt::format("{:0.8f}", f);
+          clip = fmt::format("{:f} {:x}", f, *reinterpret_cast<uint32_t *>(&f));
+        } else {
+          itemText += fmt::format("{:0.3f}", f);
+          clip = fmt::format("{:f}", f, *reinterpret_cast<uint32_t *>(&f));
+        }
       } else {
         double d = member.read_f64();
-        itemText += fmt::format("{:0.3f}", d);
-        clip = fmt::format("{:f}", d);
+        if (render_exact_values) {
+          itemText += fmt::format("{:0.16f}", d);
+          clip = fmt::format("{:f} {:x}", d, *reinterpret_cast<uint64_t *>(&d));
+        } else {
+          itemText += fmt::format("{:0.3f}", d);
+          clip = fmt::format("{:f}", d);
+        }
       }
     } else {
       itemText += fmt::format("Unknown number type {}", typ);
@@ -219,11 +230,24 @@ namespace GameObjectRenderers {
     float x = GameMemory::read_float(addr);
     float y = GameMemory::read_float(addr + 4);
     float z = GameMemory::read_float(addr + 8);
+    string msg;
+    if (render_exact_values) {
+      msg = fmt::format("{} [{:0.8f}, {:0.8f}, {:0.8f}]", member.name, x, y, z);
+    } else {
+     msg = fmt::format("{} [{:0.3f}, {:0.3f}, {:0.3f}]", member.name, x, y, z);;
+    }
 
-    string msg = fmt::format("{} [{:0.3f}, {:0.3f}, {:0.3f}]", member.name, x, y, z);
     ImGui::Text("%s", msg.c_str());
     if (ImGui::IsItemClicked()) {
-      string clip = fmt::format("{:f}, {:f}, {:f}", x, y, z);
+      string clip;
+      if (render_exact_values) {
+        clip = fmt::format("{:f} {:x}, {:f} {:x}, {:f} {:x}",
+                                  x, *reinterpret_cast<uint32_t *>(&x),
+                                  y, *reinterpret_cast<uint32_t *>(&y),
+                                  z, *reinterpret_cast<uint32_t *>(&z));
+      } else {
+        clip = fmt::format("{:f}, {:f}, {:f}", x, y, z);
+      }
       ImGui::SetClipboardText(clip.c_str());
     }
     if (ImGui::IsItemHovered()) {
@@ -239,11 +263,25 @@ namespace GameObjectRenderers {
     float z = GameMemory::read_float(addr + 8);
     float w = GameMemory::read_float(addr + 12);
 
-    string msg = fmt::format("{} [{:0.3f}, {:0.3f}, {:0.3f}, {:0.3f}]", member.name, x, y, z, w);
+    string msg;
+    if (render_exact_values) {
+      msg = fmt::format("{} [{:0.8f}, {:0.8f}, {:0.8f}, {:0.8f}]", member.name, x, y, z, w);
+    } else {
+      msg = fmt::format("{} [{:0.3f}, {:0.3f}, {:0.3f}, {:0.3f}]", member.name, x, y, z, w);
+    }
 
     ImGui::Text("%s", msg.c_str());
     if (ImGui::IsItemClicked()) {
-      string clip = fmt::format("{:f}, {:f}, {:f}, {:f}", x, y, z, w);
+      string clip;
+      if (render_exact_values) {
+        clip = fmt::format("{:f} {:x}, {:f} {:x}, {:f} {:x}, {:f} {:x}",
+                                  x, *reinterpret_cast<uint32_t *>(&x),
+                                  y, *reinterpret_cast<uint32_t *>(&y),
+                                  z, *reinterpret_cast<uint32_t *>(&z),
+                                  w, *reinterpret_cast<uint32_t *>(&w));
+      } else {
+        clip = fmt::format("{:f}, {:f}, {:f}, {:f}", x, y, z, w);
+      }
       ImGui::SetClipboardText(clip.c_str());
     }
     if (ImGui::IsItemHovered()) {
@@ -265,8 +303,13 @@ namespace GameObjectRenderers {
         string clip;
         for (int c = 0; c < 3; c++) {
           float v = GameMemory::read_float(addr + (c * 4 + r) * 4);
-          row += fmt::format("{:0.2f}, ", v);
-          clip += fmt::format("{}, ", v);
+          if (render_exact_values) {
+            row += fmt::format("{:0.8f}, ", v);
+            clip += fmt::format("{:f} {:x}, ", v, *reinterpret_cast<uint32_t *>(&v));
+          } else {
+            row += fmt::format("{:0.2f}, ", v);
+            clip += fmt::format("{:f}, ", v);
+          }
         }
         ImGui::Text("%s", row.c_str());
         if (ImGui::IsItemHovered()) {
@@ -294,8 +337,13 @@ namespace GameObjectRenderers {
         string clip;
         for (int c = 0; c < 4; c++) {
           float v = GameMemory::read_float(addr + (c * 4 + r) * 4);
-          row += fmt::format("{:0.2f}, ", v);
-          clip += fmt::format("{}, ", v);
+          if (render_exact_values) {
+            row += fmt::format("{:0.8f}, ", v);
+            clip += fmt::format("{:f} {:x}, ", v, *reinterpret_cast<uint32_t *>(&v));
+          } else {
+            row += fmt::format("{:0.2f}, ", v);
+            clip += fmt::format("{:f}, ", v);
+          }
         }
         ImGui::Text("%s", row.c_str());
         if (ImGui::IsItemHovered()) {

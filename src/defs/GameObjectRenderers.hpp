@@ -8,6 +8,7 @@
 #include "GameDefinitions.hpp"
 
 namespace GameObjectRenderers {
+  extern bool render_exact_values;
   void render(const GameDefinitions::GameMember &member, bool addTree = true);
 
   void renderEnumOrStruct(const GameDefinitions::GameMember &member, bool addTree);

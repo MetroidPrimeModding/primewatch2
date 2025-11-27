@@ -97,8 +97,8 @@ void PrimeWatch::initGlAndImgui(const int width, const int height) {
   };
 
   // TODO: probably remove this
-  if (std::filesystem::exists("../mem1.raw")) {
-    GameMemory::loadFromPath("../mem1.raw");
+  if (std::filesystem::exists("./mem1.raw")) {
+    GameMemory::loadFromPath("./mem1.raw");
   }
 }
 
@@ -142,7 +142,7 @@ void PrimeWatch::processInput() {
 
   // if shift + '1', save and enable ghost 1, etc for 1-5
   auto keys = std::array{ GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5 };
-  assert(worldRenderer.playerGhosts == keys.size());
+  assert(worldRenderer.playerGhosts.size() == keys.size());
   for (int i = 0; i < keys.size(); i++) {
     if (io.KeysDown[keys[i]]) {
       if (io.KeyShift) {
@@ -471,6 +471,7 @@ void PrimeWatch::doMainMenu() {
       if (ImGui::MenuItem("Raw Demo View", nullptr, showDemoView)) {
         showDemoView = !showDemoView;
       }
+      TOGGLE_MENU("Show exact floating point values", GameObjectRenderers::render_exact_values);
       ImGui::EndMenu();
     }
     ImGui::EndMainMenuBar();
