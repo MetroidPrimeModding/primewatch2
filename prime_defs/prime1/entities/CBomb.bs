@@ -1,0 +1,3 @@
+struct CBomb: CWeapon {
+    f32 fuseTime 0x17C
+}

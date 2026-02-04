@@ -148,9 +148,12 @@ private:
   void drawChozoGhost(const GameDefinitions::GameMember &ghost, bool highlighted,
                       const std::map<TUniqueID, GameDefinitions::GameMember> &entities);
   void drawProjectile(const GameDefinitions::GameMember &member, bool highlighted);
+  void drawBomb(const GameDefinitions::GameMember &entity, bool isHighlighted);
+  void drawPowerBomb(const GameDefinitions::GameMember &entity, bool isHighlighted);
   void drawAi(const GameDefinitions::GameMember &member, bool highlighted);
   void drawPickup(const GameDefinitions::GameMember &member, bool highlighted);
   glm::vec3 getScreenspacePosForPhysicsActor(const GameDefinitions::GameMember &physicsActor);
+  glm::vec3 getScreenspacePosForActor(const GameDefinitions::GameMember &physicsActor);
   void drawCollisionActor(const GameDefinitions::GameMember &entity, bool isHighlighted);
 };
 

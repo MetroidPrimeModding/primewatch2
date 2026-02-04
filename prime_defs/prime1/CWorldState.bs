@@ -1,0 +1,16 @@
+struct CWorldState {
+    u32 assetId 0x0
+    u32 areaId 0x4
+    rstl::rc_ptr<CScriptLayerState> layerManager 0x14
+}
+
+struct CScriptLayerState {
+    rstl::vector2<CWorldLayers::Area> areas 0x0
+}
+
+struct CWorldLayers::Area {
+    u32 startNameIdx 0x0
+    u32 layerCount 0x4
+    u32 layerBitsLo 0x8
+    u32 layerBitsHi 0xC
+}

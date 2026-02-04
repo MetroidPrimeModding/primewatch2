@@ -4,6 +4,16 @@ struct rstl::vector<T> {
     *T first
 }
 
+struct rstl::vector2<T> {
+    u32 start 0x0
+    u32 len 0x4
+    u32 end 0x4
+    u32 max 0x8
+    u32 size 0x8
+    *T first 0xC
+}
+
+
 // TODO: maybe set the size of this properly later
 struct rstl::reserved_vector<T> {
     u32 size

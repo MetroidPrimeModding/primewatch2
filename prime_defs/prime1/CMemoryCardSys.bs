@@ -1,0 +1,11 @@
+struct CMemoryCardSys {
+    TLockedToken<CGameHintInfo> hints 0x0
+    rstl::vector2<rstl::pair<u32, CSaveWorldMemory>> memoryWorlds 0xC
+}
+
+struct CGameHintInfo {
+
+}
+
+struct CSaveWorldMemory {
+}

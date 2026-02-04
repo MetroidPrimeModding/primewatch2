@@ -3,7 +3,18 @@ struct CPlayerState {
     CHealthInfo healthInfo 0xC
     u32 currentVisor 0x14
     u32 currentSuit 0x20
-    u32 items 0x14 // TODO: this is wrong
+    CPowerUp[41] items 0x14
+    rstl::vector2<ScanState> scanStates 0x170
+}
+
+struct CPowerUp {
+    i32 amount 0x0
+    i32 capacity 0x4
+}
+
+struct ScanState {
+    u32 assetId 0x0
+    f32 time 0x4
 }
 
 enum CPlayerState::EItemType {

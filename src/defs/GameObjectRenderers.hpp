@@ -1,12 +1,10 @@
 #pragma once
 
-
-#include <unordered_map>
+#include "GameDefinitions.hpp"
 #include <functional>
 #include <optional>
 #include <string>
-#include "GameDefinitions.hpp"
-
+#include <unordered_map>
 namespace GameObjectRenderers {
   extern bool render_exact_values;
   void render(const GameDefinitions::GameMember &member, bool addTree = true);
@@ -18,9 +16,10 @@ namespace GameObjectRenderers {
   void CTransformRenderer(const GameDefinitions::GameMember &member);
   void CMatrix4fRenderer(const GameDefinitions::GameMember &member);
   void renderVector(const GameDefinitions::GameMember &member);
+  void renderArray(const GameDefinitions::GameMember &member);
   void SObjectTagRenderer(const GameDefinitions::GameMember &member);
 
-  using RenderFunc = void (*)(const GameDefinitions::GameMember&);
+  using RenderFunc = void (*)(const GameDefinitions::GameMember &);
 
   extern std::unordered_map<std::string, RenderFunc> specialRenderers;
-}
+} // namespace GameObjectRenderers

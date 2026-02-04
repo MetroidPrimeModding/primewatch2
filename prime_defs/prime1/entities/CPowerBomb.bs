@@ -1,0 +1,5 @@
+struct CPowerBomb: CWeapon {
+    f32 curTime 0x15C
+    f32 curRadius 0x160
+    f32 radiusIncrement 0x164
+}

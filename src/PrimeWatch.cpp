@@ -314,6 +314,7 @@ void PrimeWatch::doImGui() {
   if (ImGui::Begin("globals")) {
     GameObjectRenderers::render(g_stateManager, true);
     GameObjectRenderers::render(g_main, true);
+    GameObjectRenderers::render(gp_MemoryCard, true);
   }
   ImGui::End();
 

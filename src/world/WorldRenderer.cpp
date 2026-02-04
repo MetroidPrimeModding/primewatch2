@@ -623,6 +623,14 @@ void WorldRenderer::renderEntities(const map<TUniqueID, GameMember> &entities,
       if (actorRenderConfig.renderProjectiles) {
         drawProjectile(entity, isHighlighted);
       }
+    } else if (entity.extendsClass("CBomb")) {
+      if (actorRenderConfig.renderProjectiles) {
+        drawBomb(entity, isHighlighted);
+      }
+    } else if (entity.extendsClass("CPowerBomb")) {
+      if (actorRenderConfig.renderProjectiles) {
+        drawPowerBomb(entity, isHighlighted);
+      }
     } else if (entity.extendsClass("CPlayer")) {
       // player render is handled elsewhere
     } else if (entity.extendsClass("CChozoGhost")) {
@@ -833,6 +841,51 @@ void WorldRenderer::drawProjectile(const GameMember &entity, bool isHighlighted)
   translucentRenderBuff->addLine(pos, pos + (glm::normalize(vel) * 0.5f));
 }
 
+void WorldRenderer::drawBomb(const GameMember &entity, bool isHighlighted) {
+  float fuseTimeSeconds = entity["fuseTime"].read_f32();
+  int fuseTimeFrames = static_cast<int>(fuseTimeSeconds * 60.0f);
+  if (fuseTimeFrames < 0) return; // it's done
+
+  glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
+
+
+  glm::vec4 color{0.8f, 0.4f, 0.4f, 0.8f};
+  if (isHighlighted) {
+    color = {1, 0, 0, 0.5f};
+  }
+
+  translucentRenderBuff->setColor(color);
+  translucentRenderBuff->setTransform(transform);
+
+  translucentRenderBuff->addTris(
+      ShapeGenerator::generateSphere({0, 0, 0}, 0.7f, color)
+  );
+
+  ImDrawList *dl = ImGui::GetBackgroundDrawList();
+  string hp = fmt::format("{:d}", fuseTimeFrames);
+  float centerX = ImGui::CalcTextSize(hp.c_str()).x / 2;
+  glm::vec3 screenSpace = getScreenspacePosForActor(entity);
+  dl->AddText(ImVec2(screenSpace.x - centerX, screenSpace.y - ImGui::GetTextLineHeight() / 2), ImColor(0xFFFFFFFF),
+              hp.c_str());
+}
+
+void WorldRenderer::drawPowerBomb(const GameMember &entity, bool isHighlighted) {
+  float curTime = entity["curTime"].read_f32();
+  if (curTime < 1.0f || curTime > 4.0f) return; // it's done
+
+  float curRadius = entity["curRadius"].read_f32();
+  glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
+
+  glm::vec4 color{0.8f, 0.4f, 0.4f, 0.4f};
+
+  translucentRenderBuff->setColor(color);
+  translucentRenderBuff->setTransform(transform);
+
+  translucentRenderBuff->addTris(
+      ShapeGenerator::generateSphere({0, 0, 0}, curRadius, color)
+  );
+}
+
 void WorldRenderer::drawAi(const GameMember &ai, bool highlighted) {
   drawPhysicsActor(ai, highlighted);
   glm::vec3 screenSpace = getScreenspacePosForPhysicsActor(ai);
@@ -845,6 +898,14 @@ void WorldRenderer::drawAi(const GameMember &ai, bool highlighted) {
   float centerX = ImGui::CalcTextSize(hp.c_str()).x / 2;
   dl->AddText(ImVec2(screenSpace.x - centerX, screenSpace.y - ImGui::GetTextLineHeight() / 2), ImColor(0xFFFFFFFF),
               hp.c_str());
+}
+
+glm::vec3 WorldRenderer::getScreenspacePosForActor(const GameMember &physicsActor) {
+  glm::mat4 transform = MathUtils::readAsCTransform(physicsActor["transform"]);
+  glm::vec3 pos = transform[3];
+  glm::vec3 screenSpace = glm::project(pos, camView, camProjection, camViewport);
+  screenSpace.y = camViewport[3] - screenSpace.y;
+  return screenSpace;
 }
 
 glm::vec3 WorldRenderer::getScreenspacePosForPhysicsActor(const GameMember &physicsActor) {

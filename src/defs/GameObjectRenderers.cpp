@@ -1,40 +1,48 @@
 #include "GameObjectRenderers.hpp"
 
-#include <imgui.h>
-#include <fmt/format.h>
 #include "GameMemory.h"
 #include "utils/GameObjectUtils.hpp"
+#include <fmt/format.h>
+#include <imgui.h>
 
 using namespace std;
 using namespace GameDefinitions;
 
 namespace GameObjectRenderers {
   bool render_exact_values = false;
-  unordered_map<string, RenderFunc> specialRenderers{ // NOLINT(cert-err58-cpp) // it won't throw (or at least I don't care if it does right now)
-      {"u8",          &primitiveRenderer},
-      {"u16",         &primitiveRenderer},
-      {"u32",         &primitiveRenderer},
-      {"u64",         &primitiveRenderer},
-      {"i8",          &primitiveRenderer},
-      {"i16",         &primitiveRenderer},
-      {"i32",         &primitiveRenderer},
-      {"i64",         &primitiveRenderer},
-      {"f32",         &primitiveRenderer},
-      {"f64",         &primitiveRenderer},
-      {"bool",        &primitiveRenderer},
-      {"CVector3f",   &CVector3fRenderer},
+  unordered_map<string, RenderFunc> specialRenderers{
+      // NOLINT(cert-err58-cpp) // it won't throw (or at least I don't care if it does right now)
+      {"u8", &primitiveRenderer},
+      {"u16", &primitiveRenderer},
+      {"u32", &primitiveRenderer},
+      {"u64", &primitiveRenderer},
+      {"i8", &primitiveRenderer},
+      {"i16", &primitiveRenderer},
+      {"i32", &primitiveRenderer},
+      {"i64", &primitiveRenderer},
+      {"f32", &primitiveRenderer},
+      {"f64", &primitiveRenderer},
+      {"bool", &primitiveRenderer},
+      {"CVector3f", &CVector3fRenderer},
       {"CQuaternion", &CQuaternionRenderer},
-      {"CTransform",  &CTransformRenderer},
-      {"CMatrix4f",   &CMatrix4fRenderer},
+      {"CTransform", &CTransformRenderer},
+      {"CMatrix4f", &CMatrix4fRenderer},
       {"SObjectTag", &SObjectTagRenderer},
   };
 
   void render(const GameMember &member, bool addTree) {
+    if (member.arrayLength) {
+      renderArray(member);
+      return;
+    }
+
     auto &typeName = member.type;
     if (specialRenderers.count(typeName)) {
       specialRenderers[typeName](member);
     } else {
-      if (typeName.rfind("rstl::vector", 0) != string::npos) {
+      if (typeName.rfind("rstl::vector<", 0) != string::npos) {
+        renderVector(member);
+      } else if (typeName.rfind("rstl::vector2<", 0) != string::npos) {
         renderVector(member);
       } else {
         renderEnumOrStruct(member, addTree);
@@ -101,14 +109,15 @@ namespace GameObjectRenderers {
       string label = fmt::format("{0}###{0}{1:08x}", member.name, member.offset);
       bool open = ImGui::CollapsingHeader(label.c_str());
       hoverTooltip(member);
-      if (!open) return;
+      if (!open)
+        return;
       ImGui::Indent();
     }
 
     if (member.offset == 0) {
       ImGui::Text("null");
     } else {
-      for (auto &extends: gameStruct->extends) {
+      for (auto &extends : gameStruct->extends) {
         render(GameMember{
             .name = extends,
             .type = extends,
@@ -116,7 +125,7 @@ namespace GameObjectRenderers {
         });
       }
 
-      for (auto &child: gameStruct->members_by_order) {
+      for (auto &child : gameStruct->members_by_order) {
         uint32_t addr = member.offset + child.offset;
         string name = child.name;
 
@@ -234,17 +243,16 @@ namespace GameObjectRenderers {
     if (render_exact_values) {
       msg = fmt::format("{} [{:0.8f}, {:0.8f}, {:0.8f}]", member.name, x, y, z);
     } else {
-     msg = fmt::format("{} [{:0.3f}, {:0.3f}, {:0.3f}]", member.name, x, y, z);;
+      msg = fmt::format("{} [{:0.3f}, {:0.3f}, {:0.3f}]", member.name, x, y, z);
+      ;
     }
 
     ImGui::Text("%s", msg.c_str());
     if (ImGui::IsItemClicked()) {
       string clip;
       if (render_exact_values) {
-        clip = fmt::format("{:f} {:x}, {:f} {:x}, {:f} {:x}",
-                                  x, *reinterpret_cast<uint32_t *>(&x),
-                                  y, *reinterpret_cast<uint32_t *>(&y),
-                                  z, *reinterpret_cast<uint32_t *>(&z));
+        clip = fmt::format("{:f} {:x}, {:f} {:x}, {:f} {:x}", x, *reinterpret_cast<uint32_t *>(&x), y,
+                           *reinterpret_cast<uint32_t *>(&y), z, *reinterpret_cast<uint32_t *>(&z));
       } else {
         clip = fmt::format("{:f}, {:f}, {:f}", x, y, z);
       }
@@ -274,11 +282,9 @@ namespace GameObjectRenderers {
     if (ImGui::IsItemClicked()) {
       string clip;
       if (render_exact_values) {
-        clip = fmt::format("{:f} {:x}, {:f} {:x}, {:f} {:x}, {:f} {:x}",
-                                  x, *reinterpret_cast<uint32_t *>(&x),
-                                  y, *reinterpret_cast<uint32_t *>(&y),
-                                  z, *reinterpret_cast<uint32_t *>(&z),
-                                  w, *reinterpret_cast<uint32_t *>(&w));
+        clip = fmt::format("{:f} {:x}, {:f} {:x}, {:f} {:x}, {:f} {:x}", x, *reinterpret_cast<uint32_t *>(&x), y,
+                           *reinterpret_cast<uint32_t *>(&y), z, *reinterpret_cast<uint32_t *>(&z), w,
+                           *reinterpret_cast<uint32_t *>(&w));
       } else {
         clip = fmt::format("{:f}, {:f}, {:f}, {:f}", x, y, z, w);
       }
@@ -362,7 +368,8 @@ namespace GameObjectRenderers {
     string label = fmt::format("{}###{:08x}", member.name, member.offset);
     bool open = ImGui::CollapsingHeader(label.c_str());
     hoverTooltip(member);
-    if (!open) return;
+    if (!open)
+      return;
     ImGui::Indent();
 
     ImGui::PushID(label.c_str());
@@ -376,8 +383,10 @@ namespace GameObjectRenderers {
 
     ImGui::InputInt("Index", &index);
 
-    if (index >= end) index = end - 1;
-    if (index < 0) index = 0;
+    if (index >= end)
+      index = end - 1;
+    if (index < 0)
+      index = 0;
 
     storage->SetInt(ImGui::GetID("index"), index);
 
@@ -403,6 +412,34 @@ namespace GameObjectRenderers {
     ImGui::Unindent();
   }
 
+  void renderArray(const GameMember &member) {
+    string label = fmt::format("{}###{:08x}", member.name, member.offset);
+    bool open = ImGui::CollapsingHeader(label.c_str());
+    hoverTooltip(member);
+    if (!open)
+      return;
+
+    uint32_t arrayLength = *member.arrayLength;
+    auto gameStruct = GameDefinitions::structByName(member.type);
+    uint32_t sizePer;
+    if (gameStruct.has_value()) {
+      sizePer = gameStruct->size;
+    } else {
+      sizePer = GameDefinitions::primitiveSize(member.type);
+    }
+    ImGui::Indent();
+
+    for (uint32_t i = 0; i < arrayLength; i++) {
+      GameMember arrayItem = member;
+      arrayItem.offset = member.offset + i * sizePer;
+      arrayItem.name = fmt::format("{:d}", i);
+      arrayItem.arrayLength = nullopt;
+
+      render(arrayItem, true);
+    }
+    ImGui::Unindent();
+  }
+
   void SObjectTagRenderer(const GameDefinitions::GameMember &member) {
     string str = GameObjectUtils::objectTagToString(member);
     string msg = fmt::format("{} {}", member.name, str);
@@ -415,5 +452,4 @@ namespace GameObjectRenderers {
     }
     hoverTooltip(member);
   }
-}
-
+} // namespace GameObjectRenderers

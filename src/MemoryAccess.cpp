@@ -378,7 +378,7 @@ uint64_t hostToBe64(uint64_t value) {
       if (strlen(pathBuffer) > 0) {
         printf("path: %s\n", pathBuffer);
         string exePath = pathBuffer;
-        if (exePath.ends_with("Dolphin")) {
+        if (exePath.ends_with("Dolphin") || exePath.ends_with("DolphinQt")) {
           printf("pid: %d path %s\n", pids[i], exePath.c_str());
           res.push_back(pids[i]);
         }
