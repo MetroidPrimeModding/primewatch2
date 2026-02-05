@@ -1,0 +1,167 @@
+struct CTweakPlayer {
+    u32 vtable 0x0
+    f32[8] maxTranslationalAcceleration 0x4
+    f32[8] maxRotationalAcceleration 0x24
+    f32[8] translationFriction 0x44
+    f32[8] rotationFriction 0x64
+    f32[8] rotationMaxSpeed 0x84
+    f32[8] translationMaxSpeed 0xa4
+    f32 normalGravAccel 0xc4
+    f32 fluidGravAccel 0xc8
+    f32 verticalJumpAccel 0xcc
+    f32 horizontalJumpAccel 0xd0
+    f32 verticalDoubleJumpAccel 0xd4
+    f32 horizontalDoubleJumpAccel 0xd8
+    f32 waterJumpFactor 0xdc
+    f32 waterBallJumpFactor 0xe0
+    f32 lavaJumpFactor 0xe4
+    f32 lavaBallJumpFactor 0xe8
+    f32 phazonJumpFactor 0xec
+    f32 phazonBallJumpFactor 0xf0
+    f32 allowedJumpTime 0xf4
+    f32 allowedDoubleJumpTime 0xf8
+    f32 minDoubleJumpWindow 0xfc
+    f32 maxDoubleJumpWindow 0x100
+//    f32  0x104
+    f32 minJumpTime 0x108
+    f32 minDoubleJumpTime 0x10c
+    f32 allowedLedgeTime 0x110
+    f32 doubleJumpImpulse 0x114
+    f32 backwardsForceMultiplier 0x118
+    f32 bombJumpRadius 0x11c
+    f32 bombJumpHeight 0x120
+    f32 eyeOffset 0x124
+    f32 turnSpeedMultiplier 0x128
+    f32 freeLookTurnSpeedMultiplier 0x12c
+    f32 horizontalFreeLookAngleVel 0x130
+    f32 verticalFreeLookAngleVel 0x134
+    f32 freeLookSpeed 0x138
+    f32 freeLookSnapSpeed 0x13c
+//    f32  0x140
+    f32 freeLookCenteredThresholdAngle 0x144
+    f32 freeLookCenteredTime 0x148
+    f32 freeLookDampenFactor 0x14c
+    f32 leftDiv 0x150
+    f32 rightDiv 0x154
+    f32[3] orbitMinDistance 0x158
+    f32[3] orbitNormalDistance 0x164
+    f32[3] orbitMaxDistance 0x170
+//    f32  0x17c
+    f32 orbitModeTimer 0x180
+    f32 orbitCameraSpeed 0x184
+    f32 orbitUpperAngle 0x188
+    f32 orbitLowerAngle 0x18c
+    f32 orbitHorizAngle 0x190
+//    f32  0x194
+//    f32  0x198
+    f32 orbitMaxTargetDistance 0x19c
+    f32 orbitMaxLockDistance 0x1a0
+    f32 orbitDistanceThreshold 0x1a4
+    u32[2] orbitScreenBoxHalfExtentX 0x1a8
+    u32[2] orbitScreenBoxHalfExtentY 0x1b0
+    u32[2] orbitScreenBoxCenterX 0x1b8
+    u32[2] orbitScreenBoxCenterY 0x1c0
+    u32[2] orbitZoneIdealX 0x1c8
+    u32[2] orbitZoneIdealY 0x1d0
+    f32 orbitNearX 0x1d8
+    f32 orbitNearZ 0x1dc
+//    f32  0x1e0
+//    f32  0x1e4
+    f32 orbitFixedOffsetZDiff 0x1e8
+    f32 orbitZRange 0x1ec
+//    f32  0x1f0
+//    f32  0x1f4
+//    f32  0x1f8
+    f32 orbitPreventionTime 0x1fc
+////    bool x200_24_dashEnabled : 1{};
+////    bool x200_25_dashOnButtonRelease : 1{};
+    f32 dashButtonHoldCancelTime 0x204
+    f32 dashStrafeInputThreshold 0x208
+    f32 sidewaysDoubleJumpImpulse 0x20c
+    f32 sidewaysVerticalDoubleJumpAccel 0x210
+    f32 sidewaysHorizontalDoubleJumpAccel 0x214
+    f32 scanningRange 0x218
+//    bool x21c_24_scanRetention : 1{};
+//    bool x21c_25_scanFreezesGame : 1{};
+//    bool x21c_26_orbitWhileScanning : 1{};
+    f32 scanMaxTargetDistance 0x220
+    f32 scanMaxLockDistance 0x224
+//    bool x228_24_freelookTurnsPlayer : 1{};
+//    bool x228_25_ : 1{};
+//    bool x228_26_ : 1{};
+//    bool x228_27_moveDuringFreeLook : 1{};
+//    bool x228_28_holdButtonsForFreeLook : 1{};
+//    bool x228_29_twoButtonsForFreeLook : 1{};
+//    bool x228_30_ : 1{};
+//    bool x228_31_ : 1{};
+//    bool x229_24_ : 1{};
+//    bool x229_25_aimWhenOrbitingPoint : 1{};
+//    bool x229_26_stayInFreeLookWhileFiring : 1{};
+//    bool x229_27_ : 1{};
+//    bool x229_28_ : 1{};
+//    bool x229_29_orbitFixedOffset : 1{};
+//    bool x229_30_gunButtonTogglesHolster : 1{};
+//    bool x229_31_gunNotFiringHolstersGun : 1{};
+//    bool x22a_24_fallingDoubleJump : 1{};
+//    bool x22a_25_impulseDoubleJump : 1{};
+//    bool x22a_26_firingCancelsCameraPitch : 1{};
+//    bool x22a_27_assistedAimingIgnoreHorizontal : 1{};
+//    bool x22a_28_assistedAimingIgnoreVertical : 1{};
+//    f32  0x22c
+//    f32  0x230
+    f32 aimMaxDistance 0x234
+//    f32  0x238
+//    f32  0x23c
+//    f32  0x240
+//    f32  0x244
+//    f32  0x248
+    f32 aimThresholdDistance 0x24c
+//    f32  0x250
+//    f32  0x254
+    f32 aimBoxWidth 0x258
+    f32 aimBoxHeight 0x25c
+    f32 aimTargetTimer 0x260
+    f32 aimAssistHorizontalAngle 0x264
+    f32 aimAssistVerticalAngle 0x268
+    f32 playerHeight 0x26c
+    f32 playerXYHalfExtent 0x270
+    f32 stepUpHeight 0x274
+    f32 stepDownHeight 0x278
+    f32 playerBallHalfExtent 0x27c
+    f32 firstPersonCameraSpeed 0x280
+//    f32  0x284
+    f32 jumpCameraPitchDownStart 0x288
+    f32 jumpCameraPitchDownFull 0x28c
+    f32 jumpCameraPitchDownAngle 0x290
+    f32 fallCameraPitchDownStart 0x294
+    f32 fallCameraPitchDownFull 0x298
+    f32 fallCameraPitchDownAngle 0x29c
+    f32 orbitDistanceMax 0x2a0
+    f32 grappleSwingLength 0x2a4
+    f32 grappleSwingPeriod 0x2a8
+    f32 grapplePullSpeedMin 0x2ac
+    f32 grappleCameraSpeed 0x2b0
+    f32 maxGrappleLockedTurnAlignDistance 0x2b4
+    f32 grapplePullSpeedProportion 0x2b8
+    f32 grapplePullSpeedMax 0x2bc
+    f32 grappleLookCenterSpeed 0x2c0
+    f32 maxGrappleTurnSpeed 0x2c4
+    f32 grappleJumpForce 0x2c8
+    f32 grappleReleaseTime 0x2cc
+    u32 grappleJumpMode 0x2d0
+//    bool x2d4_orbitReleaseBreaksGrapple{};
+//    bool x2d5_invertGrappleTurn{};
+    f32 grappleBeamSpeed 0x2d8
+    f32 grappleBeamXWaveAmplitude 0x2dc
+    f32 grappleBeamZWaveAmplitude 0x2e0
+    f32 grappleBeamAnglePhaseDelta 0x2e4
+//    f32  0x2e8
+//    f32  0x2ec
+//    f32  0x2f0
+//    bool x2f4_{};
+    f32 frozenTimeout 0x2f8
+    u32 iceBreakJumpCount 0x2fc
+    f32 variaDamageReduction 0x300
+    f32 gravityDamageReduction 0x304
+    f32 phazonDamageReduction 0x308
+}

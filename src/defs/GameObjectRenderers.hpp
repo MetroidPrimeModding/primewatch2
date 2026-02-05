@@ -7,7 +7,7 @@
 #include <unordered_map>
 namespace GameObjectRenderers {
   extern bool render_exact_values;
-  void render(const GameDefinitions::GameMember &member, bool addTree = true);
+  void render(const GameDefinitions::GameMember &member, bool addTree = true, bool derefPointer = false);
 
   void renderEnumOrStruct(const GameDefinitions::GameMember &member, bool addTree);
   void primitiveRenderer(const GameDefinitions::GameMember &member);

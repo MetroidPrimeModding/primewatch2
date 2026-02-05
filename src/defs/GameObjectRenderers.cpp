@@ -30,7 +30,17 @@ namespace GameObjectRenderers {
       {"SObjectTag", &SObjectTagRenderer},
   };
 
-  void render(const GameMember &member, bool addTree) {
+  void render(const GameMember &member, bool addTree, bool derefPointer) {
+    if (derefPointer && member.pointer) {
+      // read pointer and return recurse
+      uint32_t ptr = GameMemory::read_u32(member.offset);
+      GameMember ptrMember = member;
+      ptrMember.offset = ptr;
+      ptrMember.pointer = false;
+      render(ptrMember, addTree);
+      return;
+    }
+
     if (member.arrayLength) {
       renderArray(member);
       return;

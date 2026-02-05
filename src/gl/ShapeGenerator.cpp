@@ -175,6 +175,86 @@ namespace ShapeGenerator {
     return verts;
   }
 
+  std::vector<Vert> generateTruncatedSphere(glm::vec3 center, float radius, float bottomDistance, glm::vec4 color) {
+    vector<Vert> verts;
+
+    // AI wrote this one though :)
+
+    constexpr int latitudeLines = 15;
+    constexpr int longitudeLines = 20;
+
+    float bottomLatitude = glm::acos(bottomDistance / radius);
+    constexpr float radiansPerLatitude = glm::pi<float>() / (float) latitudeLines;
+    constexpr float radiansPerLongitude = glm::pi<float>() * 2.0f / (float) longitudeLines;
+
+    int bottomLatitudeLine = static_cast<int>(bottomLatitude / radiansPerLatitude);
+
+    for (int latitudeLine = 0; latitudeLine <= bottomLatitudeLine; latitudeLine++) {
+      float latitude = radiansPerLatitude * (float) latitudeLine;
+      float nextLatitude = radiansPerLatitude * (float) (latitudeLine + 1);
+      if (nextLatitude > bottomLatitude) {
+        nextLatitude = bottomLatitude;
+      }
+
+      for (int longitudeLine = 0; longitudeLine < longitudeLines; longitudeLine++) {
+        float longitude = radiansPerLongitude * (float) longitudeLine;
+        float nextLongitude = radiansPerLongitude * (float) (longitudeLine + 1);
+
+        glm::vec3 topLeft =
+            glm::quat(glm::vec3(0, 0, longitude)) *
+            glm::quat(glm::vec3(0, latitude, 0)) *
+            glm::vec3{0, 0, 1};
+        glm::vec3 topRight =
+            glm::quat(glm::vec3(0, 0, nextLongitude)) *
+            glm::quat(glm::vec3(0, latitude, 0)) *
+            glm::vec3{0, 0, 1};
+        glm::vec3 bottomLeft =
+            glm::quat(glm::vec3(0, 0, longitude)) *
+            glm::quat(glm::vec3(0, nextLatitude, 0)) *
+            glm::vec3{0, 0, 1};
+        glm::vec3 bottomRight =
+            glm::quat(glm::vec3(0, 0, nextLongitude)) *
+            glm::quat(glm::vec3(0, nextLatitude, 0)) *
+            glm::vec3{0, 0, 1};
+
+        glm::vec3 n = glm::normalize(glm::cross(topRight - topLeft, topRight - bottomRight));
+        // hack
+        if (latitudeLine == 0) {
+          n = glm::normalize(glm::cross(topRight - bottomLeft, topRight - bottomRight));
+        }
+        verts.emplace_back(Vert{.pos = center + topLeft * radius, .color = color, .normal = n, .barycentric = {1, 0, 0},});
+        verts.emplace_back(Vert{.pos = center + topRight * radius, .color = color, .normal = n, .barycentric = {0, 1, 0},});
+        verts.emplace_back(Vert{.pos = center + bottomRight * radius, .color = color, .normal = n, .barycentric = {0, 0, 1},});
+        verts.emplace_back(Vert{.pos = center + bottomRight * radius, .color = color, .normal = n, .barycentric = {1, 0, 0},});
+        verts.emplace_back(Vert{.pos = center + bottomLeft * radius, .color = color, .normal = n, .barycentric = {0, 1, 0},});
+        verts.emplace_back(Vert{.pos = center + topLeft * radius, .color = color, .normal = n, .barycentric = {0, 0, 1},});
+      }
+    }
+    // fill in the bottom
+    float bottomLatitudeZDist = glm::cos(bottomLatitude) * radius;
+    for (int longitudeLine = 0; longitudeLine < longitudeLines; longitudeLine++) {
+      float longitude = radiansPerLongitude * (float) longitudeLine;
+      float nextLongitude = radiansPerLongitude * (float) (longitudeLine + 1);
+
+      glm::vec3 bottomLeft =
+          glm::quat(glm::vec3(0, 0, longitude)) *
+          glm::quat(glm::vec3(0, bottomLatitude, 0)) *
+          glm::vec3{0, 0, 1};
+      glm::vec3 bottomRight =
+          glm::quat(glm::vec3(0, 0, nextLongitude)) *
+          glm::quat(glm::vec3(0, bottomLatitude, 0)) *
+          glm::vec3{0, 0, 1};
+
+      glm::vec3 n = glm::normalize(glm::cross(bottomRight - bottomLeft, bottomRight - glm::vec3{0, -1, 0}));
+
+      verts.emplace_back(Vert{.pos = center + bottomLeft * radius, .color = color, .normal = n, .barycentric = {1, 0, 0},});
+      verts.emplace_back(Vert{.pos = center + bottomRight * radius, .color = color, .normal = n, .barycentric = {0, 1, 0},});
+      verts.emplace_back(Vert{.pos = center + glm::vec3{0, 0, bottomLatitudeZDist}, .color = color, .normal = n, .barycentric = {0, 0, 1},});
+    }
+
+    return verts;
+  }
+
   inline glm::vec4 invertHelper(glm::mat4 inv, glm::vec3 v) {
     glm::vec4 res = inv * glm::vec4(v, 1.0f);
     return res / res.w;

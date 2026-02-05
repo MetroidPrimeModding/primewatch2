@@ -843,22 +843,31 @@ void WorldRenderer::drawProjectile(const GameMember &entity, bool isHighlighted)
 
 void WorldRenderer::drawBomb(const GameMember &entity, bool isHighlighted) {
   float fuseTimeSeconds = entity["fuseTime"].read_f32();
-  int fuseTimeFrames = static_cast<int>(fuseTimeSeconds * 60.0f);
-  if (fuseTimeFrames < 0) return; // it's done
+  int fuseTimeFrames = static_cast<int>(ceil(fuseTimeSeconds * 60.0f)) + 1;
+  if (fuseTimeFrames <= 0) return; // it's done
 
   glm::mat4 transform = MathUtils::readAsCTransform(entity["transform"]);
+  glm::vec3 pos = transform[3];
+  glm::vec3 posToBall = player.position + glm::vec3{0, 0, 0.7f} - pos;
+  float maxDistance = 1.5f; // from a tweak, could load it but eh
 
+  // float dotUp = glm::dot(glm::normalize(posToBall), glm::vec3{0,0,1});
+  if (glm::length(posToBall) < maxDistance && posToBall.z >= -0.7f) {
+    isHighlighted = true;
+  } else {
+    isHighlighted = false;
+  }
 
-  glm::vec4 color{0.8f, 0.4f, 0.4f, 0.8f};
+  glm::vec4 color{0.7f, 0.5f, 0.5f, 0.5f};
   if (isHighlighted) {
-    color = {1, 0, 0, 0.5f};
+    color = {0.8, 0, 0, 0.8f};
   }
 
   translucentRenderBuff->setColor(color);
   translucentRenderBuff->setTransform(transform);
 
   translucentRenderBuff->addTris(
-      ShapeGenerator::generateSphere({0, 0, 0}, 0.7f, color)
+        ShapeGenerator::generateTruncatedSphere({0, 0, 0}, maxDistance, -1.5f + 0.7f, color)
   );
 
   ImDrawList *dl = ImGui::GetBackgroundDrawList();
