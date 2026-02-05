@@ -867,7 +867,7 @@ void WorldRenderer::drawBomb(const GameMember &entity, bool isHighlighted) {
   translucentRenderBuff->setTransform(transform);
 
   translucentRenderBuff->addTris(
-        ShapeGenerator::generateTruncatedSphere({0, 0, 0}, maxDistance, -1.5f + 0.7f, color)
+        ShapeGenerator::generateTruncatedSphere({0, 0, 0}, maxDistance - 0.7f, -1.5f + 0.7f + 0.7f, color)
   );
 
   ImDrawList *dl = ImGui::GetBackgroundDrawList();
